@@ -18,7 +18,7 @@ public final class PluginLoaderTest {
     assertTrue(plugin instanceof DefaultSearchPlugin);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = IllegalStateException.class)
   public void loadPluginWithNameNotFound() {
     PluginLoader.loadPluginWithName("NoImplementation", SearchPlugin.class);
   }
