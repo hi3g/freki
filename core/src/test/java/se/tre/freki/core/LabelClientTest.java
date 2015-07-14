@@ -148,12 +148,13 @@ public class LabelClientTest {
   @Test
   public void validateLabelName() {
     final String validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUWVXYZ0123456789-_./";
-
+    
     for (char c = 0; c < 255; ++c) {
       final String input = String.valueOf(c);
       try {
         LabelClient.validateLabelName("test", input);
-        assertTrue("character with code " + ((int) input.charAt(0)) + " is not in the valid chars",
+        assertTrue("character " + input.charAt(0) + " with code " + ((int) input.charAt(
+            0)) + " is not in the valid chars",
             validChars.contains(input));
       } catch (IllegalArgumentException e) {
         assertFalse(validChars.contains(input));

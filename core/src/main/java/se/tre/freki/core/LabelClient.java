@@ -46,8 +46,11 @@ public class LabelClient {
   /** Label type context for the tag values. */
   final LabelClientTypeContext tagValues;
   /** Label name INVALID_LETTER_MATCHER, use to validate label. */
-  static final CharMatcher INVALID_LETTER_MATCHER =  CharMatcher.anyOf("-./_")
-      .or(CharMatcher.JAVA_LETTER_OR_DIGIT)
+  static final CharMatcher INVALID_LETTER_MATCHER = CharMatcher.anyOf("-./_")
+      .or(CharMatcher.JAVA_UPPER_CASE)
+      .or(CharMatcher.JAVA_LOWER_CASE)
+      .or(CharMatcher.JAVA_DIGIT)
+      .and(CharMatcher.ASCII)
       .negate()
       .precomputed();
 
