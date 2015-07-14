@@ -5,6 +5,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.addCallback;
 import static com.google.common.util.concurrent.Futures.transform;
 
+
+import se.tre.freki.labels.LabelException;
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
 import se.tre.freki.meta.Annotation;
@@ -15,6 +17,7 @@ import se.tre.freki.search.SearchPlugin;
 import se.tre.freki.storage.Store;
 import se.tre.freki.time.TimeRanges;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
@@ -123,17 +126,16 @@ public class MetaClient {
                                                   final LabelId id) {
     // Verify that the identifier exists before fetching the meta object. The future that
     // #getLabelName returns will contain an exception if it does not exist.
-    return transform(labelClient.getLabelName(type, id), new AsyncFunction<String, LabelMeta>() {
-      @Override
-      public ListenableFuture<LabelMeta> apply(final String name) throws Exception {
-        return store.getMeta(id, type);
-      }
-    });
-  }
-
-  public void indexAnnotation(final Annotation note) {
-    addCallback(searchPlugin.indexAnnotation(note), new PluginError(searchPlugin));
-    addCallback(realTimePublisher.publishAnnotation(note), new PluginError(realTimePublisher));
+    return transform(labelClient.getLabelName(type, id),
+        new AsyncFunction<Optional<String>, LabelMeta>() {
+          @Override
+          public ListenableFuture<LabelMeta> apply(final Optional<String> name) throws Exception {
+            if (name.isPresent()) {
+              return store.getMeta(id, type);
+            }
+            throw new LabelException(id, type, "Could not find label.");
+          }
+        });
   }
 
   /**

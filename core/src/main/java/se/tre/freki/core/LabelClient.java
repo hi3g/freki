@@ -5,14 +5,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.allAsList;
 import static com.google.common.util.concurrent.Futures.transform;
 
+
 import se.tre.freki.labels.IdLookupStrategy;
 import se.tre.freki.labels.LabelClientTypeContext;
-import se.tre.freki.labels.LabelException;
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
 import se.tre.freki.labels.StaticTimeSeriesId;
 import se.tre.freki.labels.TimeSeriesId;
-import se.tre.freki.labels.callbacks.StripedToMap;
 import se.tre.freki.search.IdChangeIndexerListener;
 import se.tre.freki.search.SearchPlugin;
 import se.tre.freki.storage.Store;
@@ -20,6 +19,7 @@ import se.tre.freki.storage.Store;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.EventBus;
@@ -28,8 +28,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.typesafe.config.Config;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
@@ -147,27 +145,6 @@ public class LabelClient {
     return allAsList(tagIds.build());
   }
 
-  /**
-   * Resolve the names behind all the {@link LabelId}s in the provided striped list.
-   *
-   * @param tags The IDs of the tag keys and values to resolve
-   * @return A map with the names of the tags
-   * @throws LabelException if the ID was not allocated
-   */
-  @Nonnull
-  public ListenableFuture<Map<String, String>> getTagNames(final List<LabelId> tags)
-      throws LabelException {
-    final List<ListenableFuture<String>> futures = new ArrayList<>(tags.size());
-
-    final Iterator<LabelId> iterator = tags.iterator();
-    while (iterator.hasNext()) {
-      futures.add(tagKeys.getName(iterator.next()));
-      futures.add(tagValues.getName(iterator.next()));
-    }
-
-    return transform(allAsList(futures), new StripedToMap<String>());
-  }
-
   LabelClientTypeContext idContextForType(LabelType type) {
     switch (type) {
       case METRIC:
@@ -218,7 +195,7 @@ public class LabelClient {
    * @return A future that on completion will contain the name behind the ID
    */
   @Nonnull
-  public ListenableFuture<String> getLabelName(final LabelType type,
+  public ListenableFuture<Optional<String>> getLabelName(final LabelType type,
                                                final LabelId uid) {
     checkNotNull(uid, "Missing UID");
     LabelClientTypeContext labelClientTypeContext = idContextForType(type);

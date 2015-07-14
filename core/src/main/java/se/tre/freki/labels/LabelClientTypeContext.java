@@ -113,27 +113,26 @@ public class LabelClientTypeContext {
    * @see #createId(String)
    */
   @Nonnull
-  public ListenableFuture<String> getName(final LabelId id) {
+  public ListenableFuture<Optional<String>> getName(final LabelId id) {
     final String name = idCache.getIfPresent(id);
 
     if (name != null) {
-      return Futures.immediateFuture(name);
+      return Futures.immediateFuture(Optional.of(name));
     }
 
-    class GetNameFunction implements AsyncFunction<Optional<String>, String> {
+    class GetNameFunction implements AsyncFunction<Optional<String>, Optional<String>> {
       @Nullable
       @Override
-      public ListenableFuture<String> apply(@Nullable final Optional<String> name) {
+      public ListenableFuture<Optional<String>> apply(@Nullable final Optional<String> name) {
         checkNotNull(name);
 
         if (name.isPresent()) {
           addNameToCache(id, name.get());
           addIdToCache(name.get(), id);
-          return Futures.immediateFuture(name.get());
+          return Futures.immediateFuture(Optional.of(name.get()));
         }
 
-        return Futures.immediateFailedFuture(
-            new LabelException(id, type, "No name with id " + id + " and type " + type));
+        return Futures.immediateFuture(Optional.<String>absent());
       }
     }
 

@@ -2,7 +2,6 @@ package se.tre.freki.core;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -17,14 +16,12 @@ import se.tre.freki.labels.LabelId;
 import se.tre.freki.storage.Store;
 import se.tre.freki.utils.TestUtil;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 
-import java.util.Map;
 import javax.inject.Inject;
 
 public class LabelClientTest {
@@ -81,26 +78,6 @@ public class LabelClientTest {
   }
 
   @Test
-  public void getTagNames() throws Exception {
-    ImmutableList<LabelId> ids = ImmutableList.of(host, web01);
-    final Map<String, String> tags = labelClient.getTagNames(ids).get();
-    assertEquals("web01", tags.get("host"));
-  }
-
-  @Test
-  public void getTagNamesEmptyList() throws Exception {
-    final Map<String, String> tags = labelClient.getTagNames(ImmutableList.<LabelId>of()).get();
-    assertNotNull(tags);
-    assertEquals(0L, tags.size());
-  }
-
-  @Test(expected = LabelException.class)
-  public void getTagNamesNoSuchId() throws Exception {
-    ImmutableList<LabelId> ids = ImmutableList.of(mock(LabelId.class), mock(LabelId.class));
-    labelClient.getTagNames(ids).get();
-  }
-
-  @Test
   public void getLabelId() throws Exception {
     assertEquals(sysCpu0, labelClient.getLabelId(METRIC, "sys.cpu.0").get());
   }
@@ -127,7 +104,7 @@ public class LabelClientTest {
 
   @Test
   public void getUidName() throws Exception {
-    assertEquals("web01", labelClient.getLabelName(TAGV, web01).get());
+    assertEquals("web01", labelClient.getLabelName(TAGV, web01).get().get());
   }
 
   @Test(expected = LabelException.class)
