@@ -20,21 +20,14 @@ import org.junit.rules.Timeout;
 
 import java.io.IOException;
 import java.time.Clock;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class CassandraStoreTest extends StoreTest<CassandraStore> {
-  private static final String METRIC_NAME_ONE = "sys";
-  private static final String METRIC_NAME_TWO = "cpu0";
-  private static final String METRIC_NAME_THREE = "cpu1";
-
   @Rule
   public final Timeout timeout = Timeout.millis(CassandraTestHelpers.TIMEOUT);
 
   private Config config;
   private CassandraStoreDescriptor storeDescriptor;
-  private Map<String, LabelId> nameUid = new HashMap<>();
 
   @Before
   public void setUp() throws Exception {
@@ -47,15 +40,6 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
     storeDescriptor = (CassandraStoreDescriptor) cassandraTestComponent.storeDescriptor();
 
     store = storeDescriptor.createStore(config, new MetricRegistry());
-
-    nameUid.put(METRIC_NAME_ONE, store.allocateLabel(
-        METRIC_NAME_ONE, LabelType.METRIC).get());
-
-    nameUid.put(METRIC_NAME_TWO, store.allocateLabel(
-        METRIC_NAME_TWO, LabelType.METRIC).get());
-
-    nameUid.put(METRIC_NAME_THREE, store.allocateLabel(
-        METRIC_NAME_THREE, LabelType.METRIC).get());
   }
 
   @Test
