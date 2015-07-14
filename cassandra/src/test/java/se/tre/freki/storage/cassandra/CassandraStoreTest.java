@@ -52,8 +52,9 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
 
   @Test(expected = NullPointerException.class)
   public void constructorNullClock() throws IOException {
+    final String keyspace = config.getString("freki.storage.cassandra.keyspace");
     final Cluster cluster = storeDescriptor.createCluster(config);
-    final Session session = storeDescriptor.connectTo(cluster);
+    final Session session = storeDescriptor.connectTo(cluster, keyspace);
     new CassandraStore(cluster, session, null);
   }
 
