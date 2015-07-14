@@ -1,0 +1,34 @@
+
+plugins {
+    id "me.champeau.gradle.jmh" version "0.2.0"
+}
+
+project.ext.distFiles = files("src/main/dist")
+
+dependencies {
+    compile libraries.config,
+            libraries.logback,
+            libraries.dagger,
+            libraries.metrics_core,
+            libraries.metrics_jvm,
+            libraries.jopt,
+            libraries.netty,
+
+            libraries.jackson_core,
+            libraries.jackson_databind,
+            libraries.jackson_annotation,
+            libraries.jackson_guava,
+
+            // Should be compile only
+            libraries.auto_value,
+            libraries.auto_service
+}
+
+jmh {
+    jmhVersion = '1.10.1'
+    failOnError = true
+    warmupIterations = 10
+    iterations = 10
+    fork = 1
+    jvmArgs = "-server -XX:+UseG1GC -XX:+AggressiveOpts -XX:+UseFastAccessorMethods"
+}

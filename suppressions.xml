@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE suppressions PUBLIC
+    "-//Puppy Crawl//DTD Suppressions 1.1//EN"
+    "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+
+<suppressions>
+  <!-- Ignore generated sources -->
+  <suppress checks="." files="(all|cassandra|core|idmanager[\\/]assign|web)[\\/]build" />
+
+  <!--
+  Allow no empty line between package statement and the ParametersAreNonnullByDefault annotation
+  -->
+  <suppress checks="EmptyLineSeparator" files="package-info.java$" />
+
+  <!-- Don't require javadocs for test methods -->
+  <suppress checks="JavadocMethod" files="(all|cassandra|core|idmanager[\\/]assign|web)[\\/]src[\\/]test" />
+
+  <!-- Suppress package-info errors in the test and jmh folders -->
+  <suppress checks="JavadocPackage" files="[\\/]test[\\/]"/>
+  <suppress checks="JavadocPackage" files="[\\/]jmh[\\/]"/>
+
+  <!--
+  Supres legacy files that hasn't been rewritten or updated yet.
+  -->
+  <suppress checks="." files="AggregationIterator.java$" />
+  <suppress checks="." files="Aggregators.java$" />
+  <suppress checks="." files="DataPoints.java$" />
+  <suppress checks="." files="MoreLongs.java$" />
+  <suppress checks="." files="RateOptions.java$" />
+  <suppress checks="." files="RateSpan.java$" />
+  <suppress checks="." files="SearchQuery.java$" />
+  <suppress checks="." files="Span.java$" />
+  <suppress checks="." files="TSSubQuery.java$" />
+
+  <suppress checks="." files="SeekableViewsForTest.java$" />
+  <suppress checks="." files="DateTimeTest.java$" />
+  <suppress checks="." files="DownsamplerTest.java$" />
+  <suppress checks="." files="RateSpanTest.java$" />
+  <suppress checks="." files="AggregationIteratorTest.java$" />
+  <suppress checks="." files="TSSubQueryTest.java$" />
+  <suppress checks="." files="SearchQueryTest.java$" />
+  <suppress checks="." files="AggregatorsTest.java$" />
+  <suppress checks="." files="SpanTest.java$" />
+
+</suppressions>

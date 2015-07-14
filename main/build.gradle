@@ -1,0 +1,40 @@
+
+apply plugin: 'application'
+
+mainClassName = "se.tre.freki.Main"
+applicationName = "freki"
+applicationDefaultJvmArgs = [ "-server", "-XX:+UseG1GC", "-XX:+AggressiveOpts", "-XX:+UseFastAccessorMethods" ]
+
+dependencies {
+    compile project(":freki-core")
+    compile project(":freki-cassandra")
+
+    compile project(":idmanager:freki-assign")
+    compile project(":freki-web")
+}
+
+run {
+    systemProperties = [
+        "app.home": rootDir
+    ]
+}
+
+startScripts.with {
+    doLast {
+        unixScript.text = unixScript.text.replaceAll('cd "\\$SAVED" \\>\\&-\n', '$0\nDEFAULT_JVM_OPTS="-Dapp.home=\\$APP_HOME"\n')
+        windowsScript.text = windowsScript.text.replaceAll('\r\n@rem Find java.exe', '\r\nset DEFAULT_JVM_OPTS=-Dapp.home=%APP_HOME%\r\n$0')
+    }
+}
+
+distributions {
+    main {
+        baseName = rootProject.name
+
+        contents {
+            into('') {
+                from { project(':freki-core').distFiles }
+                from { project(':freki-cassandra').distFiles }
+            }
+        }
+    }
+}

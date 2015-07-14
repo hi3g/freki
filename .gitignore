@@ -1,0 +1,15 @@
+*.pyc
+.*.swp
+*.rrd
+*.class
+*.orig
+*.log
+
+/config/logback.xml
+/config/freki.conf
+
+# Gradle
+.gradle
+build/
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar

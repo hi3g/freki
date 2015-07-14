@@ -1,0 +1,28 @@
+
+plugins {
+    id "com.google.protobuf" version "0.4.1"
+}
+
+dependencies {
+    compile project(':freki-core')
+
+    compile libraries.config,
+            libraries.dagger,
+            libraries.jopt,
+            libraries.grpc
+}
+
+sourceSets {
+    main {
+        proto {
+            plugins {
+                grpc { }
+            }
+        }
+    }
+}
+
+protocDep = "com.google.protobuf:protoc:3.0.0-alpha-2"
+protobufNativeCodeGenPluginDeps = ["grpc:io.grpc:protoc-gen-grpc-java:0.7.1"]
+
+generatedFileDir = "${project.buildDir}/generated-sources/main/java/"

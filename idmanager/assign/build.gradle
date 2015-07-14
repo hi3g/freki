@@ -1,0 +1,6 @@
+
+dependencies {
+    compile project(':freki-core')
+
+    compile libraries.jopt
+}

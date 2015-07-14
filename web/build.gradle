@@ -1,0 +1,14 @@
+
+dependencies {
+    compile project(':freki-core')
+
+    runtime project(':freki-cassandra')
+
+    compile libraries.jopt,
+            libraries.logback,
+            libraries.netty,
+            libraries.javassist,
+            libraries.metrics_json
+
+    testCompile project(':freki-core').sourceSets.test.output
+}

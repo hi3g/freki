@@ -1,0 +1,32 @@
+# Freki development config
+#
+# This is a sample config that overrides the default config with values that make sense to use while
+# developing. Create a copy of me named 'freki.conf' (ignored by git) in /config to get a config
+# that you are free to make whatever modifications you want to in.
+#
+# This config is used by `gradle run` regardless of which directory you run it in and most IDE's can
+# be configured to be use it too (IntelliJ uses this file automatically since it uses the root
+# project dir as a working directory).
+
+freki.core {
+  # Whether or not to automatically allocate label IDs for new previously unseen label names. This
+  # can be a significant bottleneck so enable with care.
+  auto_create_metrics = false
+  auto_create_tagks = false
+  auto_create_tagvs = false
+}
+
+freki.storage {
+  # The fully Java class name of the store descriptor that is able to provide the store the instance
+  # should read from and write to.
+  adapter = "se.tre.freki.storage.cassandra.CassandraStoreDescriptor"
+}
+
+freki.publisher.plugin = se.tre.freki.plugins.DefaultRealtimePublisherDescriptor
+
+freki.search.plugin = se.tre.freki.search.DefaultSearchPluginDescriptor
+
+freki.web {
+  # The port that the web server should bind to.
+  port = 8080
+}

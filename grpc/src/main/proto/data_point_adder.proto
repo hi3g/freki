@@ -1,0 +1,38 @@
+
+syntax = "proto3";
+
+package se.tre.freki.grpc;
+
+option java_multiple_files = true;
+option java_outer_classname = "AddDataPointProto";
+
+service DataPointAdder {
+  rpc AddFloat (AddFloatRequest) returns (AddDataPointResponse) {}
+  rpc AddDouble (AddDoubleRequest) returns (AddDataPointResponse) {}
+  rpc AddLong (AddLongRequest) returns (AddDataPointResponse) {}
+}
+
+message AddFloatRequest {
+  string metric = 1;
+  map<string, string> tags = 2;
+  int64 timestamp = 3;
+  float value = 4;
+}
+
+message AddDoubleRequest {
+  string metric = 1;
+  map<string, string> tags = 2;
+  int64 timestamp = 3;
+  double value = 4;
+}
+
+message AddLongRequest {
+  string metric = 1;
+  map<string, string> tags = 2;
+  int64 timestamp = 3;
+  int64 value = 4;
+}
+
+message AddDataPointResponse {
+  string message = 1;
+}
