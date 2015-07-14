@@ -39,7 +39,6 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   private static LabelId TAGK_UID_ONE;
   private static LabelId TAGV_UID_ONE;
 
-
   @Rule
   public final Timeout timeout = Timeout.millis(CassandraTestHelpers.TIMEOUT);
 
@@ -191,7 +190,6 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
 
   @After
   public void tearDown() throws Exception {
-    final String keyspace = config.getString("freki.storage.cassandra.keyspace");
     CassandraTestHelpers.truncate(store.getSession());
   }
 

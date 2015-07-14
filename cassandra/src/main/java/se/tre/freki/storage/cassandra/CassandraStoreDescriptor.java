@@ -72,7 +72,6 @@ public class CassandraStoreDescriptor extends StoreDescriptor {
                                     final MetricRegistry metrics) {
     final Cluster cluster = createCluster(config);
     final String keyspace = config.getString("freki.storage.cassandra.keyspace");
-
     final Session session = connectTo(cluster, keyspace);
     registerMetrics(cluster, metrics);
     return new CassandraStore(cluster, session, Clock.systemDefaultZone());
