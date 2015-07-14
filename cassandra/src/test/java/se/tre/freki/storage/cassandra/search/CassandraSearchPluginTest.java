@@ -22,27 +22,24 @@ public class CassandraSearchPluginTest {
   private CassandraStore store;
   private Session session;
   private CassandraSearchPlugin searchPlugin;
-  private String keyspace;
 
 
   @Before
   public void setUp() throws Exception {
     final CassandraTestComponent cassandraTestComponent = DaggerCassandraTestComponent.create();
     config = cassandraTestComponent.config();
-    keyspace = config.getString("freki.storage.cassandra.keyspace");
     // It is unfortunate that we can't get a cassandra store directly from dagger but this cast will
     // at least fail hard if it ever is any other store.
     storeDescriptor = (CassandraStoreDescriptor) cassandraTestComponent.storeDescriptor();
 
     store = storeDescriptor.createStore(config, new MetricRegistry());
     session = store.getSession();
-    searchPlugin = new CassandraSearchPlugin(store, keyspace);
+    searchPlugin = new CassandraSearchPlugin(store);
   }
 
   @After
   public void tearDown() throws Exception {
-    keyspace = config.getString("freki.storage.cassandra.keyspace");
-    CassandraTestHelpers.truncate(store.getSession(), keyspace);
+    CassandraTestHelpers.truncate(store.getSession());
   }
 
   @Test

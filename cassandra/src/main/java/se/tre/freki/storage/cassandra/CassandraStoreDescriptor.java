@@ -75,7 +75,7 @@ public class CassandraStoreDescriptor extends StoreDescriptor {
 
     final Session session = connectTo(cluster, keyspace);
     registerMetrics(cluster, metrics);
-    return new CassandraStore(cluster, session, Clock.systemDefaultZone(), keyspace);
+    return new CassandraStore(cluster, session, Clock.systemDefaultZone());
   }
 
   @Nonnull

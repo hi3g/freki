@@ -15,9 +15,8 @@ public class CassandraSearchPluginDescriptor extends SearchPluginDescriptor {
     checkArgument(store instanceof CassandraStore,
         "The %s can only be used with the %s", CassandraSearchPlugin.class, CassandraStore.class);
 
-    String keyspace = config.getString("freki.storage.cassandra.keyspace");
     CassandraStore cassandraStore = (CassandraStore) store;
 
-    return new CassandraSearchPlugin(cassandraStore, keyspace);
+    return new CassandraSearchPlugin(cassandraStore);
   }
 }

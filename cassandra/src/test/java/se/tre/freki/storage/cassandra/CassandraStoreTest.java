@@ -101,14 +101,13 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
     final String keyspace = config.getString("freki.storage.cassandra.keyspace");
     final Cluster cluster = storeDescriptor.createCluster(config);
     final Session session = storeDescriptor.connectTo(cluster, keyspace);
-    assertNotNull(new CassandraStore(cluster, session, Clock.systemDefaultZone(), keyspace));
+    assertNotNull(new CassandraStore(cluster, session, Clock.systemDefaultZone()));
   }
 
   @Test(expected = NullPointerException.class)
   public void constructorNullSession() throws IOException {
-    final String keyspace = config.getString("freki.storage.cassandra.keyspace");
     final Cluster cluster = storeDescriptor.createCluster(config);
-    new CassandraStore(cluster, null, Clock.systemDefaultZone(), keyspace);
+    new CassandraStore(cluster, null, Clock.systemDefaultZone());
   }
 
   @Test(expected = NullPointerException.class)
@@ -116,7 +115,7 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
     final String keyspace = config.getString("freki.storage.cassandra.keyspace");
     final Cluster cluster = storeDescriptor.createCluster(config);
     final Session session = storeDescriptor.connectTo(cluster, keyspace);
-    new CassandraStore(null, session, Clock.systemDefaultZone(), keyspace);
+    new CassandraStore(null, session, Clock.systemDefaultZone());
   }
 
   /*
@@ -193,7 +192,7 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   @After
   public void tearDown() throws Exception {
     final String keyspace = config.getString("freki.storage.cassandra.keyspace");
-    CassandraTestHelpers.truncate(store.getSession(), keyspace);
+    CassandraTestHelpers.truncate(store.getSession());
   }
 
   @Test

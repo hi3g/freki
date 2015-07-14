@@ -46,11 +46,11 @@ public class CassandraSearchPlugin extends SearchPlugin {
    *
    * @param cassandraStore an instance of a CassandraStore
    */
-  public CassandraSearchPlugin(final CassandraStore cassandraStore, final String keyspace) {
+  public CassandraSearchPlugin(final CassandraStore cassandraStore) {
     this.session = checkNotNull(cassandraStore.getSession());
     this.cassandraStore = checkNotNull(cassandraStore);
     createNGramStatement = session.prepare(
-        insertInto(keyspace, Tables.LABEL_SEARCH_INDEX)
+        insertInto(Tables.LABEL_SEARCH_INDEX)
             .value("ngram", bindMarker())
             .value("type", bindMarker())
             .value("label_id", bindMarker()));
@@ -58,7 +58,7 @@ public class CassandraSearchPlugin extends SearchPlugin {
     selectNGramStatment = session.prepare(
         select()
             .all()
-            .from(keyspace, Tables.LABEL_SEARCH_INDEX)
+            .from(Tables.LABEL_SEARCH_INDEX)
             .where(eq("ngram", bindMarker()))
             .and(eq("type", bindMarker()))
             .limit(5));

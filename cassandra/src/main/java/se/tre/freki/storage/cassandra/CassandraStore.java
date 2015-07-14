@@ -70,11 +70,6 @@ public class CassandraStore extends Store {
   private final Session session;
 
   /**
-   * The keyspace of cassandra to use.
-   */
-  private final String keyspace;
-
-  /**
    * A time provider to tell the current time.
    */
   private final Clock clock;
@@ -110,14 +105,12 @@ public class CassandraStore extends Store {
    */
   public CassandraStore(final Cluster cluster,
                         final Session session,
-                        final Clock clock,
-                        final String keyspace) {
+                        final Clock clock) {
     this.cluster = cluster;
     this.session = session;
     this.clock = clock;
-    this.keyspace = keyspace;
 
-    final AddPointStatements addPointStatements = new AddPointStatements(session, keyspace);
+    final AddPointStatements addPointStatements = new AddPointStatements(session);
     this.addFloatStatement = addPointStatements.addFloatStatement();
     this.addDoubleStatement = addPointStatements.addDoubleStatement();
     this.addLongStatement = addPointStatements.addLongStatement();
@@ -140,12 +133,12 @@ public class CassandraStore extends Store {
 
     createIdStatement = session.prepare(
         batch(
-            insertInto(keyspace, Tables.ID_TO_NAME)
+            insertInto(Tables.ID_TO_NAME)
                 .value("label_id", bindMarker())
                 .value("type", bindMarker())
                 .value("creation_time", bindMarker())
                 .value("name", bindMarker()),
-            insertInto(keyspace, Tables.NAME_TO_ID)
+            insertInto(Tables.NAME_TO_ID)
                 .value("name", bindMarker())
                 .value("type", bindMarker())
                 .value("creation_time", bindMarker())
@@ -153,7 +146,7 @@ public class CassandraStore extends Store {
         .setConsistencyLevel(ConsistencyLevel.ALL);
 
     updateUidNameStatement = session.prepare(
-        update(keyspace, Tables.ID_TO_NAME)
+        update(Tables.ID_TO_NAME)
             .with(set("name", bindMarker()))
             .where(eq("label_id", bindMarker()))
             .and(eq("type", bindMarker())));
@@ -161,10 +154,10 @@ public class CassandraStore extends Store {
     updateNameUidStatement = session.prepare(
         batch(
             delete()
-                .from(keyspace, Tables.NAME_TO_ID)
+                .from(Tables.NAME_TO_ID)
                 .where(eq("name", bindMarker()))
                 .and(eq("type", bindMarker())),
-            insertInto(keyspace, Tables.NAME_TO_ID)
+            insertInto(Tables.NAME_TO_ID)
                 .value("name", bindMarker())
                 .value("type", bindMarker())
                 .value("label_id", bindMarker())));
@@ -172,7 +165,7 @@ public class CassandraStore extends Store {
     getNameStatement = session.prepare(
         select()
             .all()
-            .from(keyspace, Tables.ID_TO_NAME)
+            .from(Tables.ID_TO_NAME)
             .where(eq("label_id", bindMarker()))
             .and(eq("type", bindMarker()))
             .limit(2));
@@ -180,13 +173,13 @@ public class CassandraStore extends Store {
     getIdStatement = session.prepare(
         select()
             .all()
-            .from(keyspace, Tables.NAME_TO_ID)
+            .from(Tables.NAME_TO_ID)
             .where(eq("name", bindMarker()))
             .and(eq("type", bindMarker()))
             .limit(2));
 
     insertTagsStatement = session.prepare(
-        insertInto(keyspace, Tables.TS_INVERTED_INDEX)
+        insertInto(Tables.TS_INVERTED_INDEX)
             .value("label_id", bindMarker())
             .value("type", bindMarker())
             .value("timeseries_id", bindMarker()));
