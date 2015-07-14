@@ -70,7 +70,7 @@ public class CassandraStore extends Store {
   private final Session session;
 
   /**
-   * The keyspace of cassandra in use.
+   * The keyspace of cassandra to use.
    */
   private final String keyspace;
 
