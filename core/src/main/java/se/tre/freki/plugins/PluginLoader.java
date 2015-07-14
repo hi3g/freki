@@ -43,7 +43,7 @@ public final class PluginLoader {
       }
     }
 
-    throw new IllegalArgumentException("Unable to locate plugin with name "
+    throw new IllegalStateException("Unable to locate plugin with name "
                                        + name + " of type " + type);
   }
 
