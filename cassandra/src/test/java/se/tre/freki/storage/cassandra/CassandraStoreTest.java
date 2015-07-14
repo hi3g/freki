@@ -39,6 +39,7 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   private static LabelId TAGK_UID_ONE;
   private static LabelId TAGV_UID_ONE;
 
+
   @Rule
   public final Timeout timeout = Timeout.millis(CassandraTestHelpers.TIMEOUT);
 
@@ -97,22 +98,25 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
 
   @Test
   public void constructor() throws IOException {
+    final String keyspace = config.getString("freki.storage.cassandra.keyspace");
     final Cluster cluster = storeDescriptor.createCluster(config);
-    final Session session = storeDescriptor.connectTo(cluster);
-    assertNotNull(new CassandraStore(cluster, session, Clock.systemDefaultZone()));
+    final Session session = storeDescriptor.connectTo(cluster, keyspace);
+    assertNotNull(new CassandraStore(cluster, session, Clock.systemDefaultZone(), keyspace));
   }
 
   @Test(expected = NullPointerException.class)
   public void constructorNullSession() throws IOException {
+    final String keyspace = config.getString("freki.storage.cassandra.keyspace");
     final Cluster cluster = storeDescriptor.createCluster(config);
-    new CassandraStore(cluster, null, Clock.systemDefaultZone());
+    new CassandraStore(cluster, null, Clock.systemDefaultZone(), keyspace);
   }
 
   @Test(expected = NullPointerException.class)
   public void constructorNullCluster() throws IOException {
+    final String keyspace = config.getString("freki.storage.cassandra.keyspace");
     final Cluster cluster = storeDescriptor.createCluster(config);
-    final Session session = storeDescriptor.connectTo(cluster);
-    new CassandraStore(null, session, Clock.systemDefaultZone());
+    final Session session = storeDescriptor.connectTo(cluster, keyspace);
+    new CassandraStore(null, session, Clock.systemDefaultZone(), keyspace);
   }
 
   /*
@@ -188,7 +192,8 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
 
   @After
   public void tearDown() throws Exception {
-    CassandraTestHelpers.truncate(store.getSession());
+    final String keyspace = config.getString("freki.storage.cassandra.keyspace");
+    CassandraTestHelpers.truncate(store.getSession(), keyspace);
   }
 
   @Test

@@ -24,10 +24,11 @@ public class AddPointStatements {
    * Instantiate the statements and prepare them with the provided session.
    *
    * @param session The session to prepare the statements with.
+   * @param keyspace The keyspace of cassandra to use.
    */
-  public AddPointStatements(final Session session) {
+  public AddPointStatements(final Session session, String keyspace) {
     addFloatStatement = session.prepare(
-        insertInto(Tables.KEYSPACE, Tables.DATAPOINTS)
+        insertInto(keyspace, Tables.DATAPOINTS)
             .value("timeseries_id", bindMarker())
             .value("basetime", bindMarker())
             .value("timestamp", bindMarker())
@@ -35,7 +36,7 @@ public class AddPointStatements {
             .using(timestamp(bindMarker())));
 
     addDoubleStatement = session.prepare(
-        insertInto(Tables.KEYSPACE, Tables.DATAPOINTS)
+        insertInto(keyspace, Tables.DATAPOINTS)
             .value("timeseries_id", bindMarker())
             .value("basetime", bindMarker())
             .value("timestamp", bindMarker())
@@ -43,7 +44,7 @@ public class AddPointStatements {
             .using(timestamp(bindMarker())));
 
     addLongStatement = session.prepare(
-        insertInto(Tables.KEYSPACE, Tables.DATAPOINTS)
+        insertInto(keyspace, Tables.DATAPOINTS)
             .value("timeseries_id", bindMarker())
             .value("basetime", bindMarker())
             .value("timestamp", bindMarker())

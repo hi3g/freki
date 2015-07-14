@@ -63,17 +63,19 @@ public class CassandraStoreDescriptor extends StoreDescriptor {
     return builder.build();
   }
 
-  Session connectTo(final Cluster cluster) {
-    return cluster.connect(Tables.KEYSPACE);
+  Session connectTo(final Cluster cluster, String keyspace) {
+    return cluster.connect(keyspace);
   }
 
   @Override
   public CassandraStore createStore(final Config config,
                                     final MetricRegistry metrics) {
     final Cluster cluster = createCluster(config);
-    final Session session = connectTo(cluster);
+    final String keyspace = config.getString("freki.storage.cassandra.keyspace");
+
+    final Session session = connectTo(cluster, keyspace);
     registerMetrics(cluster, metrics);
-    return new CassandraStore(cluster, session, Clock.systemDefaultZone());
+    return new CassandraStore(cluster, session, Clock.systemDefaultZone(), keyspace);
   }
 
   @Nonnull
