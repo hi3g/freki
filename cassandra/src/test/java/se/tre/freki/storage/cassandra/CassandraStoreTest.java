@@ -103,6 +103,13 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   }
 
   @Test(expected = NullPointerException.class)
+  public void constructorNullClock() throws IOException {
+    final Cluster cluster = storeDescriptor.createCluster(config);
+    final Session session = storeDescriptor.connectTo(cluster);
+    new CassandraStore(cluster, session, null);
+  }
+
+  @Test(expected = NullPointerException.class)
   public void constructorNullCluster() throws IOException {
     final Cluster cluster = storeDescriptor.createCluster(config);
     final Session session = storeDescriptor.connectTo(cluster);
@@ -113,13 +120,6 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   public void constructorNullSession() throws IOException {
     final Cluster cluster = storeDescriptor.createCluster(config);
     new CassandraStore(cluster, null, Clock.systemDefaultZone());
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void constructorNullClock() throws IOException {
-    final Cluster cluster = storeDescriptor.createCluster(config);
-    final Session session = storeDescriptor.connectTo(cluster);
-    new CassandraStore(cluster, session, null);
   }
 
   /*
@@ -208,7 +208,21 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   }
 
   @Test
-  public void testGetNamesReturnsTwo() throws Exception {
+  public void testGetIdsReturnsTwoOrder() throws Exception {
+    final LabelId firstId = CassandraLabelId.fromLong(10L);
+    final LabelId secondId = CassandraLabelId.fromLong(11L);
+    final String name = "labelName";
+
+    store.createId(CassandraLabelId.toLong(firstId), name, LabelType.METRIC).get();
+    store.createId(CassandraLabelId.toLong(secondId), name, LabelType.METRIC).get();
+    final List<LabelId> ids = store.getIds(name, LabelType.METRIC).get();
+
+    assertEquals(firstId, ids.get(0));
+    assertEquals(secondId, ids.get(1));
+  }
+
+  @Test
+  public void testGetNamesReturnsTwoOrder() throws Exception {
     final String firstName = "firstName";
     final String secondName = "secondName";
     final long duplicateId = 10L;
