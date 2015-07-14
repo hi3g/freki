@@ -59,11 +59,6 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   }
 
   @Test
-  public void buildBaseTimeNegativeTime() {
-    assertEquals(1434545280000L, CassandraStore.buildBaseTime(1434545416154L));
-  }
-
-  @Test
   public void constructor() throws IOException {
     final Cluster cluster = storeDescriptor.createCluster(config);
     final Session session = storeDescriptor.connectTo(cluster);
@@ -104,6 +99,13 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   @After
   public void tearDown() throws Exception {
     CassandraTestHelpers.truncate(store.getSession());
+  }
+
+  @Test
+  public void testBuildBaseTimeNormalizes() {
+    final long timestamp = 1434545416154L;
+    final long baseTime = 1434542400000L;
+    assertEquals(baseTime, CassandraStore.buildBaseTime(timestamp));
   }
 
   @Test
