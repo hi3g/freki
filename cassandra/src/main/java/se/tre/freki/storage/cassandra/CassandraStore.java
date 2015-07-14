@@ -106,9 +106,9 @@ public class CassandraStore extends Store {
   public CassandraStore(final Cluster cluster,
                         final Session session,
                         final Clock clock) {
-    this.cluster = cluster;
-    this.session = session;
-    this.clock = clock;
+    this.cluster = checkNotNull(cluster);
+    this.session = checkNotNull(session);
+    this.clock = checkNotNull(clock);
 
     final AddPointStatements addPointStatements = new AddPointStatements(session);
     this.addFloatStatement = addPointStatements.addFloatStatement();

@@ -103,16 +103,23 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   }
 
   @Test(expected = NullPointerException.class)
+  public void constructorNullCluster() throws IOException {
+    final Cluster cluster = storeDescriptor.createCluster(config);
+    final Session session = storeDescriptor.connectTo(cluster);
+    new CassandraStore(null, session, Clock.systemDefaultZone());
+  }
+
+  @Test(expected = NullPointerException.class)
   public void constructorNullSession() throws IOException {
     final Cluster cluster = storeDescriptor.createCluster(config);
     new CassandraStore(cluster, null, Clock.systemDefaultZone());
   }
 
   @Test(expected = NullPointerException.class)
-  public void constructorNullCluster() throws IOException {
+  public void constructorNullClock() throws IOException {
     final Cluster cluster = storeDescriptor.createCluster(config);
     final Session session = storeDescriptor.connectTo(cluster);
-    new CassandraStore(null, session, Clock.systemDefaultZone());
+    new CassandraStore(cluster, session, null);
   }
 
   /*
