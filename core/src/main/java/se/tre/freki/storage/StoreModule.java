@@ -54,7 +54,7 @@ public class StoreModule {
    * as services and thus are found by the {@link java.util.ServiceLoader}
    */
   @Provides
-  Iterable<StoreDescriptor> provideStoreDescriptors() {
+  public Iterable<StoreDescriptor> provideStoreDescriptors() {
     return ServiceLoader.load(StoreDescriptor.class);
   }
 }
