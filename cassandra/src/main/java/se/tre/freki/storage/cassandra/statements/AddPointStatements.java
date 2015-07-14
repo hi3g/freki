@@ -27,7 +27,7 @@ public class AddPointStatements {
    */
   public AddPointStatements(final Session session) {
     addFloatStatement = session.prepare(
-        insertInto(Tables.KEYSPACE, Tables.DATAPOINTS)
+        insertInto(Tables.DATAPOINTS)
             .value("timeseries_id", bindMarker())
             .value("basetime", bindMarker())
             .value("timestamp", bindMarker())
@@ -35,7 +35,7 @@ public class AddPointStatements {
             .using(timestamp(bindMarker())));
 
     addDoubleStatement = session.prepare(
-        insertInto(Tables.KEYSPACE, Tables.DATAPOINTS)
+        insertInto(Tables.DATAPOINTS)
             .value("timeseries_id", bindMarker())
             .value("basetime", bindMarker())
             .value("timestamp", bindMarker())
@@ -43,7 +43,7 @@ public class AddPointStatements {
             .using(timestamp(bindMarker())));
 
     addLongStatement = session.prepare(
-        insertInto(Tables.KEYSPACE, Tables.DATAPOINTS)
+        insertInto(Tables.DATAPOINTS)
             .value("timeseries_id", bindMarker())
             .value("basetime", bindMarker())
             .value("timestamp", bindMarker())

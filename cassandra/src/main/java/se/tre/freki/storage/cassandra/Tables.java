@@ -4,8 +4,6 @@ package se.tre.freki.storage.cassandra;
  * Constants that describe which tables we use.
  */
 public class Tables {
-  public static final String KEYSPACE = "freki";
-
   public static final String DATAPOINTS = "datapoints";
   static final String TS_INVERTED_INDEX = "ts_inverted_index";
 

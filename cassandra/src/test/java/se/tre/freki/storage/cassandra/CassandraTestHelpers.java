@@ -21,10 +21,10 @@ public class CassandraTestHelpers {
    * @param session A live session to talk to
    */
   public static void truncate(final Session session) {
-    session.execute(QueryBuilder.truncate(Tables.KEYSPACE, Tables.DATAPOINTS));
-    session.execute(QueryBuilder.truncate(Tables.KEYSPACE, Tables.TS_INVERTED_INDEX));
-    session.execute(QueryBuilder.truncate(Tables.KEYSPACE, Tables.ID_TO_NAME));
-    session.execute(QueryBuilder.truncate(Tables.KEYSPACE, Tables.NAME_TO_ID));
-    session.execute(QueryBuilder.truncate(Tables.KEYSPACE, Tables.LABEL_SEARCH_INDEX));
+    session.execute(QueryBuilder.truncate(Tables.DATAPOINTS));
+    session.execute(QueryBuilder.truncate(Tables.TS_INVERTED_INDEX));
+    session.execute(QueryBuilder.truncate(Tables.ID_TO_NAME));
+    session.execute(QueryBuilder.truncate(Tables.NAME_TO_ID));
+    session.execute(QueryBuilder.truncate(Tables.LABEL_SEARCH_INDEX));
   }
 }

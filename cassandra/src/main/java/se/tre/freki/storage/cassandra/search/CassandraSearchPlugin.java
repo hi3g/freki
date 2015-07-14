@@ -50,7 +50,7 @@ public class CassandraSearchPlugin extends SearchPlugin {
     this.session = checkNotNull(cassandraStore.getSession());
     this.cassandraStore = checkNotNull(cassandraStore);
     createNGramStatement = session.prepare(
-        insertInto(Tables.KEYSPACE, Tables.LABEL_SEARCH_INDEX)
+        insertInto(Tables.LABEL_SEARCH_INDEX)
             .value("ngram", bindMarker())
             .value("type", bindMarker())
             .value("label_id", bindMarker()));
@@ -58,7 +58,7 @@ public class CassandraSearchPlugin extends SearchPlugin {
     selectNGramStatment = session.prepare(
         select()
             .all()
-            .from(Tables.KEYSPACE, Tables.LABEL_SEARCH_INDEX)
+            .from(Tables.LABEL_SEARCH_INDEX)
             .where(eq("ngram", bindMarker()))
             .and(eq("type", bindMarker()))
             .limit(5));
