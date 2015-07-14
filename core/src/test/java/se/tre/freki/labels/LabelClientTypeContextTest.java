@@ -42,13 +42,13 @@ public final class LabelClientTypeContextTest {
   }
 
   @Test(expected = NullPointerException.class)
-  public void testCtorNoTable() {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus);
+  public void testCtorNoType() {
+    typeContext = new LabelClientTypeContext(store, null, metrics, eventBus);
   }
 
   @Test(expected = NullPointerException.class)
-  public void testCtorNoType() {
-    typeContext = new LabelClientTypeContext(store, null, metrics, eventBus);
+  public void testCtorNoMetrics() {
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, null, eventBus);
   }
 
   @Test(expected = NullPointerException.class)
