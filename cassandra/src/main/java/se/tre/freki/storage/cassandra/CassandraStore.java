@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.time.Clock;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
@@ -461,7 +462,7 @@ public class CassandraStore extends Store {
   protected ListenableFuture<LabelId> createId(final long id,
                                                final String name,
                                                final LabelType type) {
-    final long createTimestamp = clock.millis();
+    final Date createTimestamp = Date.from(clock.instant());
     final ResultSetFuture save = session.executeAsync(
         createIdStatement.bind(id, type.toValue(), createTimestamp, name,
             name, type.toValue(), createTimestamp, id));
