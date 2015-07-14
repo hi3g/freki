@@ -13,7 +13,6 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.typesafe.config.Config;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,16 +56,6 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
 
     nameUid.put(METRIC_NAME_THREE, store.allocateLabel(
         METRIC_NAME_THREE, LabelType.METRIC).get());
-  }
-
-  @Test
-  public void allocateLabel() throws Exception {
-    LabelId newMetricUid = store.allocateLabel("new", LabelType.METRIC).get();
-    long maxUid = 0;
-    for (LabelId uid : nameUid.values()) {
-      maxUid = Math.max(CassandraLabelId.toLong(uid), maxUid);
-    }
-    Assert.assertEquals(maxUid + 1, CassandraLabelId.toLong(newMetricUid));
   }
 
   @Test
