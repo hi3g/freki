@@ -1,11 +1,8 @@
 package se.tre.freki.storage.cassandra;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
 
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
@@ -14,7 +11,6 @@ import se.tre.freki.storage.StoreTest;
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
-import com.google.common.base.Optional;
 import com.typesafe.config.Config;
 import org.junit.After;
 import org.junit.Assert;
@@ -33,11 +29,6 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   private static final String METRIC_NAME_ONE = "sys";
   private static final String METRIC_NAME_TWO = "cpu0";
   private static final String METRIC_NAME_THREE = "cpu1";
-  private static final String TAGK_NAME_ONE = "host";
-  private static final String TAGV_NAME_ONE = "127.0.0.1";
-
-  private static LabelId TAGK_UID_ONE;
-  private static LabelId TAGV_UID_ONE;
 
   @Rule
   public final Timeout timeout = Timeout.millis(CassandraTestHelpers.TIMEOUT);
@@ -66,18 +57,6 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
 
     nameUid.put(METRIC_NAME_THREE, store.allocateLabel(
         METRIC_NAME_THREE, LabelType.METRIC).get());
-
-    TAGK_UID_ONE = store.allocateLabel(TAGK_NAME_ONE, LabelType.TAGK).get();
-    TAGV_UID_ONE = store.allocateLabel(TAGV_NAME_ONE, LabelType.TAGV).get();
-
-
-    /*
-    store.addPoint(TSUID_ONE, new byte[]{'d', '1'}, 1356998400, (short) 'a');
-    store.addPoint(TSUID_ONE, new byte[]{'d', '2'}, 1356998401, (short) 'b');
-    store.addPoint(TSUID_ONE, new byte[]{'d', '2'}, 1357002078, (short) 'b');
-
-    store.addPoint(TSUID_TWO, new byte[]{'d', '3'}, 1356998400, (short) 'b');
-    */
   }
 
   @Test
@@ -122,69 +101,9 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
     new CassandraStore(cluster, null, Clock.systemDefaultZone());
   }
 
-  /*
-  @Test
-  public void addPoint() throws Exception {
-    CassandraTestHelpers.truncate(store.getSession());
-    //'001001001', 1356998400, 1356998400, 'a', 'data1'
-    store.addPoint(
-            new byte[]{0, 0, 1, 0, 0, 1, 0, 0, 1},
-            new byte[]{'v', 'a', 'l', 'u', 'e', '1'},
-            (long) 1356998400,
-            (short) 47).get(TIMEOUT);
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void addPointNull() throws Exception {
-    CassandraTestHelpers.truncate(store.getSession());
-    store.addPoint(
-            null,
-            new byte[]{'v', 'a', 'l', 'u', 'e', '1'},
-            (long) 1356998400,
-            (short) 47).get(TIMEOUT);
-
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void addPointEmpty() throws Exception {
-    CassandraTestHelpers.truncate(store.getSession());
-    store.addPoint(
-            new byte[]{},
-            new byte[]{'v', 'a', 'l', 'u', 'e', '1'},
-            (long) 1356998400,
-            (short) 47).get(TIMEOUT);
-
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void addPointTooShort() throws Exception {
-    CassandraTestHelpers.truncate(store.getSession());
-    store.addPoint(
-            new byte[]{0, 0, 1, 0, 0, 1, 0, 0},
-            new byte[]{'v', 'a', 'l', 'u', 'e', '1'},
-            (long) 1356998400,
-            (short) 47).get(TIMEOUT);
-  }
-  */
-
-  @Test
-  public void getId() throws Exception {
-    validateValidId(METRIC_NAME_ONE, LabelType.METRIC);
-    validateValidId(METRIC_NAME_TWO, LabelType.METRIC);
-    validateValidId(METRIC_NAME_THREE, LabelType.METRIC);
-    validateInvalidId("Missing", LabelType.METRIC);
-    validateValidId(TAGK_NAME_ONE, LabelType.TAGK);
-    validateValidId(TAGV_NAME_ONE, LabelType.TAGV);
-  }
-
-  @Test
-  public void getName() throws Exception {
-    validateValidName(METRIC_NAME_ONE, LabelType.METRIC);
-    validateValidName(METRIC_NAME_TWO, LabelType.METRIC);
-    validateValidName(METRIC_NAME_THREE, LabelType.METRIC);
-    validateInvalidName(mock(LabelId.class), LabelType.METRIC);
-    validateValidName(TAGK_NAME_ONE, LabelType.TAGK);
-    validateValidName(TAGV_NAME_ONE, LabelType.TAGK);
+  @Override
+  protected LabelId missingLabelId() {
+    return CassandraLabelId.fromLong(15L);
   }
 
   @Test
@@ -229,7 +148,8 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
 
   @Test
   public void testGetNamesMissingEmptyList() throws Exception {
-    final List<String> missing = store.getNames(CassandraLabelId.fromLong(10L), LabelType.TAGK).get();
+    final List<String> missing = store.getNames(CassandraLabelId.fromLong(10L), LabelType.TAGK)
+        .get();
     assertEquals(0, missing.size());
   }
 
@@ -246,33 +166,5 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
 
     assertEquals(firstName, names.get(0));
     assertEquals(secondName, names.get(1));
-  }
-
-  private void validateInvalidId(final String name, final LabelType type)
-      throws Exception {
-    Optional<LabelId> value = store.getId(name, type).get();
-    assertFalse(value.isPresent());
-  }
-
-  private void validateInvalidName(final LabelId uid, final LabelType type)
-      throws Exception {
-    Optional<String> value = store.getName(uid, type).get();
-    assertFalse(value.isPresent());
-  }
-
-  private void validateValidId(final String name, final LabelType type)
-      throws Exception {
-    Optional<LabelId> value = store.getId(name, type).get();
-
-    assertTrue(value.isPresent());
-    assertEquals(nameUid.get(name), value.get());
-  }
-
-  private void validateValidName(final String name, final LabelType type)
-      throws Exception {
-    Optional<String> value = store.getName(nameUid.get(name), type).get();
-
-    assertTrue(value.isPresent());
-    assertEquals(name, value.get());
   }
 }
