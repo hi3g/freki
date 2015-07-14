@@ -208,6 +208,12 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   }
 
   @Test
+  public void testGetIdsMissingEmptyList() throws Exception {
+    final List<LabelId> missing = store.getIds("missing", LabelType.TAGK).get();
+    assertEquals(0, missing.size());
+  }
+
+  @Test
   public void testGetIdsReturnsTwoOrder() throws Exception {
     final LabelId firstId = CassandraLabelId.fromLong(10L);
     final LabelId secondId = CassandraLabelId.fromLong(11L);
@@ -219,6 +225,12 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
 
     assertEquals(firstId, ids.get(0));
     assertEquals(secondId, ids.get(1));
+  }
+
+  @Test
+  public void testGetNamesMissingEmptyList() throws Exception {
+    final List<String> missing = store.getNames(CassandraLabelId.fromLong(10L), LabelType.TAGK).get();
+    assertEquals(0, missing.size());
   }
 
   @Test
