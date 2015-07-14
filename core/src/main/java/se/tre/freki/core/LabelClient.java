@@ -80,9 +80,12 @@ public class LabelClient {
 
     long cacheSize = config.getLong("freki.core.label_client_cache_size");
 
-    metrics = new LabelClientTypeContext(store, LabelType.METRIC, metricsRegistry, idEventBus, cacheSize);
-    tagKeys = new LabelClientTypeContext(store, LabelType.TAGK, metricsRegistry, idEventBus, cacheSize);
-    tagValues = new LabelClientTypeContext(store, LabelType.TAGV, metricsRegistry, idEventBus, cacheSize);
+    metrics = new LabelClientTypeContext(store, LabelType.METRIC, metricsRegistry, idEventBus,
+        cacheSize);
+    tagKeys = new LabelClientTypeContext(store, LabelType.TAGK, metricsRegistry, idEventBus,
+        cacheSize);
+    tagValues = new LabelClientTypeContext(store, LabelType.TAGV, metricsRegistry, idEventBus,
+        cacheSize);
 
     // Notify the search plugin about new and deleted labels
     idEventBus.register(new IdChangeIndexerListener(store, searchPlugin));
