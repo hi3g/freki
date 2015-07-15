@@ -183,6 +183,10 @@ subprojects {
         source = fileTree(dir: "src/test", include: "**/*.java")
     }
 
+    findbugs {
+        excludeFilter = file("$rootDir/findbugs_filter.xml")
+    }
+
     // Configure intellij to add the generated sources folders to its build path
     idea {
         module {
