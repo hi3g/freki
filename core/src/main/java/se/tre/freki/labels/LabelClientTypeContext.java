@@ -19,7 +19,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.AsyncFunction;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -108,7 +107,6 @@ public class LabelClientTypeContext {
    * Finds the name associated with a given ID.
    *
    * @param id The ID associated with that name.
-   * @throws LabelException if the given ID is not assigned
    * @see #getId(String)
    * @see #createId(String)
    */
@@ -129,10 +127,9 @@ public class LabelClientTypeContext {
         if (name.isPresent()) {
           addNameToCache(id, name.get());
           addIdToCache(name.get(), id);
-          return Futures.immediateFuture(name);
         }
 
-        return Futures.immediateFuture(Optional.<String>absent());
+        return Futures.immediateFuture(name);
       }
     }
 
@@ -157,27 +154,25 @@ public class LabelClientTypeContext {
    * @return A future that on completion will contain the ID behind the name
    */
   @Nonnull
-  public ListenableFuture<LabelId> getId(final String name) {
+  public ListenableFuture<Optional<LabelId>> getId(final String name) {
     final LabelId id = nameCache.getIfPresent(name);
 
     if (id != null) {
-      return Futures.immediateFuture(id);
+      return Futures.immediateFuture(Optional.of(id));
     }
 
-    class GetIdFunction implements AsyncFunction<Optional<LabelId>, LabelId> {
+    class GetIdFunction implements AsyncFunction<Optional<LabelId>, Optional<LabelId>> {
       @Nullable
       @Override
-      public ListenableFuture<LabelId> apply(@Nullable final Optional<LabelId> id) {
+      public ListenableFuture<Optional<LabelId>> apply(@Nullable final Optional<LabelId> id) {
         checkNotNull(id);
 
         if (id.isPresent()) {
           addIdToCache(name, id.get());
           addNameToCache(id.get(), name);
-          return Futures.immediateFuture(id.get());
         }
 
-        return Futures.immediateFailedFuture(
-            new LabelException(name, type, "No ID for name " + name + " and type " + type));
+        return Futures.immediateFuture(id);
       }
     }
 
@@ -265,14 +260,19 @@ public class LabelClientTypeContext {
                                              + "for " + type + " already exists");
         }
 
-        return transform(getId(oldname), new AsyncFunction<LabelId, Void>() {
+        return transform(getId(oldname), new AsyncFunction<Optional<LabelId>, Void>() {
           @Override
-          public ListenableFuture<Void> apply(final LabelId oldUid) throws Exception {
-            store.allocateLabel(newname, oldUid, type);
+          public ListenableFuture<Void> apply(final Optional<LabelId> oldUid) throws Exception {
+            if (!oldUid.isPresent()) {
+              return Futures.immediateFailedFuture(new LabelException(oldname, type,
+                  "No label with that name"));
+            }
+
+            store.allocateLabel(newname, oldUid.get(), type);
 
             // Update cache.
-            addIdToCache(newname, oldUid);  // add     new name -> ID
-            idCache.put(oldUid, newname);   // update  ID -> new name
+            addIdToCache(newname, oldUid.get());  // add     new name -> ID
+            idCache.put(oldUid.get(), newname);   // update  ID -> new name
             nameCache.invalidate(oldname);  // remove  old name -> ID
 
             // Delete the old forward mapping.
@@ -290,21 +290,13 @@ public class LabelClientTypeContext {
    * @return A future that on completion contains true if the name exists, false otherwise
    */
   public ListenableFuture<Boolean> checkUidExists(String name) {
-    final SettableFuture<Boolean> exists = SettableFuture.create();
-
-    Futures.addCallback(getId(name), new FutureCallback<LabelId>() {
+    return transform(getId(name), new Function<Optional<LabelId>, Boolean>() {
+      @Nonnull
       @Override
-      public void onSuccess(@Nullable final LabelId result) {
-        exists.set(result != null);
-      }
-
-      @Override
-      public void onFailure(final Throwable throwable) {
-        exists.set(false);
+      public Boolean apply(final Optional<LabelId> input) {
+        return input.isPresent();
       }
     });
-
-    return exists;
   }
 
   @Override
@@ -312,5 +304,10 @@ public class LabelClientTypeContext {
     return MoreObjects.toStringHelper(this)
         .add("type", type)
         .toString();
+  }
+
+  @Deprecated
+  public LabelType type() {
+    return type;
   }
 }

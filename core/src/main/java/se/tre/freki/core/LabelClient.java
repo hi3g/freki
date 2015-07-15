@@ -209,8 +209,8 @@ public class LabelClient {
    * @return A future that on completion will contain the ID behind the name
    */
   @Nonnull
-  public ListenableFuture<LabelId> getLabelId(final LabelType type,
-                                              final String name) {
+  public ListenableFuture<Optional<LabelId>> getLabelId(final LabelType type,
+                                                        final String name) {
     checkArgument(!Strings.isNullOrEmpty(name), "Missing label name");
     LabelClientTypeContext labelClientTypeContext = idContextForType(type);
     return labelClientTypeContext.getId(name);
