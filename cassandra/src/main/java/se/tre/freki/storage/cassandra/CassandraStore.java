@@ -52,7 +52,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * An implementation of {@link Store} that uses Cassandra as the underlying storage backend.
@@ -302,7 +301,7 @@ public class CassandraStore extends Store {
 
     return transform(idsFuture, new Function<ResultSet, List<LabelId>>() {
       @Override
-      public List<LabelId> apply(@Nullable final ResultSet result) {
+      public List<LabelId> apply(final ResultSet result) {
         ImmutableList.Builder<LabelId> builder = ImmutableList.builder();
 
         for (final Row row : result) {
@@ -344,7 +343,7 @@ public class CassandraStore extends Store {
 
     return transform(namesFuture, new Function<ResultSet, List<String>>() {
       @Override
-      public List<String> apply(@Nullable final ResultSet result) {
+      public List<String> apply(final ResultSet result) {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
 
         for (final Row row : result) {
@@ -411,8 +410,7 @@ public class CassandraStore extends Store {
 
   /**
    * Check if either of (id, type) and (name, type) are taken or if both are available. If either of
-   * the combinations already are taken the returned future will contain an {@link
-   * LabelException}.
+   * the combinations already are taken the returned future will contain an {@link LabelException}.
    *
    * @param id The id to check if it is available
    * @param name The name to check if it is available
@@ -542,7 +540,7 @@ public class CassandraStore extends Store {
 
     return transform(getNameFuture, new Function<ResultSet, LabelId>() {
       @Override
-      public LabelId apply(@Nullable final ResultSet rows) {
+      public LabelId apply(final ResultSet rows) {
         final String oldName = rows.one().getString("name");
 
         session.executeAsync(updateUidNameStatement.bind(name, toLong(id), type.toValue()));

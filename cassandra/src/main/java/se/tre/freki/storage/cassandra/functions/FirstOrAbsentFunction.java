@@ -5,12 +5,12 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import java.util.List;
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 public class FirstOrAbsentFunction<V> implements Function<List<V>, Optional<V>> {
+  @Nonnull
   @Override
-  public Optional<V> apply(@Nullable final List<V> input) {
-    // No point in checking for null since the method call will throw an NPE anyway
+  public Optional<V> apply(final List<V> input) {
     if (input.isEmpty()) {
       return Optional.absent();
     } else {

@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * This class contains methods for resolving back and forth between the ID and name of individual
@@ -119,11 +118,9 @@ public class LabelClientTypeContext {
     }
 
     class GetNameFunction implements AsyncFunction<Optional<String>, Optional<String>> {
-      @Nullable
+      @Nonnull
       @Override
-      public ListenableFuture<Optional<String>> apply(@Nullable final Optional<String> name) {
-        checkNotNull(name);
-
+      public ListenableFuture<Optional<String>> apply(final Optional<String> name) {
         if (name.isPresent()) {
           addNameToCache(id, name.get());
           addIdToCache(name.get(), id);
@@ -162,11 +159,9 @@ public class LabelClientTypeContext {
     }
 
     class GetIdFunction implements AsyncFunction<Optional<LabelId>, Optional<LabelId>> {
-      @Nullable
+      @Nonnull
       @Override
-      public ListenableFuture<Optional<LabelId>> apply(@Nullable final Optional<LabelId> id) {
-        checkNotNull(id);
-
+      public ListenableFuture<Optional<LabelId>> apply(final Optional<LabelId> id) {
         if (id.isPresent()) {
           addIdToCache(name, id.get());
           addNameToCache(id.get(), name);
@@ -225,11 +220,9 @@ public class LabelClientTypeContext {
     ListenableFuture<LabelId> uid = store.allocateLabel(name, type);
 
     return transform(uid, new Function<LabelId, LabelId>() {
-      @Nullable
+      @Nonnull
       @Override
-      public LabelId apply(@Nullable final LabelId uid) {
-        checkNotNull(uid);
-
+      public LabelId apply(final LabelId uid) {
         cacheMapping(name, uid);
 
         LOG.info("Completed pending assignment for: {}", name);
