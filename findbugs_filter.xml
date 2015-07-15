@@ -1,0 +1,12 @@
+<FindBugsFilter>
+  <Match>
+    <Class name="se.tre.freki.utils.KillingUncaughtHandler" />
+    <Method name="uncaughtException" />
+    <Bug pattern="DM_EXIT" />
+  </Match>
+
+  <Match>
+    <Package name="se.tre.freki.grpc" />
+    <Bug pattern="UCF_USELESS_CONTROL_FLOW" />
+  </Match>
+</FindBugsFilter>
