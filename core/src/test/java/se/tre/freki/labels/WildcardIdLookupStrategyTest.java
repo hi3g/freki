@@ -2,6 +2,8 @@ package se.tre.freki.labels;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import se.tre.freki.DaggerTestComponent;
 import se.tre.freki.storage.Store;
@@ -15,6 +17,7 @@ import org.junit.Test;
 import org.junit.rules.Timeout;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 
 public class WildcardIdLookupStrategyTest {
@@ -60,8 +63,13 @@ public class WildcardIdLookupStrategyTest {
     assertEquals(id, lookupStrategy.getId(uid, "nameexists").get());
   }
 
-  @Test(expected = LabelException.class)
+  @Test
   public void testResolveIdGetsMissingId() throws Exception {
-    lookupStrategy.getId(uid, "nosuchname").get();
+    try {
+      lookupStrategy.getId(uid, "nosuchname").get();
+      fail("Future should have contained future but did not!");
+    } catch (ExecutionException e) {
+      assertTrue(e.getCause() instanceof LabelException);
+    }
   }
 }
