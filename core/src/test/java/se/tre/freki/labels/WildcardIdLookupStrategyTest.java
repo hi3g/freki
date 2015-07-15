@@ -24,7 +24,6 @@ public class WildcardIdLookupStrategyTest {
 
   private LabelClientTypeContext uid;
   private IdLookupStrategy lookupStrategy;
-  private final long cacheSize = 2000;
 
   @Rule
   public final Timeout timeout = Timeout.millis(TestUtil.TIMEOUT);
@@ -33,7 +32,10 @@ public class WildcardIdLookupStrategyTest {
   public void setUp() throws IOException {
     DaggerTestComponent.create().inject(this);
 
-    uid = new LabelClientTypeContext(client, LabelType.METRIC, metricRegistry, eventBus, cacheSize);
+    final long maxCacheSize = 2000;
+    uid = new LabelClientTypeContext(client, LabelType.METRIC, metricRegistry, eventBus,
+        maxCacheSize);
+
     lookupStrategy = new IdLookupStrategy.WildcardIdLookupStrategy();
   }
 
