@@ -1,6 +1,7 @@
 package se.tre.freki.labels;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -65,9 +66,9 @@ public final class LabelClientTypeContextTest {
 
     final LabelId id = store.allocateLabel("foo", LabelType.METRIC).get();
 
-    assertEquals("foo", typeContext.getName(id).get());
+    assertEquals("foo", typeContext.getName(id).get().get());
     // Should be a cache hit ...
-    assertEquals("foo", typeContext.getName(id).get());
+    assertEquals("foo", typeContext.getName(id).get().get());
 
     final SortedMap<String, Counter> counters = metrics.getCounters();
     assertEquals(1, counters.get("uid.cache-hit:kind=metrics").getCount());
@@ -75,11 +76,11 @@ public final class LabelClientTypeContextTest {
     assertEquals(2, metrics.getGauges().get("uid.cache-size:kind=metrics").getValue());
   }
 
-  @Test(expected = LabelException.class, timeout = TestUtil.TIMEOUT)
+  @Test
   public void getNameForNonexistentId() throws Exception {
     typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
         maxCacheSize);
-    typeContext.getName(mock(LabelId.class)).get();
+    assertFalse(typeContext.getName(mock(LabelId.class)).get().isPresent());
   }
 
   @Test(timeout = TestUtil.TIMEOUT)
@@ -89,11 +90,11 @@ public final class LabelClientTypeContextTest {
 
     final LabelId id = store.allocateLabel("foo", LabelType.METRIC).get();
 
-    assertEquals(id, typeContext.getId("foo").get());
+    assertEquals(id, typeContext.getId("foo").get().get());
     // Should be a cache hit ...
-    assertEquals(id, typeContext.getId("foo").get());
+    assertEquals(id, typeContext.getId("foo").get().get());
     // Should be a cache hit too ...
-    assertEquals(id, typeContext.getId("foo").get());
+    assertEquals(id, typeContext.getId("foo").get().get());
 
     final SortedMap<String, Counter> counters = metrics.getCounters();
     assertEquals(2, counters.get("uid.cache-hit:kind=metrics").getCount());
@@ -101,11 +102,11 @@ public final class LabelClientTypeContextTest {
     assertEquals(2, metrics.getGauges().get("uid.cache-size:kind=metrics").getValue());
   }
 
-  @Test(expected = LabelException.class)
+  @Test
   public void getIdForNonexistentName() throws Exception {
     typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
         maxCacheSize);
-    typeContext.getId("foo").get();
+    assertFalse(typeContext.getId("foo").get().isPresent());
   }
 
   @Test

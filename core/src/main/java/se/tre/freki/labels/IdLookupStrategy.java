@@ -1,13 +1,14 @@
 package se.tre.freki.labels;
 
+import static com.google.common.util.concurrent.Futures.transform;
+
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * An IdLookupStrategy defines some custom behavior to use when attempting to lookup the ID behind a
@@ -20,7 +21,8 @@ public interface IdLookupStrategy {
    *
    * @param labelClientTypeContext The LabelClientTypeContext instance to use for looking up the ID
    * @param name The name to find the ID behind
-   * @return A future that on completion will contains the ID behind the name
+   * @return A future that on completion will contains the ID behind the name or a {@link
+   * LabelException} if it does not exist
    */
   @Nonnull
   ListenableFuture<LabelId> getId(final LabelClientTypeContext labelClientTypeContext,
@@ -37,7 +39,8 @@ public interface IdLookupStrategy {
     @Override
     public ListenableFuture<LabelId> getId(final LabelClientTypeContext labelClientTypeContext,
                                            final String name) {
-      return labelClientTypeContext.getId(name);
+      return transform(labelClientTypeContext.getId(name),
+          new ToLabelIdOrThrow(name, labelClientTypeContext.type()));
     }
   }
 
@@ -52,31 +55,13 @@ public interface IdLookupStrategy {
     @Override
     public ListenableFuture<LabelId> getId(final LabelClientTypeContext labelClientTypeContext,
                                            final String name) {
-      final SettableFuture<LabelId> id = SettableFuture.create();
-
-      Futures.addCallback(labelClientTypeContext.getId(name), new FutureCallback<LabelId>() {
-        @Override
-        public void onSuccess(@Nullable final LabelId result) {
-          id.set(result);
-        }
-
-        @Override
-        public void onFailure(final Throwable throwable) {
-          Futures.addCallback(labelClientTypeContext.createId(name), new FutureCallback<LabelId>() {
+      return transform(labelClientTypeContext.getId(name),
+          new AsyncFunction<Optional<LabelId>, LabelId>() {
             @Override
-            public void onSuccess(@Nullable final LabelId result) {
-              id.set(result);
-            }
-
-            @Override
-            public void onFailure(final Throwable throwable) {
-              id.setException(throwable);
+            public ListenableFuture<LabelId> apply(final Optional<LabelId> input) throws Exception {
+              return labelClientTypeContext.createId(name);
             }
           });
-        }
-      });
-
-      return id;
     }
   }
 
@@ -100,7 +85,29 @@ public interface IdLookupStrategy {
         return Futures.immediateFuture(null);
       }
 
-      return labelClientTypeContext.getId(name);
+      return transform(labelClientTypeContext.getId(name),
+          new ToLabelIdOrThrow(name, labelClientTypeContext.type()));
+    }
+  }
+
+  class ToLabelIdOrThrow implements AsyncFunction<Optional<LabelId>, LabelId> {
+    private final String name;
+    private final LabelType type;
+
+    public ToLabelIdOrThrow(final String name,
+                            final LabelType type) {
+      this.name = name;
+      this.type = type;
+    }
+
+    @Override
+    public ListenableFuture<LabelId> apply(final Optional<LabelId> id) throws Exception {
+      if (!id.isPresent()) {
+        return Futures.immediateFailedFuture(
+            new LabelException(name, type, "No label of type " + type + " with name " + name));
+      }
+
+      return Futures.immediateFuture(id.get());
     }
   }
 }
