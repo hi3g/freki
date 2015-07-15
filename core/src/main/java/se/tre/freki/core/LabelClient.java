@@ -30,7 +30,6 @@ import com.typesafe.config.Config;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -93,8 +92,8 @@ public class LabelClient {
    * @param name The string to validate.
    * @throws IllegalArgumentException if the string isn't valid.
    */
-  public static void validateLabelName(final String what, @Nullable final String name) {
-    checkNotNull(name, "Invalid name should not be null");
+  public static void validateLabelName(final String what, final String name) {
+    checkNotNull(name, "%s must not be null", what);
     int index = INVALID_LETTER_MATCHER.indexIn(name);
     //If no match index -1 is returned
     if (-1 != index) {
@@ -235,7 +234,7 @@ public class LabelClient {
       }
 
       @Override
-      public TimeSeriesId apply(@Nullable final LabelId metricid) {
+      public TimeSeriesId apply(final LabelId metricid) {
         return new StaticTimeSeriesId(metricid, tagIds);
       }
     }

@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
-import javax.annotation.Nullable;
 
 /**
  * A resource that accepts post requests whose body contains a JSON array of datapoints.
@@ -151,8 +150,7 @@ public final class DatapointsResource extends Resource {
    */
   private static class IntegralPredicate implements Predicate<JsonNode> {
     @Override
-    public boolean apply(@Nullable final JsonNode value) {
-      // No point in checking for null since the method call will throw an NPE anyway
+    public boolean apply(final JsonNode value) {
       return value.isIntegralNumber();
     }
   }
@@ -162,8 +160,7 @@ public final class DatapointsResource extends Resource {
    */
   private static class FloatPredicate implements Predicate<JsonNode> {
     @Override
-    public boolean apply(@Nullable final JsonNode value) {
-      // No point in checking for null since the method call will throw an NPE anyway
+    public boolean apply(final JsonNode value) {
       return value.isFloat();
     }
   }
@@ -173,8 +170,7 @@ public final class DatapointsResource extends Resource {
    */
   private static class DoublePredicate implements Predicate<JsonNode> {
     @Override
-    public boolean apply(@Nullable final JsonNode value) {
-      // No point in checking for null since the method call will throw an NPE anyway
+    public boolean apply(final JsonNode value) {
       return value.isDouble();
     }
   }
