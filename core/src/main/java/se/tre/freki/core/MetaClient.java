@@ -3,8 +3,8 @@ package se.tre.freki.core;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.addCallback;
+import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.transform;
-
 
 import se.tre.freki.labels.LabelException;
 import se.tre.freki.labels.LabelId;
@@ -133,7 +133,9 @@ public class MetaClient {
             if (name.isPresent()) {
               return store.getMeta(id, type);
             }
-            throw new LabelException(id, type, "Could not find label.");
+
+            return immediateFailedFuture(new LabelException(id, type,
+                "Could not find label meta information for id " + id + " and " + type));
           }
         });
   }

@@ -129,7 +129,7 @@ public class LabelClientTypeContext {
         if (name.isPresent()) {
           addNameToCache(id, name.get());
           addIdToCache(name.get(), id);
-          return Futures.immediateFuture(Optional.of(name.get()));
+          return Futures.immediateFuture(name);
         }
 
         return Futures.immediateFuture(Optional.<String>absent());

@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.allAsList;
 import static com.google.common.util.concurrent.Futures.transform;
 
-
 import se.tre.freki.labels.IdLookupStrategy;
 import se.tre.freki.labels.LabelClientTypeContext;
 import se.tre.freki.labels.LabelId;
@@ -196,7 +195,7 @@ public class LabelClient {
    */
   @Nonnull
   public ListenableFuture<Optional<String>> getLabelName(final LabelType type,
-                                               final LabelId uid) {
+                                                         final LabelId uid) {
     checkNotNull(uid, "Missing UID");
     LabelClientTypeContext labelClientTypeContext = idContextForType(type);
     return labelClientTypeContext.getName(uid);
