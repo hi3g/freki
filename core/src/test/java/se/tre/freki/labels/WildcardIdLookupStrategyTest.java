@@ -32,7 +32,10 @@ public class WildcardIdLookupStrategyTest {
   public void setUp() throws IOException {
     DaggerTestComponent.create().inject(this);
 
-    uid = new LabelClientTypeContext(client, LabelType.METRIC, metricRegistry, eventBus);
+    final long maxCacheSize = 2000;
+    uid = new LabelClientTypeContext(client, LabelType.METRIC, metricRegistry, eventBus,
+        maxCacheSize);
+
     lookupStrategy = new IdLookupStrategy.WildcardIdLookupStrategy();
   }
 

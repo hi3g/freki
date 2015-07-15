@@ -78,9 +78,12 @@ public class LabelClient {
     metricLookupStrategy = lookupStrategy(
         config.getBoolean("freki.core.auto_create_metrics"));
 
-    metrics = new LabelClientTypeContext(store, LabelType.METRIC, metricsRegistry, idEventBus);
-    tagKeys = new LabelClientTypeContext(store, LabelType.TAGK, metricsRegistry, idEventBus);
-    tagValues = new LabelClientTypeContext(store, LabelType.TAGV, metricsRegistry, idEventBus);
+    metrics = new LabelClientTypeContext(store, LabelType.METRIC, metricsRegistry, idEventBus,
+        config.getLong("freki.core.metrics.cache.max_size"));
+    tagKeys = new LabelClientTypeContext(store, LabelType.TAGK, metricsRegistry, idEventBus,
+        config.getLong("freki.core.tag_keys.cache.max_size"));
+    tagValues = new LabelClientTypeContext(store, LabelType.TAGV, metricsRegistry, idEventBus,
+        config.getLong("freki.core.tag_values.cache.max_size"));
 
     // Notify the search plugin about new and deleted labels
     idEventBus.register(new IdChangeIndexerListener(store, searchPlugin));

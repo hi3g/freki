@@ -27,6 +27,7 @@ public final class LabelClientTypeContextTest {
   @Inject EventBus eventBus;
 
   private LabelClientTypeContext typeContext;
+  private final long maxCacheSize = 2000;
 
   @Rule
   public final Timeout timeout = Timeout.millis(TestUtil.TIMEOUT);
@@ -38,27 +39,29 @@ public final class LabelClientTypeContextTest {
 
   @Test(expected = NullPointerException.class)
   public void testCtorNoStore() {
-    typeContext = new LabelClientTypeContext(null, LabelType.METRIC, metrics, eventBus);
+    typeContext = new LabelClientTypeContext(null, LabelType.METRIC, metrics, eventBus,
+        maxCacheSize);
   }
 
   @Test(expected = NullPointerException.class)
   public void testCtorNoType() {
-    typeContext = new LabelClientTypeContext(store, null, metrics, eventBus);
+    typeContext = new LabelClientTypeContext(store, null, metrics, eventBus, maxCacheSize);
   }
 
   @Test(expected = NullPointerException.class)
   public void testCtorNoMetrics() {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, null, eventBus);
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, null, eventBus, maxCacheSize);
   }
 
   @Test(expected = NullPointerException.class)
   public void testCtorNoEventbus() {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, null);
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, null, maxCacheSize);
   }
 
   @Test(timeout = TestUtil.TIMEOUT)
   public void getNameSuccessfulLookup() throws Exception {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus);
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
+        maxCacheSize);
 
     final LabelId id = store.allocateLabel("foo", LabelType.METRIC).get();
 
@@ -74,13 +77,15 @@ public final class LabelClientTypeContextTest {
 
   @Test(expected = LabelException.class, timeout = TestUtil.TIMEOUT)
   public void getNameForNonexistentId() throws Exception {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus);
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
+        maxCacheSize);
     typeContext.getName(mock(LabelId.class)).get();
   }
 
   @Test(timeout = TestUtil.TIMEOUT)
   public void getIdSuccessfulLookup() throws Exception {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus);
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
+        maxCacheSize);
 
     final LabelId id = store.allocateLabel("foo", LabelType.METRIC).get();
 
@@ -98,13 +103,15 @@ public final class LabelClientTypeContextTest {
 
   @Test(expected = LabelException.class)
   public void getIdForNonexistentName() throws Exception {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus);
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
+        maxCacheSize);
     typeContext.getId("foo").get();
   }
 
   @Test
   public void createIdPublishesEventOnSuccess() throws Exception {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus);
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
+        maxCacheSize);
     typeContext.createId("foo").get();
     verify(eventBus).post(any(LabelCreatedEvent.class));
   }

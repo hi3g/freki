@@ -73,18 +73,19 @@ public class LabelClientTypeContext {
   public LabelClientTypeContext(final Store store,
                                 final LabelType type,
                                 final MetricRegistry metrics,
-                                final EventBus idEventBus) {
+                                final EventBus idEventBus,
+                                final long maxCacheSize) {
     this.store = checkNotNull(store);
     this.type = checkNotNull(type);
     this.idEventBus = checkNotNull(idEventBus);
 
     nameCache = CacheBuilder.newBuilder()
-        .maximumSize(200000)
+        .maximumSize(maxCacheSize)
         .recordStats()
         .build();
 
     idCache = CacheBuilder.newBuilder()
-        .maximumSize(200000)
+        .maximumSize(maxCacheSize)
         .recordStats()
         .build();
 
