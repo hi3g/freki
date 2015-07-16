@@ -515,29 +515,29 @@ public class CassandraStore extends Store {
    * Renames a label that already exists to a new given value. This method is used by the function
    * {@link se.tre.freki.labels.LabelClientTypeContext#rename}.
    *
-   * @param name The name to write.
+   * @param newName The name to write.
    * @param id The uid to use.
    * @param type The type of UID
    * @return The uid that was used.
    */
   @Nonnull
   @Override
-  public ListenableFuture<LabelId> renameLabel(final String name,
-                                                 final LabelId id,
-                                                 final LabelType type) {
-
+  public ListenableFuture<LabelId> renameLabel(final String newName,
+                                               final LabelId id,
+                                               final LabelType type) {
     // Get old name
-    final ResultSetFuture nameFuture = session.executeAsync(
+    final ResultSetFuture oldNameFuture = session.executeAsync(
         getNameStatement.bind(toLong(id), type.toValue()));
 
-    return transform(nameFuture, new Function<ResultSet, LabelId>() {
+    return transform(oldNameFuture, new Function<ResultSet, LabelId>() {
       @Override
       public LabelId apply(final ResultSet rows) {
         final String oldName = rows.one().getString("name");
 
-        session.executeAsync(updateUidNameStatement.bind(name, toLong(id), type.toValue()));
+        session.executeAsync(updateUidNameStatement.bind(newName, toLong(id), type.toValue()));
         session.executeAsync(
-            updateNameUidStatement.bind(oldName, type.toValue(), name, type.toValue(), toLong(id)));
+            updateNameUidStatement.bind(oldName, type.toValue(), newName, type.toValue(),
+                toLong(id)));
 
         return id;
       }
