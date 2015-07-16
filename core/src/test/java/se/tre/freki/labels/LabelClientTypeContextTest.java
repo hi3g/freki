@@ -1,27 +1,34 @@
 package se.tre.freki.labels;
 
+import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static se.tre.freki.labels.LabelType.TAGK;
+import static se.tre.freki.storage.MemoryLabelId.randomLabelId;
 
 import se.tre.freki.DaggerTestComponent;
 import se.tre.freki.storage.Store;
 import se.tre.freki.utils.TestUtil;
 
-import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Optional;
 import com.google.common.eventbus.EventBus;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
-import java.util.SortedMap;
 import javax.inject.Inject;
 
 public final class LabelClientTypeContextTest {
@@ -69,51 +76,67 @@ public final class LabelClientTypeContextTest {
     typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus, -5);
   }
 
-  @Test(timeout = TestUtil.TIMEOUT)
-  public void getNameSuccessfulLookup() throws Exception {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
-        maxCacheSize);
+  @Test
+  public void testGetNameFromStorePresent() throws Exception {
+    store = mock(Store.class);
+    final LabelId id = randomLabelId();
 
-    final LabelId id = store.allocateLabel("foo", LabelType.METRIC).get();
+    typeContext = new LabelClientTypeContext(store, TAGK, metrics, eventBus, maxCacheSize);
 
-    assertEquals("foo", typeContext.getName(id).get().get());
-    // Should be a cache hit ...
-    assertEquals("foo", typeContext.getName(id).get().get());
+    when(store.getName(id, TAGK)).thenAnswer(
+        new Answer<ListenableFuture<Optional<String>>>() {
+          @Override
+          public ListenableFuture<Optional<String>> answer(final InvocationOnMock invocation)
+              throws Throwable {
+            return immediateFuture(Optional.of("name"));
+          }
+        });
 
-    final SortedMap<String, Counter> counters = metrics.getCounters();
-    assertEquals(1, counters.get("uid.cache-hit:kind=metrics").getCount());
-    assertEquals(1, counters.get("uid.cache-miss:kind=metrics").getCount());
-    assertEquals(2, metrics.getGauges().get("uid.cache-size:kind=metrics").getValue());
+    // The first call should hit the store
+    assertEquals("name", typeContext.getName(id).get().get());
+    verify(store, times(1)).getName(id, TAGK);
+
+    // On the second call the store should still only have been
+    // hit once since the name should now be cached.
+    assertEquals("name", typeContext.getName(id).get().get());
+    verify(store, times(1)).getName(id, TAGK);
   }
 
   @Test
-  public void getNameForNonexistentId() throws Exception {
+  public void testGetNameAbsent() throws Exception {
     typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
         maxCacheSize);
     assertFalse(typeContext.getName(mock(LabelId.class)).get().isPresent());
   }
 
-  @Test(timeout = TestUtil.TIMEOUT)
-  public void getIdSuccessfulLookup() throws Exception {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
-        maxCacheSize);
+  @Test
+  public void testGetIdFromStorePresent() throws Exception {
+    store = mock(Store.class);
+    final LabelId id = randomLabelId();
 
-    final LabelId id = store.allocateLabel("foo", LabelType.METRIC).get();
+    typeContext = new LabelClientTypeContext(store, TAGK, metrics, eventBus, maxCacheSize);
 
-    assertEquals(id, typeContext.getId("foo").get().get());
-    // Should be a cache hit ...
-    assertEquals(id, typeContext.getId("foo").get().get());
-    // Should be a cache hit too ...
-    assertEquals(id, typeContext.getId("foo").get().get());
+    when(store.getId("name", TAGK)).thenAnswer(
+        new Answer<ListenableFuture<Optional<LabelId>>>() {
+          @Override
+          public ListenableFuture<Optional<LabelId>> answer(final InvocationOnMock invocation)
+              throws Throwable {
+            return immediateFuture(Optional.of(id));
+          }
+        });
 
-    final SortedMap<String, Counter> counters = metrics.getCounters();
-    assertEquals(2, counters.get("uid.cache-hit:kind=metrics").getCount());
-    assertEquals(1, counters.get("uid.cache-miss:kind=metrics").getCount());
-    assertEquals(2, metrics.getGauges().get("uid.cache-size:kind=metrics").getValue());
+    // The first call should hit the store
+    assertEquals(id, typeContext.getId("name").get().get());
+    verify(store, times(1)).getId("name", TAGK);
+
+    // On the second call the store should still only have been
+    // hit once since the name should now be cached.
+    assertEquals(id, typeContext.getId("name").get().get());
+    verify(store, times(1)).getId("name", TAGK);
   }
 
   @Test
-  public void getIdForNonexistentName() throws Exception {
+  public void testGetIdAbsent() throws Exception {
     typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
         maxCacheSize);
     assertFalse(typeContext.getId("foo").get().isPresent());
