@@ -1,6 +1,13 @@
 package se.tre.freki.storage;
 
+import se.tre.freki.labels.LabelId;
+import se.tre.freki.labels.LabelType;
+import se.tre.freki.labels.TimeSeriesId;
+import se.tre.freki.meta.Annotation;
+import se.tre.freki.meta.LabelMeta;
+
 import com.google.auto.value.AutoValue;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
@@ -9,12 +16,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Table;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import se.tre.freki.labels.LabelId;
-import se.tre.freki.labels.LabelType;
-import se.tre.freki.labels.TimeSeriesId;
-import se.tre.freki.meta.Annotation;
-import se.tre.freki.meta.LabelMeta;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -23,6 +26,8 @@ import java.util.NavigableMap;
 import javax.annotation.Nonnull;
 
 public class MemoryStore extends Store {
+  private static final Charset ASCII = Charsets.ISO_8859_1;
+
   private final Table<LabelId, String, LabelMeta> labelMetas;
   private final Table<TimeSeriesKey, Long, Annotation> annotations;
 
