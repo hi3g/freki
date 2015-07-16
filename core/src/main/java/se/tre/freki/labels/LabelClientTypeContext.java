@@ -53,7 +53,7 @@ public class LabelClientTypeContext {
   private final Cache<LabelId, String> idCache;
 
   /** Map of pending UID assignments. */
-  private final Map<String, ListenableFuture<LabelId>> pendingAssignments = new HashMap<>();
+  private final Map<String, SettableFuture<LabelId>> pendingAssignments = new HashMap<>();
 
   /**
    * The event bus to which the id changes done by this instance will be published.
@@ -192,18 +192,23 @@ public class LabelClientTypeContext {
    */
   @Nonnull
   public ListenableFuture<LabelId> createId(final String name) {
-    ListenableFuture<LabelId> assignment;
+    SettableFuture<LabelId> assignment;
     synchronized (pendingAssignments) {
       assignment = pendingAssignments.get(name);
+      // If assignment is null no one tried to assign this label yet.
+      // Or someone already did
       if (assignment == null) {
-        // to prevent UID leaks that can be caused when multiple time
-        // series for the same metric or tags arrive, we need to write a
-        // deferred to the pending map as quickly as possible. Then we can
-        // start the assignment process after we've stashed the deferred
-        // and released the lock
-        assignment = SettableFuture.create();
-        pendingAssignments.put(name, assignment);
+        // If someone already did it should be in the cache
+        if (nameCache.getIfPresent(name) == null) {
+          assignment = SettableFuture.create();
+          pendingAssignments.put(name, assignment);
+        } else {
+          // It was assigned and in the cache
+          LOG.info("Already done for UID assignment: {}", name);
+          return Futures.immediateCheckedFuture(nameCache.getIfPresent(name));
+        }
       } else {
+        // Another thread was trying to assign it
         LOG.info("Already waiting for UID assignment: {}", name);
         return assignment;
       }
@@ -221,7 +226,8 @@ public class LabelClientTypeContext {
 
         LOG.info("Completed pending assignment for: {}", name);
         synchronized (pendingAssignments) {
-          pendingAssignments.remove(name);
+          SettableFuture<LabelId> completed = pendingAssignments.remove(name);
+          completed.set(uid);
         }
 
         idEventBus.post(new LabelCreatedEvent(uid, name, type));
@@ -234,8 +240,8 @@ public class LabelClientTypeContext {
   /**
    * Rename the label with the name {@code oldname} to {@code newname}.
    *
-   * @param oldname  The current name of the label
-   * @param newname  The desired new name of the label
+   * @param oldname The current name of the label
+   * @param newname The desired new name of the label
    * @return A future that indicates the completion of the request
    */
   public ListenableFuture<Void> rename(final String oldname, final String newname) {
