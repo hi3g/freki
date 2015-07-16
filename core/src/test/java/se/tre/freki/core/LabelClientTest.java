@@ -2,26 +2,25 @@ package se.tre.freki.core;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static se.tre.freki.labels.LabelType.METRIC;
 import static se.tre.freki.labels.LabelType.TAGK;
 import static se.tre.freki.labels.LabelType.TAGV;
 
 import se.tre.freki.DaggerTestComponent;
-import se.tre.freki.labels.LabelException;
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.storage.Store;
 import se.tre.freki.utils.TestUtil;
 
-import com.google.common.util.concurrent.Futures;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 
+import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 
 public class LabelClientTest {
@@ -49,7 +48,7 @@ public class LabelClientTest {
     labelClient.createId(METRIC, "Not!A:Valid@Name");
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = NullPointerException.class)
   public void createUidNullName() {
     labelClient.createId(METRIC, null);
   }
@@ -61,25 +60,22 @@ public class LabelClientTest {
 
   @Test
   public void createUidTagKey() {
-    final LabelId id = mock(LabelId.class);
-    when(store.createLabel("region", TAGK))
-        .thenReturn(Futures.immediateFuture(id));
-    assertSame(id, labelClient.createId(TAGK, "region"));
+    assertNotNull(labelClient.createId(TAGK, "region"));
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void createUidTagKeyExists() {
-    labelClient.createId(TAGK, "host");
-  }
-
-  @Test(expected = LabelException.class)
-  public void executeTimeSeriesQueryMissingName() throws Exception {
-    labelClient.executeTimeSeriesQuery(null).get();
+  @Test
+  public void createUidTagKeyExists() throws Exception {
+    try {
+      labelClient.createId(TAGK, "host").get();
+      fail("The id should have existed and therefore an exception should have been thrown");
+    } catch (ExecutionException e) {
+      assertTrue(e.getCause() instanceof IllegalArgumentException);
+    }
   }
 
   @Test
   public void getLabelId() throws Exception {
-    assertEquals(sysCpu0, labelClient.getLabelId(METRIC, "sys.cpu.0").get());
+    assertEquals(sysCpu0, labelClient.getLabelId(METRIC, "sys.cpu.0").get().get());
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -87,9 +83,9 @@ public class LabelClientTest {
     labelClient.getLabelId(TAGV, "");
   }
 
-  @Test(expected = LabelException.class)
+  @Test
   public void getLabelIdNoSuchName() throws Exception {
-    labelClient.getLabelId(METRIC, "sys.cpu.2").get();
+    assertFalse(labelClient.getLabelId(METRIC, "sys.cpu.2").get().isPresent());
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -107,9 +103,9 @@ public class LabelClientTest {
     assertEquals("web01", labelClient.getLabelName(TAGV, web01).get().get());
   }
 
-  @Test(expected = LabelException.class)
+  @Test
   public void getLabelNameNoSuchId() throws Exception {
-    labelClient.getLabelName(TAGV, mock(LabelId.class)).get();
+    assertFalse(labelClient.getLabelName(TAGV, mock(LabelId.class)).get().isPresent());
   }
 
   @Test(expected = NullPointerException.class)
@@ -125,13 +121,13 @@ public class LabelClientTest {
   @Test
   public void validateLabelName() {
     final String validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUWVXYZ0123456789-_./";
-    
+
     for (char c = 0; c < 255; ++c) {
       final String input = String.valueOf(c);
       try {
         LabelClient.validateLabelName("test", input);
         assertTrue("character " + input.charAt(0) + " with code " + ((int) input.charAt(
-            0)) + " is not in the valid chars",
+                0)) + " is not in the valid chars",
             validChars.contains(input));
       } catch (IllegalArgumentException e) {
         assertFalse(validChars.contains(input));
@@ -139,7 +135,7 @@ public class LabelClientTest {
     }
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = NullPointerException.class)
   public void validateLabelNameNullString() {
     LabelClient.validateLabelName("test", null);
   }
