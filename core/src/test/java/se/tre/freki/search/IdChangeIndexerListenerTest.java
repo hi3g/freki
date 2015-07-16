@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 import static se.tre.freki.labels.LabelType.METRIC;
 import static se.tre.freki.storage.MemoryLabelId.randomLabelId;
 
-import se.tre.freki.DaggerTestComponent;
 import se.tre.freki.labels.LabelCreatedEvent;
 import se.tre.freki.labels.LabelDeletedEvent;
 import se.tre.freki.labels.LabelId;
@@ -33,7 +32,6 @@ public class IdChangeIndexerListenerTest {
 
   @Before
   public void setUp() throws Exception {
-    DaggerTestComponent.create().inject(this);
     MockitoAnnotations.initMocks(this);
 
     idChangeIndexer = new IdChangeIndexerListener(store, searchPlugin);
