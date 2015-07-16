@@ -24,7 +24,7 @@ public abstract class Store implements Closeable {
   // Identifier management
   //
   @Nonnull
-  public abstract ListenableFuture<LabelId> allocateLabel(final String name,
+  public abstract ListenableFuture<LabelId> createLabel(final String name,
                                                           final LabelType type);
 
   @Nonnull

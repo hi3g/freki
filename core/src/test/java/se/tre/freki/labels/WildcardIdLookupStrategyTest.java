@@ -59,7 +59,7 @@ public class WildcardIdLookupStrategyTest {
 
   @Test(timeout = TestUtil.TIMEOUT)
   public void testResolveIdGetsId() throws Exception {
-    LabelId id = client.allocateLabel("nameexists", LabelType.METRIC).get();
+    LabelId id = client.createLabel("nameexists", LabelType.METRIC).get();
     assertEquals(id, lookupStrategy.getId(uid, "nameexists").get());
   }
 

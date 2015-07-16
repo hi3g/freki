@@ -141,8 +141,8 @@ public class MemoryStore extends Store {
 
   @Nonnull
   @Override
-  public ListenableFuture<LabelId> allocateLabel(final String name,
-                                                 final LabelType type) {
+  public ListenableFuture<LabelId> createLabel(final String name,
+                                               final LabelType type) {
     LabelId id;
 
     do {
@@ -156,8 +156,8 @@ public class MemoryStore extends Store {
   @Nonnull
   @Override
   public ListenableFuture<LabelId> renameLabel(final String name,
-                                                 final LabelId id,
-                                                 final LabelType type) {
+                                               final LabelId id,
+                                               final LabelType type) {
     if (identifierReverse.contains(id, type)) {
       throw new IllegalArgumentException("An ID with " + id + " already exists");
     }
@@ -174,7 +174,9 @@ public class MemoryStore extends Store {
   }
 
   @Nonnull
-  @Override
+
+
+
   public ListenableFuture<Void> deleteAnnotation(final LabelId metric,
                                                  final ImmutableMap<LabelId, LabelId> tags,
                                                  final long startTime) {

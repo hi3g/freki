@@ -1,4 +1,4 @@
-<code_scheme name="OpenTSDB-Style">
+<code_scheme name="Freki-Style">
   <option name="OTHER_INDENT_OPTIONS">
     <value>
       <option name="INDENT_SIZE" value="2" />
@@ -23,7 +23,7 @@
     <value>
       <package name="" withSubpackages="true" static="true" />
       <emptyLine />
-      <package name="net.opentsdb" withSubpackages="true" static="false" />
+      <package name="se.tre.freki" withSubpackages="true" static="false" />
       <emptyLine />
       <package name="" withSubpackages="true" static="false" />
       <emptyLine />

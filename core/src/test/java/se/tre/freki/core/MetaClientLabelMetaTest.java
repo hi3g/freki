@@ -46,8 +46,8 @@ public class MetaClientLabelMetaTest {
     DaggerTestComponent.create().inject(this);
     MockitoAnnotations.initMocks(this);
 
-    sysCpu0 = store.allocateLabel("sys.cpu.0", LabelType.METRIC).get();
-    sysCpu2 = store.allocateLabel("sys.cpu.2", LabelType.METRIC).get();
+    sysCpu0 = store.createLabel("sys.cpu.0", LabelType.METRIC).get();
+    sysCpu2 = store.createLabel("sys.cpu.2", LabelType.METRIC).get();
 
     LabelMeta labelMeta = LabelMeta.create(sysCpu0, LabelType.METRIC, "sys.cpu.0", "Description",
         1328140801);

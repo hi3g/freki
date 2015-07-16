@@ -215,7 +215,7 @@ public class LabelClientTypeContext {
     }
 
     // start the assignment dance after stashing the deferred
-    ListenableFuture<LabelId> uid = store.allocateLabel(name, type);
+    ListenableFuture<LabelId> uid = store.createLabel(name, type);
 
     return transform(uid, new Function<LabelId, LabelId>() {
       @Nonnull

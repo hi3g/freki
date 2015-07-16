@@ -39,36 +39,36 @@ public class LabelClientTest {
   public void setUp() throws Exception {
     DaggerTestComponent.create().inject(this);
 
-    sysCpu0 = store.allocateLabel("sys.cpu.0", METRIC).get();
-    host = store.allocateLabel("host", TAGK).get();
-    web01 = store.allocateLabel("web01", TAGV).get();
+    sysCpu0 = store.createLabel("sys.cpu.0", METRIC).get();
+    host = store.createLabel("host", TAGK).get();
+    web01 = store.createLabel("web01", TAGV).get();
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void assignUidInvalidCharacter() {
+  public void createUidInvalidCharacter() {
     labelClient.createId(METRIC, "Not!A:Valid@Name");
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void assignUidNullName() {
+  public void createUidNullName() {
     labelClient.createId(METRIC, null);
   }
 
   @Test(expected = NullPointerException.class)
-  public void assignUidNullType() {
+  public void createUidNullType() {
     labelClient.createId(null, "localhost");
   }
 
   @Test
-  public void assignUidTagKey() {
+  public void createUidTagKey() {
     final LabelId id = mock(LabelId.class);
-    when(store.allocateLabel("region", TAGK))
+    when(store.createLabel("region", TAGK))
         .thenReturn(Futures.immediateFuture(id));
     assertSame(id, labelClient.createId(TAGK, "region"));
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void assignUidTagKeyExists() {
+  public void createUidTagKeyExists() {
     labelClient.createId(TAGK, "host");
   }
 
