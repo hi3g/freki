@@ -195,21 +195,21 @@ public class LabelClientTypeContext {
     ListenableFuture<LabelId> assignment;
     synchronized (pendingAssignments) {
       assignment = pendingAssignments.get(name);
+      // If assignment is null no one tried to assign this label yet.
+      // Or someone already did
       if (assignment == null) {
+        // If someone already did it should be in the cache
         if (nameCache.getIfPresent(name) == null) {
-          // to prevent UID leaks that can be caused when multiple time
-          // series for the same metric or tags arrive, we need to write a
-          // deferred to the pending map as quickly as possible. Then we can
-          // start the assignment process after we've stashed the deferred
-          // and released the lock
           assignment = SettableFuture.create();
           pendingAssignments.put(name, assignment);
         }
         else {
+          // It was assigned and in the cache
           LOG.info("Already done for UID assignment: {}", name);
           return Futures.immediateCheckedFuture(nameCache.getIfPresent(name));
         }
       } else {
+        // Another thread was trying to assign it
         LOG.info("Already waiting for UID assignment: {}", name);
         return assignment;
       }
