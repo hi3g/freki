@@ -11,13 +11,11 @@ import static se.tre.freki.labels.LabelType.TAGK;
 import static se.tre.freki.labels.LabelType.TAGV;
 
 import se.tre.freki.DaggerTestComponent;
-import se.tre.freki.labels.LabelException;
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.storage.Store;
 import se.tre.freki.utils.TestUtil;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -69,16 +67,10 @@ public class LabelClientTest {
   public void createUidTagKeyExists() throws Exception {
     try {
       labelClient.createId(TAGK, "host").get();
-      fail("The future was empty!");
+      fail("The id should have existed and therefore an exception should have been thrown");
     } catch (ExecutionException e) {
       assertTrue(e.getCause() instanceof IllegalArgumentException);
     }
-  }
-
-  @Ignore("executeTimeSeriesQuery")
-  @Test(expected = LabelException.class)
-  public void executeTimeSeriesQueryMissingName() throws Exception {
-    labelClient.executeTimeSeriesQuery(null).get();
   }
 
   @Test
