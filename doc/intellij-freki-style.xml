@@ -1,4 +1,4 @@
-<code_scheme name="Freki-Style">
+<code_scheme name="OpenTSDB-Style">
   <option name="OTHER_INDENT_OPTIONS">
     <value>
       <option name="INDENT_SIZE" value="2" />
@@ -23,7 +23,7 @@
     <value>
       <package name="" withSubpackages="true" static="true" />
       <emptyLine />
-      <package name="se.tre.freki" withSubpackages="true" static="false" />
+      <package name="net.opentsdb" withSubpackages="true" static="false" />
       <emptyLine />
       <package name="" withSubpackages="true" static="false" />
       <emptyLine />
@@ -44,7 +44,6 @@
     <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
   </XML>
   <codeStyleSettings language="JAVA">
-    <option name="KEEP_LINE_BREAKS" value="true" />
     <option name="KEEP_FIRST_COLUMN_COMMENT" value="false" />
     <option name="KEEP_CONTROL_STATEMENT_IN_ONE_LINE" value="false" />
     <option name="BLANK_LINES_BEFORE_PACKAGE" value="1" />
@@ -301,6 +300,17 @@
               <AND>
                 <METHOD>true</METHOD>
                 <NAME>setUp</NAME>
+                <PUBLIC>true</PUBLIC>
+              </AND>
+            </match>
+          </rule>
+        </section>
+        <section>
+          <rule>
+            <match>
+              <AND>
+                <METHOD>true</METHOD>
+                <NAME>tearDown</NAME>
                 <PUBLIC>true</PUBLIC>
               </AND>
             </match>

@@ -42,6 +42,11 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
     store = storeDescriptor.createStore(config, new MetricRegistry());
   }
 
+  @After
+  public void tearDown() throws Exception {
+    CassandraTestHelpers.truncate(store.getSession());
+  }
+
   @Test
   public void constructor() throws IOException {
     final String keyspace = config.getString("freki.storage.cassandra.keyspace");
@@ -81,11 +86,6 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   public void renameId() {
     fail();
     //store.allocateLabel("renamed", new byte[]{0, 0, 4}, LabelType.METRIC);
-  }
-
-  @After
-  public void tearDown() throws Exception {
-    CassandraTestHelpers.truncate(store.getSession());
   }
 
   @Test
