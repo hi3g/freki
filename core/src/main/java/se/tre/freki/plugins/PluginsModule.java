@@ -16,9 +16,8 @@ public class PluginsModule {
   @Singleton
   SearchPlugin provideSearchPlugin(final Config config, final Store store) {
     try {
-      SearchPluginDescriptor descriptor = PluginLoader.loadPluginWithName(
-          config.getString("freki.search.plugin"),
-          SearchPluginDescriptor.class);
+      SearchPluginDescriptor descriptor = PluginLoader.forType(SearchPluginDescriptor.class)
+          .pluginWithName(config.getString("freki.search.plugin"));
 
       return descriptor.create(config, store);
     } catch (Exception e) {
@@ -30,9 +29,9 @@ public class PluginsModule {
   @Singleton
   RealTimePublisher provideRealtimePublisher(final Config config) {
     try {
-      RealTimePublisherDescriptor descriptor = PluginLoader.loadPluginWithName(
-          config.getString("freki.publisher.plugin"),
-          RealTimePublisherDescriptor.class);
+      RealTimePublisherDescriptor descriptor = PluginLoader
+          .forType(RealTimePublisherDescriptor.class)
+          .pluginWithName(config.getString("freki.publisher.plugin"));
 
       return descriptor.create(config);
     } catch (Exception e) {
