@@ -117,7 +117,7 @@ public class LabelClientTypeContext {
       return Futures.immediateFuture(Optional.of(name));
     }
 
-    class GetNameFunction implements AsyncFunction<Optional<String>, Optional<String>> {
+    class CacheNameFunction implements AsyncFunction<Optional<String>, Optional<String>> {
       @Nonnull
       @Override
       public ListenableFuture<Optional<String>> apply(final Optional<String> name) {
@@ -130,7 +130,7 @@ public class LabelClientTypeContext {
       }
     }
 
-    return transform(store.getName(id, type), new GetNameFunction());
+    return transform(store.getName(id, type), new CacheNameFunction());
   }
 
   private void addNameToCache(final LabelId id,
@@ -158,7 +158,7 @@ public class LabelClientTypeContext {
       return Futures.immediateFuture(Optional.of(id));
     }
 
-    class GetIdFunction implements AsyncFunction<Optional<LabelId>, Optional<LabelId>> {
+    class CacheIdFunction implements AsyncFunction<Optional<LabelId>, Optional<LabelId>> {
       @Nonnull
       @Override
       public ListenableFuture<Optional<LabelId>> apply(final Optional<LabelId> id) {
@@ -171,7 +171,7 @@ public class LabelClientTypeContext {
       }
     }
 
-    return transform(store.getId(name, type), new GetIdFunction());
+    return transform(store.getId(name, type), new CacheIdFunction());
   }
 
   private void addIdToCache(final String name,
@@ -182,13 +182,6 @@ public class LabelClientTypeContext {
         "name %s was already mapped to %s, tried to map to %s", name, foundId, id);
 
     nameCache.put(name, id);
-  }
-
-  /** Adds the bidirectional mapping in the cache. */
-  private void cacheMapping(final String name,
-                            final LabelId id) {
-    addIdToCache(name, id);
-    addNameToCache(id, name);
   }
 
   /**
@@ -223,7 +216,8 @@ public class LabelClientTypeContext {
       @Nonnull
       @Override
       public LabelId apply(final LabelId uid) {
-        cacheMapping(name, uid);
+        addIdToCache(name, uid);
+        addNameToCache(uid, name);
 
         LOG.info("Completed pending assignment for: {}", name);
         synchronized (pendingAssignments) {

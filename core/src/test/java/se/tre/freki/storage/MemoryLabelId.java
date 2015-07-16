@@ -15,6 +15,10 @@ import javax.annotation.Nonnull;
 public class MemoryLabelId implements LabelId<MemoryLabelId> {
   private final UUID uuid;
 
+  public static LabelId randomLabelId() {
+    return new MemoryLabelId(UUID.randomUUID());
+  }
+
   public MemoryLabelId() {
     this(UUID.randomUUID());
   }
