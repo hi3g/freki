@@ -67,4 +67,24 @@ public abstract class StoreTest<K extends Store> {
     final Optional<String> missing = store.getName(missingLabelId(), LabelType.TAGV).get();
     assertFalse(missing.isPresent());
   }
+
+  @Test
+  public void testRenameIdFoundOnNewName() throws Exception {
+    final LabelId id = store.createLabel("name", LabelType.TAGK).get();
+    store.renameLabel("newname", id, LabelType.TAGK).get();
+    final LabelId newNameId = store.getId("newname", LabelType.TAGK).get().get();
+    assertEquals(id, newNameId);
+  }
+
+  @Test
+  public void testRenameIdNotFoundOnOldName() throws Exception {
+    final LabelId id = store.createLabel("name", LabelType.TAGK).get();
+    store.renameLabel("newname", id, LabelType.TAGK).get();
+    assertFalse(store.getId("name", LabelType.TAGK).get().isPresent());
+  }
+
+  @Test
+  public void testRenameIdNotFound() throws Exception {
+    store.renameLabel("name", missingLabelId(), LabelType.TAGK).get();
+  }
 }

@@ -2,7 +2,6 @@ package se.tre.freki.storage.cassandra;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
@@ -80,11 +79,6 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   @Override
   protected LabelId missingLabelId() {
     return CassandraLabelId.fromLong(15L);
-  }
-
-  @Test
-  public void renameId() {
-    fail();
   }
 
   @Test
