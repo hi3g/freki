@@ -30,6 +30,8 @@ install the plugin checkstyle-IDEA. The checkstyle configuration is located
 in `checkstyle.xml`. You will have to set the `rootDir` checkstyle variable
 to `$PROJECT_DIR$`.
 
+The packages autovalue.shaded, com.google.api.client.repackaged and junit.framework should be added
+to intellj as packages that should not be auto-imported.
 
 One final useful tool is the IntelliJ findbugs plugin which can help to spot unnecessary bugs. All
 of the mentioned tools are generally executed as part of the build process and pull requests are
