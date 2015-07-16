@@ -196,13 +196,19 @@ public class LabelClientTypeContext {
     synchronized (pendingAssignments) {
       assignment = pendingAssignments.get(name);
       if (assignment == null) {
-        // to prevent UID leaks that can be caused when multiple time
-        // series for the same metric or tags arrive, we need to write a
-        // deferred to the pending map as quickly as possible. Then we can
-        // start the assignment process after we've stashed the deferred
-        // and released the lock
-        assignment = SettableFuture.create();
-        pendingAssignments.put(name, assignment);
+        if (nameCache.getIfPresent(name) == null) {
+          // to prevent UID leaks that can be caused when multiple time
+          // series for the same metric or tags arrive, we need to write a
+          // deferred to the pending map as quickly as possible. Then we can
+          // start the assignment process after we've stashed the deferred
+          // and released the lock
+          assignment = SettableFuture.create();
+          pendingAssignments.put(name, assignment);
+        }
+        else {
+          LOG.info("Already done for UID assignment: {}", name);
+          return Futures.immediateCheckedFuture(nameCache.getIfPresent(name));
+        }
       } else {
         LOG.info("Already waiting for UID assignment: {}", name);
         return assignment;
