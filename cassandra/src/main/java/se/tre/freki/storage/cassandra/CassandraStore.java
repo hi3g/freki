@@ -512,11 +512,8 @@ public class CassandraStore extends Store {
   }
 
   /**
-   * <<<<<<< Updated upstream Renames a label that already exists to a new given value. This method
-   * is used by the function ======= For all intents and purposes this function works as a rename.
-   * In the HBase implementation the other method {@link #createLabel} uses this method that
-   * basically overwrites the value no matter what. This method is also used by the function >>>>>>>
-   * Stashed changes {@link se.tre.freki.labels.LabelClientTypeContext#rename}.
+   * Renames a label that already exists to a new given value. This method
+   * is used by the function {@link se.tre.freki.labels.LabelClientTypeContext#rename}.
    *
    * @param newName The name to write.
    * @param id The uid to use.
