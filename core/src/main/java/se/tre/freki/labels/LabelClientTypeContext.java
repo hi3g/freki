@@ -261,7 +261,7 @@ public class LabelClientTypeContext {
                   "No label with that name"));
             }
 
-            store.allocateLabel(newname, oldUid.get(), type);
+            store.renameLabel(newname, oldUid.get(), type);
 
             // Update cache.
             addIdToCache(newname, oldUid.get());  // add     new name -> ID

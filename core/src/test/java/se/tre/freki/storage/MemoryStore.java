@@ -150,12 +150,12 @@ public class MemoryStore extends Store {
       // Make sure the new id is unique
     } while (identifierReverse.containsRow(id));
 
-    return allocateLabel(name, id, type);
+    return renameLabel(name, id, type);
   }
 
   @Nonnull
   @Override
-  public ListenableFuture<LabelId> allocateLabel(final String name,
+  public ListenableFuture<LabelId> renameLabel(final String name,
                                                  final LabelId id,
                                                  final LabelType type) {
     if (identifierReverse.contains(id, type)) {

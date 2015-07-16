@@ -512,42 +512,33 @@ public class CassandraStore extends Store {
   }
 
   /**
-   * For all intents and purposes this function works as a rename. In the HBase implementation the
-   * other method {@link #allocateLabel} uses this method that basically overwrites the value no
-   * matter what. This method is also used by the function
+   * Renames a label that already exists to a new given value. This method is used by the function
    * {@link se.tre.freki.labels.LabelClientTypeContext#rename}.
    *
-   * @param name The name to write.
+   * @param newName The name to write.
    * @param id The uid to use.
    * @param type The type of UID
    * @return The uid that was used.
    */
   @Nonnull
   @Override
-  public ListenableFuture<LabelId> allocateLabel(final String name,
-                                                 final LabelId id,
-                                                 final LabelType type) {
-    /*
-    TODO #zeeck this method should be considered to be changed to rename and the implementation
-    changed in the HBaseStore. One of the prerequisites of this function is that the UID already
-    exists.
-     */
-
-    // Get old name, we do this manually because the other method returns
-    // a deferred and we want to avoid to mix deferreds between functions.
-    final ResultSetFuture getNameFuture = session.executeAsync(
+  public ListenableFuture<LabelId> renameLabel(final String newName,
+                                               final LabelId id,
+                                               final LabelType type) {
+    // Get old name
+    final ResultSetFuture oldNameFuture = session.executeAsync(
         getNameStatement.bind(toLong(id), type.toValue()));
 
-    return transform(getNameFuture, new Function<ResultSet, LabelId>() {
+    return transform(oldNameFuture, new Function<ResultSet, LabelId>() {
       @Override
       public LabelId apply(final ResultSet rows) {
         final String oldName = rows.one().getString("name");
 
-        session.executeAsync(updateUidNameStatement.bind(name, toLong(id), type.toValue()));
+        session.executeAsync(updateUidNameStatement.bind(newName, toLong(id), type.toValue()));
         session.executeAsync(
-            updateNameUidStatement.bind(oldName, type.toValue(), name, type.toValue(), toLong(id)));
+            updateNameUidStatement.bind(oldName, type.toValue(), newName, type.toValue(),
+                toLong(id)));
 
-        //TODO (zeeck) maybe check if this was ok
         return id;
       }
     });
