@@ -39,24 +39,30 @@ public final class LabelClientTypeContextTest {
   }
 
   @Test(expected = NullPointerException.class)
-  public void testCtorNoStore() {
+  public void testConstructorNoStore() {
     typeContext = new LabelClientTypeContext(null, LabelType.METRIC, metrics, eventBus,
         maxCacheSize);
   }
 
   @Test(expected = NullPointerException.class)
-  public void testCtorNoType() {
+  public void testConstructorNoType() {
     typeContext = new LabelClientTypeContext(store, null, metrics, eventBus, maxCacheSize);
   }
 
   @Test(expected = NullPointerException.class)
-  public void testCtorNoMetrics() {
+  public void testConstructorNoMetrics() {
     typeContext = new LabelClientTypeContext(store, LabelType.METRIC, null, eventBus, maxCacheSize);
   }
 
   @Test(expected = NullPointerException.class)
-  public void testCtorNoEventbus() {
+  public void testConstructorNoEventbus() {
     typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, null, maxCacheSize);
+  }
+
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testConstructorNegativeMaxSize() {
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus, -5);
   }
 
   @Test(timeout = TestUtil.TIMEOUT)
