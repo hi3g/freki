@@ -10,6 +10,7 @@ import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
 
 import com.google.common.base.Optional;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
@@ -66,5 +67,28 @@ public abstract class StoreTest<K extends Store> {
   public void testGetNameMissingAbsent() throws Exception {
     final Optional<String> missing = store.getName(missingLabelId(), LabelType.TAGV).get();
     assertFalse(missing.isPresent());
+  }
+
+  @Test
+  @Ignore
+  public void testRenameIdFoundOnNewName() throws Exception {
+    final LabelId id = store.createLabel("name", LabelType.TAGK).get();
+    store.renameLabel("newname", id, LabelType.TAGK).get();
+    final LabelId newNameId = store.getId("newname", LabelType.TAGK).get().get();
+    assertEquals(id, newNameId);
+  }
+
+  @Test
+  @Ignore
+  public void testRenameIdNotFoundOnOldName() throws Exception {
+    final LabelId id = store.createLabel("name", LabelType.TAGK).get();
+    store.renameLabel("newname", id, LabelType.TAGK).get();
+    assertFalse(store.getId("name", LabelType.TAGK).get().isPresent());
+  }
+
+  @Test
+  @Ignore
+  public void testRenameIdNotFound() throws Exception {
+    store.renameLabel("name", missingLabelId(), LabelType.TAGK).get();
   }
 }
