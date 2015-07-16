@@ -57,9 +57,9 @@ public class MetaClientLabelMetaTest {
 
   @Test
   public void getLabelMeta() throws Exception {
-    final LabelMeta meta = metaClient.getLabelMeta(LabelType.METRIC, sysCpu2).get();
+    final LabelMeta meta = metaClient.getLabelMeta(LabelType.METRIC, sysCpu0).get();
     Assert.assertEquals(LabelType.METRIC, meta.type());
-    assertEquals("sys.cpu.2", meta.name());
-    Assert.assertEquals(sysCpu2, meta.identifier());
+    assertEquals("sys.cpu.0", meta.name());
+    Assert.assertEquals(sysCpu0, meta.identifier());
   }
 }
