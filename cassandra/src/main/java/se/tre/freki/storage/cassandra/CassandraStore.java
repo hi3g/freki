@@ -81,11 +81,11 @@ public class CassandraStore extends Store {
   private final PreparedStatement addLongStatement;
   private PreparedStatement insertTagsStatement;
   /**
-   * The statement used by the {@link #allocateLabel} method.
+   * The statement used by the {@link #createLabel} method.
    */
   private PreparedStatement createIdStatement;
   /**
-   * Used for {@link #allocateLabel}, the one that does rename.
+   * Used for {@link #createLabel}, the one that does rename.
    */
   private PreparedStatement updateUidNameStatement;
   private PreparedStatement updateNameUidStatement;
@@ -482,22 +482,22 @@ public class CassandraStore extends Store {
    * the information if it is. If the information could be saved the ID will be returned in a
    * future, otherwise the future will contain an {@link LabelException}.
    *
-   * @param name The name to allocate an ID for
-   * @param type The type of name to allocate an ID for
-   * @return A future that contains the newly allocated ID if successful, otherwise the future will
+   * @param name The name to create an ID for
+   * @param type The type of name to create an ID for
+   * @return A future that contains the newly create ID if successful, otherwise the future will
    * contain a {@link LabelException}.
    */
   @Nonnull
   @Override
-  public ListenableFuture<LabelId> allocateLabel(final String name,
-                                                 final LabelType type) {
+  public ListenableFuture<LabelId> createLabel(final String name,
+                                               final LabelType type) {
     // This discards half the hash but it should still work ok with murmur3.
     final long id = Hashing.murmur3_128().hashString(name, CassandraConst.CHARSET).asLong();
 
     // This does not protect us against someone trying to create the same
     // information in parallel but it is a convenience to the user so that we
     // do not even try to create if we can find an existing ID with the
-    // information we are trying to allocate now.
+    // information we are trying to create now.
     ListenableFuture<Void> availableFuture = checkAvailable(id, name, type);
 
     return transform(availableFuture, new AsyncFunction<Void, LabelId>() {
@@ -512,8 +512,8 @@ public class CassandraStore extends Store {
   }
 
   /**
-   * Renames a label that already exists to a new given value. This method is used by the function
-   * {@link se.tre.freki.labels.LabelClientTypeContext#rename}.
+   * Renames a label that already exists to a new given value. This method
+   * is used by the function {@link se.tre.freki.labels.LabelClientTypeContext#rename}.
    *
    * @param newName The name to write.
    * @param id The uid to use.
@@ -527,6 +527,7 @@ public class CassandraStore extends Store {
                                                final LabelType type) {
     // Get old name
     final ResultSetFuture oldNameFuture = session.executeAsync(
+
         getNameStatement.bind(toLong(id), type.toValue()));
 
     return transform(oldNameFuture, new Function<ResultSet, LabelId>() {

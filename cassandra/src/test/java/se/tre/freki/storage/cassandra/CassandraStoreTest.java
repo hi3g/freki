@@ -85,7 +85,6 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   @Test
   public void renameId() {
     fail();
-    //store.allocateLabel("renamed", new byte[]{0, 0, 4}, LabelType.METRIC);
   }
 
   @Test

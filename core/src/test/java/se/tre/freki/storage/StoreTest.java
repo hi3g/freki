@@ -25,10 +25,10 @@ public abstract class StoreTest<K extends Store> {
 
   @Test
   public void testAllocateLabelExistingException() throws Exception {
-    store.allocateLabel("newname", LabelType.TAGK).get();
+    store.createLabel("newname", LabelType.TAGK).get();
 
     try {
-      final LabelId secondAllocation = store.allocateLabel("newname", LabelType.TAGK).get();
+      final LabelId secondAllocation = store.createLabel("newname", LabelType.TAGK).get();
       fail("The second allocation with the same name should have thrown an exception");
     } catch (ExecutionException e) {
       assertTrue(e.getCause() instanceof LabelException);
@@ -37,14 +37,14 @@ public abstract class StoreTest<K extends Store> {
 
   @Test
   public void testAllocateLabelNotExisting() throws Exception {
-    final LabelId label = store.allocateLabel("newname", LabelType.TAGK).get();
+    final LabelId label = store.createLabel("newname", LabelType.TAGK).get();
     final Optional<LabelId> fetchedLabel = store.getId("newname", LabelType.TAGK).get();
     assertEquals(label, fetchedLabel.get());
   }
 
   @Test
   public void testGetIdExisting() throws Exception {
-    final LabelId newLabel = store.allocateLabel("newname", LabelType.TAGV).get();
+    final LabelId newLabel = store.createLabel("newname", LabelType.TAGV).get();
     final Optional<LabelId> fetchedLabel = store.getId("newname", LabelType.TAGV).get();
     assertEquals(newLabel, fetchedLabel.get());
   }
@@ -57,7 +57,7 @@ public abstract class StoreTest<K extends Store> {
 
   @Test
   public void testGetNameExisting() throws Exception {
-    final LabelId newLabel = store.allocateLabel("newname", LabelType.TAGV).get();
+    final LabelId newLabel = store.createLabel("newname", LabelType.TAGV).get();
     final Optional<String> fetchedLabel = store.getName(newLabel, LabelType.TAGV).get();
     assertEquals("newname", fetchedLabel.get());
   }
