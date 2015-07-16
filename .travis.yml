@@ -1,4 +1,5 @@
 language: java
+before_script: cqlsh -f cassandra/src/main/dist/config/tables.cql
 script: ./gradlew check
 jdk:
   - oraclejdk8
