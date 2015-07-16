@@ -10,6 +10,7 @@ import se.tre.freki.storage.StoreTest;
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
+import com.google.common.hash.Hashing;
 import com.typesafe.config.Config;
 import org.junit.After;
 import org.junit.Rule;
@@ -136,5 +137,32 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
 
     assertEquals(firstName, names.get(0));
     assertEquals(secondName, names.get(1));
+  }
+
+  @Test
+  public void makeLabelSpecificId() {
+    assertEquals(0, store.makeLabelSpecificId(0, LabelType.METRIC));
+    assertEquals(0, store.makeLabelSpecificId(3, LabelType.METRIC));
+    assertEquals(4, store.makeLabelSpecificId(4, LabelType.METRIC));
+
+    assertEquals(1, store.makeLabelSpecificId(0, LabelType.TAGV));
+    assertEquals(1, store.makeLabelSpecificId(3, LabelType.TAGV));
+    assertEquals(5, store.makeLabelSpecificId(4, LabelType.TAGV));
+
+    assertEquals(2, store.makeLabelSpecificId(0, LabelType.TAGK));
+    assertEquals(2, store.makeLabelSpecificId(3, LabelType.TAGK));
+    assertEquals(6, store.makeLabelSpecificId(4, LabelType.TAGK));
+  }
+
+  @Test
+  public void generateId() {
+
+    final String name = "testString";
+
+    long id = Hashing.murmur3_128().hashString(name, CassandraConst.CHARSET).asLong();
+    id = id >> 2;
+    id = id << 2;
+
+    assertEquals(id, store.generateId(name, LabelType.METRIC));
   }
 }

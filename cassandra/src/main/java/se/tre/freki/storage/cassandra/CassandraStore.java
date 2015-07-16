@@ -492,7 +492,7 @@ public class CassandraStore extends Store {
   public ListenableFuture<LabelId> createLabel(final String name,
                                                final LabelType type) {
     // This discards half the hash but it should still work ok with murmur3.
-    final long id = Hashing.murmur3_128().hashString(name, CassandraConst.CHARSET).asLong();
+    final long id = generateId(name, type);
 
     // This does not protect us against someone trying to create the same
     // information in parallel but it is a convenience to the user so that we
@@ -509,6 +509,34 @@ public class CassandraStore extends Store {
         return createId(id, name, type);
       }
     });
+  }
+
+  protected long generateId(final String name, final LabelType type) {
+    final long id = Hashing.murmur3_128().hashString(name, CassandraConst.CHARSET).asLong();
+
+    return makeLabelSpecificId(id, type);
+  }
+
+  protected long makeLabelSpecificId(final long id, final LabelType type) {
+
+    long returnValue = id;
+    returnValue &= ~0b1; // unset LSB bit
+    returnValue &= ~0b10; // unset 2nd bit from LSB
+
+    switch (type) {
+      case METRIC:
+        break;
+      case TAGV:
+        returnValue |= 0b1; // set LSB bit
+        break;
+      case TAGK:
+        returnValue |= 0b10; // set 2nd bit from LSB
+        break;
+      default:
+        throw new IllegalArgumentException("Unknown type.");
+    }
+
+    return returnValue;
   }
 
   /**
