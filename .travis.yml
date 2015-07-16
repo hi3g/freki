@@ -1,6 +1,6 @@
 language: java
 before_script: ./gradlew assemble
-script: ./gradlew checkstyleMain checkstyleTest checkstyleJmh
+script: ./gradlew check
 jdk:
   - oraclejdk8
 notifications:
@@ -12,3 +12,5 @@ cache:
 branches:
   only:
     - master
+services:
+  - cassandra
