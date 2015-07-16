@@ -174,9 +174,7 @@ public class MemoryStore extends Store {
   }
 
   @Nonnull
-
-
-
+  @Override
   public ListenableFuture<Void> deleteAnnotation(final LabelId metric,
                                                  final ImmutableMap<LabelId, LabelId> tags,
                                                  final long startTime) {
