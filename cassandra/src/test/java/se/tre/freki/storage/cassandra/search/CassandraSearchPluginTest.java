@@ -10,7 +10,6 @@ import se.tre.freki.storage.cassandra.CassandraTestHelpers;
 import se.tre.freki.storage.cassandra.DaggerCassandraTestComponent;
 
 import com.codahale.metrics.MetricRegistry;
-import com.datastax.driver.core.Session;
 import com.typesafe.config.Config;
 import org.junit.After;
 import org.junit.Before;
@@ -20,7 +19,6 @@ public class CassandraSearchPluginTest {
   private CassandraStoreDescriptor storeDescriptor;
   private Config config;
   private CassandraStore store;
-  private Session session;
   private CassandraSearchPlugin searchPlugin;
 
 
@@ -33,7 +31,6 @@ public class CassandraSearchPluginTest {
     storeDescriptor = (CassandraStoreDescriptor) cassandraTestComponent.storeDescriptor();
 
     store = storeDescriptor.createStore(config, new MetricRegistry());
-    session = store.getSession();
     searchPlugin = new CassandraSearchPlugin(store);
   }
 
