@@ -1,5 +1,5 @@
 language: java
-before_script: ./gradlew testClasses
+before_script: ./gradlew assemble
 script: ./gradlew checkstyleMain checkstyleTest checkstyleJmh
 jdk:
   - oraclejdk8
@@ -9,3 +9,6 @@ sudo: false
 cache:
   directories:
     - $HOME/.gradle/
+branches:
+  only:
+    - master
