@@ -17,6 +17,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
 import java.util.SortedMap;
@@ -25,7 +27,8 @@ import javax.inject.Inject;
 public final class LabelClientTypeContextTest {
   @Inject Store store;
   @Inject MetricRegistry metrics;
-  @Inject EventBus eventBus;
+
+  @Mock EventBus eventBus;
 
   private LabelClientTypeContext typeContext;
   private final long maxCacheSize = 2000;
@@ -35,6 +38,7 @@ public final class LabelClientTypeContextTest {
 
   @Before
   public void setUp() throws IOException {
+    MockitoAnnotations.initMocks(this);
     DaggerTestComponent.create().inject(this);
   }
 
