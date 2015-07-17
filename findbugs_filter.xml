@@ -9,4 +9,13 @@
     <Package name="se.tre.freki.grpc" />
     <Bug pattern="UCF_USELESS_CONTROL_FLOW" />
   </Match>
+
+  <Match>
+    <Package name="~se\.tre\.freki\..*\.generated" />
+    <Class name="~.+Benchmark.+" />
+  </Match>
+
+  <Match>
+    <Package name="org.openjdk.jmh.infra.generated"/>
+  </Match>
 </FindBugsFilter>
