@@ -69,7 +69,8 @@ public final class LabelClientTypeContextTest {
 
   @Test(expected = NullPointerException.class)
   public void testConstructorNoEventbus() {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, null, MAX_CACHE_SIZE);
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, null,
+        MAX_CACHE_SIZE);
   }
 
 
