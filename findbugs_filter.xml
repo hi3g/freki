@@ -7,7 +7,10 @@
 
   <Match>
     <Package name="se.tre.freki.grpc" />
-    <Bug pattern="UCF_USELESS_CONTROL_FLOW" />
+    <Or>
+      <Bug pattern="UCF_USELESS_CONTROL_FLOW" />
+      <Bug pattern="SE_BAD_FIELD" />
+    </Or>
   </Match>
 
   <Match>
