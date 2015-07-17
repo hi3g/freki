@@ -12,7 +12,6 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.typesafe.config.Config;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -28,8 +27,8 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   private Config config;
   private CassandraStoreDescriptor storeDescriptor;
 
-  @Before
-  public void setUp() throws Exception {
+  @Override
+  protected CassandraStore buildStore() {
     final CassandraTestComponent cassandraTestComponent = DaggerCassandraTestComponent.create();
 
     config = cassandraTestComponent.config();
@@ -38,7 +37,7 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
     // at least fail hard if it ever is any other store.
     storeDescriptor = (CassandraStoreDescriptor) cassandraTestComponent.storeDescriptor();
 
-    store = storeDescriptor.createStore(config, new MetricRegistry());
+    return storeDescriptor.createStore(config, new MetricRegistry());
   }
 
   @After

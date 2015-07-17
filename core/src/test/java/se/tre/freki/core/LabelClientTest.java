@@ -31,7 +31,6 @@ public class LabelClientTest {
   @Inject LabelClient labelClient;
 
   private LabelId sysCpu0;
-  private LabelId host;
   private LabelId web01;
 
   @Before
@@ -39,7 +38,6 @@ public class LabelClientTest {
     DaggerTestComponent.create().inject(this);
 
     sysCpu0 = store.createLabel("sys.cpu.0", METRIC).get();
-    host = store.createLabel("host", TAGK).get();
     web01 = store.createLabel("web01", TAGV).get();
   }
 
@@ -66,7 +64,7 @@ public class LabelClientTest {
   @Test
   public void createUidTagKeyExists() throws Exception {
     try {
-      labelClient.createId(TAGK, "host").get();
+      labelClient.createId(TAGV, "web01").get();
       fail("The id should have existed and therefore an exception should have been thrown");
     } catch (ExecutionException e) {
       assertTrue(e.getCause() instanceof IllegalArgumentException);
@@ -86,11 +84,6 @@ public class LabelClientTest {
   @Test
   public void getLabelIdNoSuchName() throws Exception {
     assertFalse(labelClient.getLabelId(METRIC, "sys.cpu.2").get().isPresent());
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void getLabelIdNullName() {
-    labelClient.getLabelId(TAGV, null);
   }
 
   @Test(expected = NullPointerException.class)

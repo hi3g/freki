@@ -7,6 +7,18 @@
 
   <Match>
     <Package name="se.tre.freki.grpc" />
-    <Bug pattern="UCF_USELESS_CONTROL_FLOW" />
+    <Or>
+      <Bug pattern="UCF_USELESS_CONTROL_FLOW" />
+      <Bug pattern="SE_BAD_FIELD" />
+    </Or>
+  </Match>
+
+  <Match>
+    <Package name="~se\.tre\.freki\..*\.generated" />
+    <Class name="~.+Benchmark.+" />
+  </Match>
+
+  <Match>
+    <Package name="org.openjdk.jmh.infra.generated"/>
   </Match>
 </FindBugsFilter>

@@ -2,6 +2,7 @@ package se.tre.freki.storage;
 
 import static org.junit.Assert.assertNotNull;
 
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -12,13 +13,20 @@ import org.junit.Test;
 public abstract class StoreDescriptorTest {
   protected StoreDescriptor storeDescriptor;
 
+  @Before
+  public void setUp() throws Exception {
+    storeDescriptor = buildStoreDescriptor();
+  }
+
+  protected abstract StoreDescriptor buildStoreDescriptor();
+
   @Test
-  public void testLabelIdSerializerNotNull() {
+  public void testLabelIdDeserializerNotNull() {
     assertNotNull(storeDescriptor.labelIdDeserializer());
   }
 
   @Test
-  public void testLabelIdDeserializerNotNull() {
+  public void testLabelIdSerializerNotNull() {
     assertNotNull(storeDescriptor.labelIdDeserializer());
   }
 }

@@ -21,8 +21,8 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 public class LabelMetaMixInTest {
-  private final String id = "d2576c75-8825-4ec2-8d93-311423c05c98";
-  private final LabelId labelId = new MemoryLabelId(UUID.fromString(id));
+  private static final String ID = "d2576c75-8825-4ec2-8d93-311423c05c98";
+  private final LabelId labelId = new MemoryLabelId(UUID.fromString(ID));
 
   @Inject ObjectMapper jsonMapper;
 
@@ -42,7 +42,7 @@ public class LabelMetaMixInTest {
     final ObjectNode rootNode = jsonMapper.readValue(json, ObjectNode.class);
 
     assertEquals(5, Iterators.size(rootNode.fields()));
-    assertEquals(id, rootNode.get("identifier").asText());
+    assertEquals(ID, rootNode.get("identifier").asText());
     assertEquals("METRIC", rootNode.get("type").asText());
     assertEquals("sys.cpu.0", rootNode.get("name").textValue());
     assertEquals("Description", rootNode.get("description").textValue());
