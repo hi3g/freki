@@ -43,11 +43,6 @@ public class WildcardIdLookupStrategyTest {
   }
 
   @Test
-  public void testResolveIdWildcardEmpty() throws Exception {
-    assertNull(lookupStrategy.getId(uid, "").get());
-  }
-
-  @Test
   public void testResolveIdWildcardStar() throws Exception {
     assertNull(lookupStrategy.getId(uid, "*").get());
   }
