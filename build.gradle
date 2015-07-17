@@ -137,7 +137,6 @@ subprojects {
 
     test {
         maxHeapSize = "2048m"
-        jvmArgs '-XX:MaxPermSize=256m'
 
         forkEvery = 1000
         maxParallelForks = 1
