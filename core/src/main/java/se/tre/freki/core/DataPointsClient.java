@@ -8,6 +8,7 @@ import se.tre.freki.labels.Labels;
 import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.plugins.PluginError;
 import se.tre.freki.plugins.RealTimePublisher;
+import se.tre.freki.query.TimeSeriesResultSet;
 import se.tre.freki.stats.Metrics;
 import se.tre.freki.stats.StopTimerCallback;
 import se.tre.freki.storage.Store;
@@ -23,7 +24,9 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.typesafe.config.Config;
 
+import java.util.Iterator;
 import java.util.Map;
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -202,9 +205,8 @@ public class DataPointsClient {
     return addPointComplete;
   }
 
-  // TODO
-  public ListenableFuture<Object[]> executeQuery(Object query) {
-    //return store.executeQuery(query);
+  @Nonnull
+  public Iterator<TimeSeriesResultSet> query(final String query) {
     return null;
   }
 }
