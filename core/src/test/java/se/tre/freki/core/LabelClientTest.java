@@ -64,7 +64,7 @@ public class LabelClientTest {
   @Test
   public void createUidTagKeyExists() throws Exception {
     try {
-      labelClient.createId(TAGK, "host").get();
+      labelClient.createId(TAGV, "web01").get();
       fail("The id should have existed and therefore an exception should have been thrown");
     } catch (ExecutionException e) {
       assertTrue(e.getCause() instanceof IllegalArgumentException);
