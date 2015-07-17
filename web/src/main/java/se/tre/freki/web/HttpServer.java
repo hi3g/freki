@@ -10,14 +10,19 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
 import joptsimple.OptionException;
 import joptsimple.OptionSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class HttpServer {
+  private static final Logger LOG = LoggerFactory.getLogger(HttpServer.class);
+
   /**
    * Entry-point for the http server application. The assign program is normally not executed
    * directly but rather through the main project.
@@ -69,7 +74,10 @@ public final class HttpServer {
             .handler(new LoggingHandler())
             .childHandler(httpServerComponent.httpServerInitializer());
 
-        b.bind(config.getInt("freki.web.port")).sync().channel().closeFuture().sync();
+        final int listenPort = config.getInt("freki.web.port");
+        final ChannelFuture bindFuture = b.bind(listenPort).sync();
+        LOG.info("Web server is now listening on port {}", listenPort);
+        bindFuture.channel().closeFuture().sync();
       } finally {
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
