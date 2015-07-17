@@ -6,7 +6,7 @@
 
 <suppressions>
   <!-- Ignore generated sources -->
-  <suppress checks="." files="(all|cassandra|core|idmanager[\\/]assign|web)[\\/]build" />
+  <suppress checks="." files="(main|grpc|cassandra|core|idmanager[\\/]assign|web)[\\/]build" />
 
   <!--
   Allow no empty line between package statement and the ParametersAreNonnullByDefault annotation
