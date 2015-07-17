@@ -10,6 +10,7 @@ import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
 
 import com.google.common.base.Optional;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -17,6 +18,13 @@ import java.util.concurrent.ExecutionException;
 
 public abstract class StoreTest<K extends Store> {
   protected K store;
+
+  @Before
+  public void setUp() throws Exception {
+    store = buildStore();
+  }
+
+  protected abstract K buildStore();
 
   /**
    * Get a label id that the store perceives as not being created. Since we have no regulations on a
@@ -29,7 +37,7 @@ public abstract class StoreTest<K extends Store> {
     store.createLabel("newname", LabelType.TAGK).get();
 
     try {
-      final LabelId secondAllocation = store.createLabel("newname", LabelType.TAGK).get();
+      store.createLabel("newname", LabelType.TAGK).get();
       fail("The second allocation with the same name should have thrown an exception");
     } catch (ExecutionException e) {
       assertTrue(e.getCause() instanceof LabelException);

@@ -51,7 +51,7 @@ public class AnnotationMixInTest {
 
   @Test
   public void serializeMatchesExactly() throws Exception {
-    final String json = new String(jsonMapper.writeValueAsBytes(annotation));
+    final String json = jsonMapper.writeValueAsString(annotation);
     assertEquals(annotationJson, json);
   }
 }

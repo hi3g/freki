@@ -32,13 +32,14 @@ import java.io.IOException;
 import javax.inject.Inject;
 
 public final class LabelClientTypeContextTest {
+  private static final long MAX_CACHE_SIZE = 2000;
+
   @Inject Store store;
   @Inject MetricRegistry metrics;
 
   @Mock EventBus eventBus;
 
   private LabelClientTypeContext typeContext;
-  private final long maxCacheSize = 2000;
 
   @Rule
   public final Timeout timeout = Timeout.millis(TestUtil.TIMEOUT);
@@ -52,22 +53,23 @@ public final class LabelClientTypeContextTest {
   @Test(expected = NullPointerException.class)
   public void testConstructorNoStore() {
     typeContext = new LabelClientTypeContext(null, LabelType.METRIC, metrics, eventBus,
-        maxCacheSize);
+        MAX_CACHE_SIZE);
   }
 
   @Test(expected = NullPointerException.class)
   public void testConstructorNoType() {
-    typeContext = new LabelClientTypeContext(store, null, metrics, eventBus, maxCacheSize);
+    typeContext = new LabelClientTypeContext(store, null, metrics, eventBus, MAX_CACHE_SIZE);
   }
 
   @Test(expected = NullPointerException.class)
   public void testConstructorNoMetrics() {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, null, eventBus, maxCacheSize);
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, null, eventBus,
+        MAX_CACHE_SIZE);
   }
 
   @Test(expected = NullPointerException.class)
   public void testConstructorNoEventbus() {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, null, maxCacheSize);
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, null, MAX_CACHE_SIZE);
   }
 
 
@@ -81,7 +83,7 @@ public final class LabelClientTypeContextTest {
     store = mock(Store.class);
     final LabelId id = randomLabelId();
 
-    typeContext = new LabelClientTypeContext(store, TAGK, metrics, eventBus, maxCacheSize);
+    typeContext = new LabelClientTypeContext(store, TAGK, metrics, eventBus, MAX_CACHE_SIZE);
 
     when(store.getName(id, TAGK)).thenAnswer(
         new Answer<ListenableFuture<Optional<String>>>() {
@@ -105,7 +107,7 @@ public final class LabelClientTypeContextTest {
   @Test
   public void testGetNameAbsent() throws Exception {
     typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
-        maxCacheSize);
+        MAX_CACHE_SIZE);
     assertFalse(typeContext.getName(mock(LabelId.class)).get().isPresent());
   }
 
@@ -114,7 +116,7 @@ public final class LabelClientTypeContextTest {
     store = mock(Store.class);
     final LabelId id = randomLabelId();
 
-    typeContext = new LabelClientTypeContext(store, TAGK, metrics, eventBus, maxCacheSize);
+    typeContext = new LabelClientTypeContext(store, TAGK, metrics, eventBus, MAX_CACHE_SIZE);
 
     when(store.getId("name", TAGK)).thenAnswer(
         new Answer<ListenableFuture<Optional<LabelId>>>() {
@@ -138,14 +140,14 @@ public final class LabelClientTypeContextTest {
   @Test
   public void testGetIdAbsent() throws Exception {
     typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
-        maxCacheSize);
+        MAX_CACHE_SIZE);
     assertFalse(typeContext.getId("foo").get().isPresent());
   }
 
   @Test
   public void createIdPublishesEventOnSuccess() throws Exception {
     typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
-        maxCacheSize);
+        MAX_CACHE_SIZE);
     typeContext.createId("foo").get();
     verify(eventBus).post(any(LabelCreatedEvent.class));
   }

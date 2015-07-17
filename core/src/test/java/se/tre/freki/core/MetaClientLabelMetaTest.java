@@ -36,7 +36,6 @@ public class MetaClientLabelMetaTest {
   @Mock private SearchPlugin searchPlugin;
 
   private LabelId sysCpu0;
-  private LabelId sysCpu2;
 
   @Rule
   public final Timeout timeout = Timeout.millis(TestUtil.TIMEOUT);
@@ -47,7 +46,6 @@ public class MetaClientLabelMetaTest {
     MockitoAnnotations.initMocks(this);
 
     sysCpu0 = store.createLabel("sys.cpu.0", LabelType.METRIC).get();
-    sysCpu2 = store.createLabel("sys.cpu.2", LabelType.METRIC).get();
 
     LabelMeta labelMeta = LabelMeta.create(sysCpu0, LabelType.METRIC, "sys.cpu.0", "Description",
         1328140801);

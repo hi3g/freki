@@ -31,7 +31,6 @@ public class LabelClientTest {
   @Inject LabelClient labelClient;
 
   private LabelId sysCpu0;
-  private LabelId host;
   private LabelId web01;
 
   @Before
@@ -39,7 +38,6 @@ public class LabelClientTest {
     DaggerTestComponent.create().inject(this);
 
     sysCpu0 = store.createLabel("sys.cpu.0", METRIC).get();
-    host = store.createLabel("host", TAGK).get();
     web01 = store.createLabel("web01", TAGV).get();
   }
 
