@@ -86,11 +86,6 @@ public class LabelClientTest {
     assertFalse(labelClient.getLabelId(METRIC, "sys.cpu.2").get().isPresent());
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void getLabelIdNullName() {
-    labelClient.getLabelId(TAGV, null);
-  }
-
   @Test(expected = NullPointerException.class)
   public void getLabelIdNullType() {
     labelClient.getLabelId(null, "sys.cpu.1");
