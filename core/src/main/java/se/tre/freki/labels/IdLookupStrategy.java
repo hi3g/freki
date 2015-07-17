@@ -3,7 +3,6 @@ package se.tre.freki.labels;
 import static com.google.common.util.concurrent.Futures.transform;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -68,7 +67,7 @@ public interface IdLookupStrategy {
   /**
    * An ID lookup strategy that supports wildcards.
    *
-   * <p>If the provided name is {@code null}, empty or equal to "*" it will be interpreted as a
+   * <p>If the provided name is equal to "*" it will be interpreted as a
    * wildcard and it will return immediately with a future that contains {@code null}.
    *
    * <p>If the provided name is not interpreted as a wildcard as described above then a regular
@@ -81,7 +80,7 @@ public interface IdLookupStrategy {
     @Override
     public ListenableFuture<LabelId> getId(final LabelClientTypeContext labelClientTypeContext,
                                            final String name) {
-      if (Strings.isNullOrEmpty(name) || "*".equals(name)) {
+      if ("*".equals(name)) {
         return Futures.immediateFuture(null);
       }
 
