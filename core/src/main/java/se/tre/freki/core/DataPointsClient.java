@@ -8,6 +8,7 @@ import se.tre.freki.labels.Labels;
 import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.plugins.PluginError;
 import se.tre.freki.plugins.RealTimePublisher;
+import se.tre.freki.query.TimeSeriesQuery;
 import se.tre.freki.query.TimeSeriesResultSet;
 import se.tre.freki.stats.Metrics;
 import se.tre.freki.stats.StopTimerCallback;
@@ -207,6 +208,11 @@ public class DataPointsClient {
 
   @Nonnull
   public Iterator<TimeSeriesResultSet> query(final String query) {
+    return null;
+  }
+
+  @Nonnull
+  public Iterator<TimeSeriesResultSet> query(final TimeSeriesQuery query) {
     return null;
   }
 }
