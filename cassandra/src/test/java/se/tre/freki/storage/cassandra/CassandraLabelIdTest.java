@@ -1,37 +1,46 @@
 package se.tre.freki.storage.cassandra;
 
-import static org.junit.Assert.*;
-
-import se.tre.freki.labels.LabelType;
+import static org.junit.Assert.assertEquals;
+import static se.tre.freki.labels.LabelType.METRIC;
+import static se.tre.freki.labels.LabelType.TAGK;
+import static se.tre.freki.labels.LabelType.TAGV;
+import static se.tre.freki.storage.cassandra.CassandraLabelId.makeIdTypeSpecific;
 
 import com.google.common.hash.Hashing;
 import org.junit.Test;
 
 public class CassandraLabelIdTest {
+  private static final long SMALL_ID = 3;
+  private static final long LARGE_ID = 524291;
+
+  private static final long LARGE_ID_METRIC    = 524288;
+  private static final long LARGE_ID_TAG_KEY   = 524290;
+  private static final long LARGE_ID_TAG_VALUE = 524289;
+
   @Test
-  public void makeLabelSpecificId() {
-    assertEquals(0, CassandraLabelId.makeLabelSpecificId(0, LabelType.METRIC));
-    assertEquals(0, CassandraLabelId.makeLabelSpecificId(3, LabelType.METRIC));
-    assertEquals(4, CassandraLabelId.makeLabelSpecificId(4, LabelType.METRIC));
-
-    assertEquals(1, CassandraLabelId.makeLabelSpecificId(0, LabelType.TAGV));
-    assertEquals(1, CassandraLabelId.makeLabelSpecificId(3, LabelType.TAGV));
-    assertEquals(5, CassandraLabelId.makeLabelSpecificId(4, LabelType.TAGV));
-
-    assertEquals(2, CassandraLabelId.makeLabelSpecificId(0, LabelType.TAGK));
-    assertEquals(2, CassandraLabelId.makeLabelSpecificId(3, LabelType.TAGK));
-    assertEquals(6, CassandraLabelId.makeLabelSpecificId(4, LabelType.TAGK));
+  public void testMakeIdTypeSpecificMasksMetric() throws Exception {
+    assertEquals(0b00, makeIdTypeSpecific(SMALL_ID, METRIC));
+    assertEquals(LARGE_ID_METRIC, makeIdTypeSpecific(LARGE_ID, METRIC));
   }
 
   @Test
-  public void generateId() {
+  public void testMakeIdTypeSpecificMasksTagKey() throws Exception {
+    assertEquals(0b10, makeIdTypeSpecific(SMALL_ID, TAGK));
+    assertEquals(LARGE_ID_TAG_KEY, makeIdTypeSpecific(LARGE_ID, TAGK));
+  }
 
+  @Test
+  public void testMakeIdTypeSpecificMasksTagValue() throws Exception {
+    assertEquals(0b01, makeIdTypeSpecific(SMALL_ID, TAGV));
+    assertEquals(LARGE_ID_TAG_VALUE, makeIdTypeSpecific(LARGE_ID, TAGV));
+  }
+
+  @Test
+  public void testGenerateIdHashes() {
     final String name = "testString";
+    final long id = Hashing.murmur3_128().hashString(name, CassandraConst.CHARSET).asLong();
+    final long typeId = makeIdTypeSpecific(id, METRIC);
 
-    long id = Hashing.murmur3_128().hashString(name, CassandraConst.CHARSET).asLong();
-    id = id >> 2;
-    id = id << 2;
-
-    assertEquals(id, CassandraLabelId.generateId(name, LabelType.METRIC));
+    assertEquals(typeId, CassandraLabelId.generateId(name, METRIC));
   }
 }

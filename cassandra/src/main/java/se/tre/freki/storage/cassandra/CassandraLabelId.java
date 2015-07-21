@@ -24,10 +24,10 @@ public class CassandraLabelId implements LabelId<CassandraLabelId> {
     // This discards half the hash but it should still work ok with murmur3.
     final long id = Hashing.murmur3_128().hashString(name, CassandraConst.CHARSET).asLong();
 
-    return makeLabelSpecificId(id, type);
+    return makeIdTypeSpecific(id, type);
   }
 
-  protected static long makeLabelSpecificId(final long id, final LabelType type) {
+  protected static long makeIdTypeSpecific(final long id, final LabelType type) {
 
     long returnValue = id;
     returnValue &= ~0b1; // unset LSB bit
