@@ -1,8 +1,10 @@
 package se.tre.freki.storage.cassandra;
 
 import se.tre.freki.labels.LabelId;
+import se.tre.freki.labels.LabelType;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.hash.Hashing;
 import com.google.common.primitives.Longs;
 
 import javax.annotation.Nonnull;
@@ -16,6 +18,35 @@ public class CassandraLabelId implements LabelId<CassandraLabelId> {
 
   public static LabelId fromLong(final long id) {
     return new CassandraLabelId(id);
+  }
+
+  protected static long generateId(final String name, final LabelType type) {
+    // This discards half the hash but it should still work ok with murmur3.
+    final long id = Hashing.murmur3_128().hashString(name, CassandraConst.CHARSET).asLong();
+
+    return makeLabelSpecificId(id, type);
+  }
+
+  protected static long makeLabelSpecificId(final long id, final LabelType type) {
+
+    long returnValue = id;
+    returnValue &= ~0b1; // unset LSB bit
+    returnValue &= ~0b10; // unset 2nd bit from LSB
+
+    switch (type) {
+      case METRIC:
+        break;
+      case TAGV:
+        returnValue |= 0b1; // set LSB bit
+        break;
+      case TAGK:
+        returnValue |= 0b10; // set 2nd bit from LSB
+        break;
+      default:
+        throw new IllegalArgumentException("Unknown type.");
+    }
+
+    return returnValue;
   }
 
   public static long toLong(final LabelId labelId) {
