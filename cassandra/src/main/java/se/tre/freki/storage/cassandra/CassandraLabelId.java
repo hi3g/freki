@@ -10,6 +10,10 @@ import com.google.common.primitives.Longs;
 import javax.annotation.Nonnull;
 
 public class CassandraLabelId implements LabelId<CassandraLabelId> {
+  private static long METRIC_MASK = 0xFFFFFFFFFFFFFFFCL;
+  private static long TAGK_MASK   = 0xFFFFFFFFFFFFFFFEL;
+  private static long TAGV_MASK   = 0xFFFFFFFFFFFFFFFDL;
+
   private final long id;
 
   CassandraLabelId(final long id) {
@@ -20,6 +24,16 @@ public class CassandraLabelId implements LabelId<CassandraLabelId> {
     return new CassandraLabelId(id);
   }
 
+  /**
+   * Generate a "random" long ID for the provided name. This is currently implemented using murmur3
+   * but this may change in the future. The generated ID will be masked so its type can later be
+   * identified by just looking at the ID. Note that this mask removes 2-bits from the ID space
+   * which means that there can only be 2^62-1 IDs.
+   *
+   * @param name The name of the new label to generate an ID for
+   * @param type The type of the new ID
+   * @return A generated masked ID
+   */
   protected static long generateId(final String name, final LabelType type) {
     // This discards half the hash but it should still work ok with murmur3.
     final long id = Hashing.murmur3_128().hashString(name, CassandraConst.CHARSET).asLong();
@@ -27,26 +41,25 @@ public class CassandraLabelId implements LabelId<CassandraLabelId> {
     return makeIdTypeSpecific(id, type);
   }
 
+  /**
+   * Mask the provided ID to be of the given type.
+   *
+   * @param id The ID to mask
+   * @param type The type of ID to mask it to
+   * @return The masked ID
+   */
   protected static long makeIdTypeSpecific(final long id, final LabelType type) {
-
-    long returnValue = id;
-    returnValue &= ~0b1; // unset LSB bit
-    returnValue &= ~0b10; // unset 2nd bit from LSB
-
     switch (type) {
       case METRIC:
-        break;
+        return id & METRIC_MASK;
       case TAGV:
-        returnValue |= 0b1; // set LSB bit
-        break;
+        return id & TAGV_MASK;
       case TAGK:
-        returnValue |= 0b10; // set 2nd bit from LSB
-        break;
+        return id & TAGK_MASK;
       default:
-        throw new IllegalArgumentException("Unknown type.");
+        throw new AssertionError("The switch should have covered all cases but did not. Type is "
+                                 + type);
     }
-
-    return returnValue;
   }
 
   public static long toLong(final LabelId labelId) {
