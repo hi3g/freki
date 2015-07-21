@@ -10,7 +10,6 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
@@ -62,26 +61,20 @@ public final class HttpServer {
       final EventLoopGroup workerGroup = EventLoopGroups.sharedWorkerGroup(
           config.getInt("freki.web.threads.worker_group"));
 
-      try {
-        final ServerBootstrap b = new ServerBootstrap()
-            .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-            .option(ChannelOption.SO_BACKLOG, config.getInt("freki.web.backlog"))
-            .option(ChannelOption.TCP_NODELAY, Boolean.TRUE)
-            .option(ChannelOption.SO_KEEPALIVE, Boolean.TRUE)
-            .option(ChannelOption.SO_REUSEADDR, Boolean.TRUE)
-            .group(bossGroup, workerGroup)
-            .channel(EpollServerSocketChannel.class)
-            .handler(new LoggingHandler())
-            .childHandler(httpServerComponent.httpServerInitializer());
+      final ServerBootstrap b = new ServerBootstrap()
+          .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+          .option(ChannelOption.SO_BACKLOG, config.getInt("freki.web.backlog"))
+          .option(ChannelOption.TCP_NODELAY, Boolean.TRUE)
+          .option(ChannelOption.SO_KEEPALIVE, Boolean.TRUE)
+          .option(ChannelOption.SO_REUSEADDR, Boolean.TRUE)
+          .group(bossGroup, workerGroup)
+          .channel(EpollServerSocketChannel.class)
+          .handler(new LoggingHandler())
+          .childHandler(httpServerComponent.httpServerInitializer());
 
-        final int listenPort = config.getInt("freki.web.port");
-        final ChannelFuture bindFuture = b.bind(listenPort).sync();
-        LOG.info("Web server is now listening on port {}", listenPort);
-        bindFuture.channel().closeFuture().sync();
-      } finally {
-        bossGroup.shutdownGracefully();
-        workerGroup.shutdownGracefully();
-      }
+      final int listenPort = config.getInt("freki.web.port");
+      b.bind(listenPort).sync();
+      LOG.info("Web server is now listening on port {}", listenPort);
     } catch (IllegalArgumentException | OptionException | InterruptedException e) {
       cliApplication.printError(e.getMessage());
       System.exit(42);
