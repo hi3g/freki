@@ -70,6 +70,7 @@ public final class PluginLoader<T> {
 
     for (final T plugin : plugins) {
       if (plugin.getClass().getName().equals(name)) {
+        LOG.info("Using {} as the {} plugin", plugin, pluginType);
         return plugin;
       }
     }
