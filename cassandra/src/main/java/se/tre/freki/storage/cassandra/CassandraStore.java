@@ -471,7 +471,7 @@ public class CassandraStore extends Store {
         // The Cassandra driver will have thrown an exception if the insertion
         // failed in which case we would not be here so just return the id we
         // sent to Cassandra.
-        return Futures.immediateFuture(fromLong(id));
+        return Futures.<LabelId>immediateFuture(fromLong(id));
       }
     });
   }
@@ -492,7 +492,7 @@ public class CassandraStore extends Store {
   public ListenableFuture<LabelId> createLabel(final String name,
                                                final LabelType type) {
     // This discards half the hash but it should still work ok with murmur3.
-    final long id = Hashing.murmur3_128().hashString(name, CassandraConst.CHARSET).asLong();
+    final long id = CassandraLabelId.generateId(name, type);
 
     // This does not protect us against someone trying to create the same
     // information in parallel but it is a convenience to the user so that we
