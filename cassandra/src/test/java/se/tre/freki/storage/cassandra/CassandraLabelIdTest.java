@@ -13,8 +13,8 @@ public class CassandraLabelIdTest {
   private static final long SMALL_ID = 3;
   private static final long LARGE_ID = 524291;
 
-  private static final long LARGE_ID_METRIC    = 524288;
-  private static final long LARGE_ID_TAG_KEY   = 524290;
+  private static final long LARGE_ID_METRIC = 524288;
+  private static final long LARGE_ID_TAG_KEY = 524290;
   private static final long LARGE_ID_TAG_VALUE = 524289;
 
   @Test
@@ -33,6 +33,29 @@ public class CassandraLabelIdTest {
   public void testMakeIdTypeSpecificMasksTagValue() throws Exception {
     assertEquals(0b01, makeIdTypeSpecific(SMALL_ID, TAGV));
     assertEquals(LARGE_ID_TAG_VALUE, makeIdTypeSpecific(LARGE_ID, TAGV));
+  }
+
+  @Test
+  public void testTypeMetric() throws Exception {
+    final CassandraLabelId labelId = CassandraLabelId.fromLong(LARGE_ID_METRIC);
+    assertEquals(METRIC, labelId.type());
+  }
+
+  @Test
+  public void testTypeTagKey() throws Exception {
+    final CassandraLabelId labelId = CassandraLabelId.fromLong(LARGE_ID_TAG_KEY);
+    assertEquals(TAGK, labelId.type());
+  }
+
+  @Test
+  public void testTypeTagValue() throws Exception {
+    final CassandraLabelId labelId = CassandraLabelId.fromLong(LARGE_ID_TAG_VALUE);
+    assertEquals(TAGV, labelId.type());
+  }
+
+  @Test(expected = AssertionError.class)
+  public void testTypeBadId() throws Exception {
+    CassandraLabelId.fromLong(LARGE_ID).type();
   }
 
   @Test

@@ -471,7 +471,7 @@ public class CassandraStore extends Store {
         // The Cassandra driver will have thrown an exception if the insertion
         // failed in which case we would not be here so just return the id we
         // sent to Cassandra.
-        return Futures.immediateFuture(fromLong(id));
+        return Futures.<LabelId>immediateFuture(fromLong(id));
       }
     });
   }

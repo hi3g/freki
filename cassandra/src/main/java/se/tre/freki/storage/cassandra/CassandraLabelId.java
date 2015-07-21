@@ -20,7 +20,7 @@ public class CassandraLabelId implements LabelId<CassandraLabelId> {
     this.id = id;
   }
 
-  public static LabelId fromLong(final long id) {
+  public static CassandraLabelId fromLong(final long id) {
     return new CassandraLabelId(id);
   }
 
@@ -94,7 +94,22 @@ public class CassandraLabelId implements LabelId<CassandraLabelId> {
         .add("id", id)
         .toString();
   }
-  
+
+  /**
+   * Get the type of label this ID represents.
+   */
+  public LabelType type() {
+    if ((id | METRIC_MASK) == METRIC_MASK) {
+      return LabelType.METRIC;
+    } else if ((id | TAGK_MASK) == TAGK_MASK) {
+      return LabelType.TAGK;
+    } else if ((id | TAGV_MASK) == TAGV_MASK) {
+      return LabelType.TAGV;
+    } else {
+      throw new AssertionError("The type of the ID " + id + " could not be determined");
+    }
+  }
+
   static class CassandraLabelIdSerializer implements LabelIdSerializer<CassandraLabelId> {
     @Nonnull
     @Override
