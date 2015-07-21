@@ -3,10 +3,14 @@ package se.tre.freki.utils;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.EpollEventLoopGroup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ThreadFactory;
 
 public class EventLoopGroups {
+  private static final Logger LOG = LoggerFactory.getLogger(EventLoopGroups.class);
+
   private static EventLoopGroup bossGroup;
   private static EventLoopGroup workerGroup;
 
@@ -54,8 +58,10 @@ public class EventLoopGroups {
    * @return An initialized event loop group who will be shutdown by a shutdown hook
    */
   private static EventLoopGroup newLoopGroup(final String baseName, final int parallelism) {
-    workerGroup = new EpollEventLoopGroup(parallelism, threadFactory(baseName));
+    EventLoopGroup workerGroup = new EpollEventLoopGroup(parallelism, threadFactory(baseName));
     Runtime.getRuntime().addShutdownHook(shutdownHookFor(workerGroup, baseName));
+    LOG.info("Created event loop group with base name {} and parallelism {}",
+        baseName, parallelism);
     return workerGroup;
   }
 
