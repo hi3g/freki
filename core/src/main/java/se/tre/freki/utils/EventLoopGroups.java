@@ -55,7 +55,7 @@ public class EventLoopGroups {
    */
   private static EventLoopGroup newLoopGroup(final String baseName, final int parallelism) {
     workerGroup = new EpollEventLoopGroup(parallelism, threadFactory(baseName));
-    Runtime.getRuntime().addShutdownHook(shutdownHookFor(workerGroup));
+    Runtime.getRuntime().addShutdownHook(shutdownHookFor(workerGroup, baseName));
     return workerGroup;
   }
 
@@ -80,14 +80,15 @@ public class EventLoopGroups {
    * @param eventLoopGroup The event loop group to shutdown
    * @return A new not started thread that will shutdown the provided event loop group when started
    */
-  private static Thread shutdownHookFor(final EventLoopGroup eventLoopGroup) {
-    return new Thread(new EventLoopGroupShutdownHook(eventLoopGroup));
+  private static Thread shutdownHookFor(final EventLoopGroup eventLoopGroup,
+                                        final String baseName) {
+    return new Thread(null, new EventLoopGroupShutdownHook(eventLoopGroup), baseName + "-shutdown");
   }
 
   /**
    * A runnable class that will shutdown {@link EventLoopGroup}s when ran.
    *
-   * @see #shutdownHookFor(EventLoopGroup)
+   * @see #shutdownHookFor(EventLoopGroup, String)
    */
   private static class EventLoopGroupShutdownHook implements Runnable {
     private final EventLoopGroup eventLoopGroup;
