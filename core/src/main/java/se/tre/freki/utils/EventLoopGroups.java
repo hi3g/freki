@@ -109,7 +109,7 @@ public class EventLoopGroups {
         eventLoopGroup.shutdownGracefully().sync();
       } catch (InterruptedException e) {
         // We can not use the logging framework since it may either be in the process of shutting
-        // down or it may already have done so. This will print to stderr with is good enough.
+        // down or it may already have done so. This will print to stderr which is good enough.
         e.printStackTrace();
       }
     }
