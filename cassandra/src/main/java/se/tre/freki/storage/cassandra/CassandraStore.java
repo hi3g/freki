@@ -10,6 +10,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.transform;
+import static se.tre.freki.storage.cassandra.BaseTimes.baseTimesBetween;
 import static se.tre.freki.storage.cassandra.CassandraLabelId.fromLong;
 import static se.tre.freki.storage.cassandra.CassandraLabelId.toLong;
 
@@ -28,6 +29,7 @@ import se.tre.freki.storage.cassandra.query.DataPointIterator;
 import se.tre.freki.storage.cassandra.statements.AddPointStatements;
 import se.tre.freki.storage.cassandra.statements.AddPointStatements.AddPointStatementMarkers;
 import se.tre.freki.storage.cassandra.statements.FetchPointsStatements;
+import se.tre.freki.storage.cassandra.statements.FetchPointsStatements.SelectPointStatementMarkers;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
@@ -53,6 +55,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.PrimitiveIterator;
 import javax.annotation.Nonnull;
 
 /**
@@ -412,11 +415,24 @@ public class CassandraStore extends Store {
   private ResultSetFuture fetchTimeSeriesRows(final ByteBuffer timeSeriesId,
                                               final long startTime,
                                               final long endTime) {
-    final long startBaseTime = BaseTimes.baseTimeFor(startTime);
-    final long endBaseTime = BaseTimes.baseTimeFor(endTime);
+    final PrimitiveIterator.OfLong baseTimes = baseTimesBetween(startTime, endTime);
 
-    return session.executeAsync(fetchTimeSeriesStatement.bind(
-        timeSeriesId, startBaseTime, endBaseTime, startTime, endTime));
+    while (baseTimes.hasNext()) {
+      fetchTimeSeriesRows(timeSeriesId, baseTimes.nextLong(), startTime, endTime);
+    }
+
+  }
+
+
+  private ResultSetFuture fetchTimeSeriesRows(final ByteBuffer timeSeriesId,
+                                              final long baseTime,
+                                              final long startTime,
+                                              final long endTime) {
+    return session.executeAsync(fetchTimeSeriesStatement.bind()
+        .setBytesUnsafe(SelectPointStatementMarkers.ID.ordinal(), timeSeriesId)
+        .setLong(SelectPointStatementMarkers.BASE_TIME.ordinal(), baseTime)
+        .setLong(SelectPointStatementMarkers.LOWER_TIMESTAMP.ordinal(), startTime)
+        .setLong(SelectPointStatementMarkers.UPPER_TIMESTAMP.ordinal(), endTime));
   }
 
   /**
