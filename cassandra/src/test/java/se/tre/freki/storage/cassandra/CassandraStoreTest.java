@@ -81,13 +81,6 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   }
 
   @Test
-  public void testBuildBaseTimeNormalizes() {
-    final long timestamp = 1434545416154L;
-    final long baseTime = 1434542400000L;
-    assertEquals(baseTime, CassandraStore.buildBaseTime(timestamp));
-  }
-
-  @Test
   public void testCreateId() throws Exception {
     final String doesNotExistName = "does.not.exist";
     final long doesNotExistId = 10L;
