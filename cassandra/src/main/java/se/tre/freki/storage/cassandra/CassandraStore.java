@@ -118,13 +118,6 @@ public class CassandraStore extends Store {
   }
 
   /**
-   * Calculate the base time based on a timestamp to be used in a row key.
-   */
-  static long buildBaseTime(final long timestamp) {
-    return (timestamp - (timestamp % CassandraConst.BASE_TIME_PERIOD));
-  }
-
-  /**
    * In this method we prepare all the statements used for accessing Cassandra.
    */
   private void prepareStatements() {
@@ -240,7 +233,7 @@ public class CassandraStore extends Store {
 
     final ByteBuffer tsid = ByteBuffer.wrap(tsidHasher.hash().asBytes());
 
-    final long baseTime = buildBaseTime(timestamp);
+    final long baseTime = BaseTimes.baseTimeFor(timestamp);
 
     addPointStatement.setBytesUnsafe(AddPointStatementMarkers.ID.ordinal(), tsid);
     addPointStatement.setLong(AddPointStatementMarkers.BASE_TIME.ordinal(), baseTime);
