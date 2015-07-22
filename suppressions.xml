@@ -6,7 +6,7 @@
 
 <suppressions>
   <!-- Ignore generated sources -->
-  <suppress checks="." files="(main|grpc|cassandra|core|idmanager[\\/]assign|web)[\\/]build" />
+  <suppress checks="." files="(main|grpc|cassandra|core|label-manager[\\/]createLabel|web)[\\/]build" />
 
   <!--
   Allow no empty line between package statement and the ParametersAreNonnullByDefault annotation
@@ -14,7 +14,7 @@
   <suppress checks="EmptyLineSeparator" files="package-info.java$" />
 
   <!-- Don't require javadocs for test methods -->
-  <suppress checks="JavadocMethod" files="(all|cassandra|core|idmanager[\\/]assign|web)[\\/]src[\\/]test" />
+  <suppress checks="JavadocMethod" files="(all|cassandra|core|label-manager[\\/]createLabel|web)[\\/]src[\\/]test" />
 
   <!-- Suppress package-info errors in the test and jmh folders -->
   <suppress checks="JavadocPackage" files="[\\/]test[\\/]"/>
