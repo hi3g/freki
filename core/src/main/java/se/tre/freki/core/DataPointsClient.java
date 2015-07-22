@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.addCallback;
 
+import se.tre.freki.labels.Labels;
 import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.plugins.PluginError;
 import se.tre.freki.plugins.RealTimePublisher;
@@ -83,10 +84,10 @@ public class DataPointsClient {
         "No more than %s tags are allowed but there are %s",
         maxTags, tags.size(), metric, tags);
 
-    LabelClient.validateLabelName("metric name", metric);
+    Labels.checkLabelName("metric name", metric);
     for (final Map.Entry<String, String> tag : tags.entrySet()) {
-      LabelClient.validateLabelName("tag name", tag.getKey());
-      LabelClient.validateLabelName("tag value", tag.getValue());
+      Labels.checkLabelName("tag name", tag.getKey());
+      Labels.checkLabelName("tag value", tag.getValue());
     }
   }
 

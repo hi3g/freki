@@ -1,5 +1,5 @@
 
-package se.tre.freki.core;
+package se.tre.freki.labels;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -16,12 +16,12 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Benchmark)
 @Fork(3)
-public class ValidaLabelNameBenchmark {
+public class ValidateLabelNameBenchmark {
   @Param({"host", "sys.cpu.util"})
   public String labelName;
 
   @Benchmark
   public void validateLabelName() {
-    LabelClient.validateLabelName("benchmark", labelName);
+    Labels.checkLabelName("benchmark", labelName);
   }
 }

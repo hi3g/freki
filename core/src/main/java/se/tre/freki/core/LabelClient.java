@@ -9,6 +9,7 @@ import se.tre.freki.labels.IdLookupStrategy;
 import se.tre.freki.labels.LabelClientTypeContext;
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
+import se.tre.freki.labels.Labels;
 import se.tre.freki.labels.StaticTimeSeriesId;
 import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.search.IdChangeIndexerListener;
@@ -16,7 +17,6 @@ import se.tre.freki.search.SearchPlugin;
 import se.tre.freki.storage.Store;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -41,15 +41,6 @@ public class LabelClient {
   final LabelClientTypeContext tagKeys;
   /** Label type context for the tag values. */
   final LabelClientTypeContext tagValues;
-  /** Label name INVALID_LETTER_MATCHER, use to validate label. */
-
-  static final CharMatcher INVALID_LETTER_MATCHER = CharMatcher.anyOf("-./_")
-      .or(CharMatcher.JAVA_UPPER_CASE)
-      .or(CharMatcher.JAVA_LOWER_CASE)
-      .or(CharMatcher.JAVA_DIGIT)
-      .and(CharMatcher.ASCII)
-      .negate()
-      .precomputed();
 
   private final IdLookupStrategy tagKeyLookupStrategy;
   private final IdLookupStrategy tagValueLookupStrategy;
@@ -83,23 +74,6 @@ public class LabelClient {
 
     // Notify the search plugin about new and deleted labels
     idEventBus.register(new IdChangeIndexerListener(store, searchPlugin));
-  }
-
-  /**
-   * Ensures that a given string is a valid metric name or tag name/value.
-   *
-   * @param what A human readable description of what's being validated.
-   * @param name The string to validate.
-   * @throws IllegalArgumentException if the string isn't valid.
-   */
-  public static void validateLabelName(final String what, final String name) {
-    checkNotNull(name, "%s must not be null", what);
-    int index = INVALID_LETTER_MATCHER.indexIn(name);
-    //If no match index -1 is returned
-    if (-1 != index) {
-      throw new IllegalArgumentException(
-          "Invalid " + what + " (\"" + name + "\"): illegal character: " + name.charAt(index));
-    }
   }
 
   /**
@@ -158,7 +132,7 @@ public class LabelClient {
 
   /**
    * Create a new ID for the given name and type. The name must pass the checks performed by {@link
-   * #validateLabelName(String, String)}.
+   * Labels#checkLabelName(String, String)}.
    *
    * @param type The type of label to create
    * @param name The name of the label to create
@@ -167,7 +141,7 @@ public class LabelClient {
   @Nonnull
   public ListenableFuture<LabelId> createId(final LabelType type,
                                             final String name) {
-    validateLabelName(type.toString(), name);
+    Labels.checkLabelName(type.toString(), name);
 
     final LabelClientTypeContext instance = idContextForType(type);
 
