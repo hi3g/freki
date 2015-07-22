@@ -118,6 +118,36 @@ public class CassandraStore extends Store {
   }
 
   @Nonnull
+  @Override
+  public ListenableFuture<Void> addPoint(final TimeSeriesId tsuid,
+                                         final long timestamp,
+                                         final float value) {
+    final BoundStatement addPointStatement = addFloatStatement.bind()
+        .setFloat(AddPointStatementMarkers.VALUE.ordinal(), value);
+    return addPoint(addPointStatement, tsuid.metric(), tsuid.tags(), timestamp);
+  }
+
+  @Nonnull
+  @Override
+  public ListenableFuture<Void> addPoint(final TimeSeriesId tsuid,
+                                         final long timestamp,
+                                         final double value) {
+    final BoundStatement addPointStatement = addDoubleStatement.bind()
+        .setDouble(AddPointStatementMarkers.VALUE.ordinal(), value);
+    return addPoint(addPointStatement, tsuid.metric(), tsuid.tags(), timestamp);
+  }
+
+  @Nonnull
+  @Override
+  public ListenableFuture<Void> addPoint(final TimeSeriesId tsuid,
+                                         final long timestamp,
+                                         final long value) {
+    final BoundStatement addPointStatement = addLongStatement.bind()
+        .setLong(AddPointStatementMarkers.VALUE.ordinal(), value);
+    return addPoint(addPointStatement, tsuid.metric(), tsuid.tags(), timestamp);
+  }
+
+  @Nonnull
   private ListenableFuture<Void> addPoint(final BoundStatement addPointStatement,
                                           final LabelId metric,
                                           final List<LabelId> tags,
@@ -311,36 +341,6 @@ public class CassandraStore extends Store {
                                                     final LabelType type) {
     ListenableFuture<List<String>> namesFuture = getNames(id, type);
     return transform(namesFuture, new FirstOrAbsentFunction<String>());
-  }
-
-  @Nonnull
-  @Override
-  public ListenableFuture<Void> addPoint(final TimeSeriesId tsuid,
-                                         final long timestamp,
-                                         final float value) {
-    final BoundStatement addPointStatement = addFloatStatement.bind()
-        .setFloat(AddPointStatementMarkers.VALUE.ordinal(), value);
-    return addPoint(addPointStatement, tsuid.metric(), tsuid.tags(), timestamp);
-  }
-
-  @Nonnull
-  @Override
-  public ListenableFuture<Void> addPoint(final TimeSeriesId tsuid,
-                                         final long timestamp,
-                                         final double value) {
-    final BoundStatement addPointStatement = addDoubleStatement.bind()
-        .setDouble(AddPointStatementMarkers.VALUE.ordinal(), value);
-    return addPoint(addPointStatement, tsuid.metric(), tsuid.tags(), timestamp);
-  }
-
-  @Nonnull
-  @Override
-  public ListenableFuture<Void> addPoint(final TimeSeriesId tsuid,
-                                         final long timestamp,
-                                         final long value) {
-    final BoundStatement addPointStatement = addLongStatement.bind()
-        .setLong(AddPointStatementMarkers.VALUE.ordinal(), value);
-    return addPoint(addPointStatement, tsuid.metric(), tsuid.tags(), timestamp);
   }
 
   @Override
