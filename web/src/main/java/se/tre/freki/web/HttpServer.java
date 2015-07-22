@@ -24,7 +24,7 @@ public final class HttpServer {
   private static final Logger LOG = LoggerFactory.getLogger(HttpServer.class);
 
   /**
-   * Entry-point for the http server application. The assign program is normally not executed
+   * Entry-point for the http server application. The web program is normally not executed
    * directly but rather through the main project.
    *
    * @param args The command-line arguments

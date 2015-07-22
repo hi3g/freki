@@ -4,14 +4,14 @@ rootProject.name = "freki"
 include ":freki-main"
 include ":freki-core"
 include ":freki-cassandra"
-include ":idmanager:freki-assign"
+include ":label-manager:freki-create"
 include ":freki-web"
 include ":freki-grpc"
 
 project(':freki-main').projectDir = "$rootDir/main" as File
 project(':freki-core').projectDir = "$rootDir/core" as File
 project(':freki-cassandra').projectDir = "$rootDir/cassandra" as File
-project(':idmanager:freki-assign').projectDir = "$rootDir/idmanager/assign" as File
+project(':label-manager:freki-create').projectDir = "$rootDir/label-manager/createlabel" as File
 project(':freki-web').projectDir = "$rootDir/web" as File
 project(':freki-grpc').projectDir = "$rootDir/grpc" as File
 

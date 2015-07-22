@@ -9,7 +9,7 @@ dependencies {
     compile project(":freki-core")
     compile project(":freki-cassandra")
 
-    compile project(":idmanager:freki-assign")
+    compile project(":label-manager:freki-create")
     compile project(":freki-web")
 }
 
