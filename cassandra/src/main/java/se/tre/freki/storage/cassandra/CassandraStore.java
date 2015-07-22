@@ -19,12 +19,15 @@ import se.tre.freki.labels.LabelType;
 import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.meta.Annotation;
 import se.tre.freki.meta.LabelMeta;
+import se.tre.freki.query.DataPoint;
 import se.tre.freki.storage.Store;
 import se.tre.freki.storage.cassandra.functions.FirstOrAbsentFunction;
 import se.tre.freki.storage.cassandra.functions.IsEmptyFunction;
 import se.tre.freki.storage.cassandra.functions.ToVoidFunction;
+import se.tre.freki.storage.cassandra.query.DataPointIterator;
 import se.tre.freki.storage.cassandra.statements.AddPointStatements;
 import se.tre.freki.storage.cassandra.statements.AddPointStatements.AddPointStatementMarkers;
+import se.tre.freki.storage.cassandra.statements.FetchDataPointsStatements;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
@@ -47,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
@@ -77,6 +81,12 @@ public class CassandraStore extends Store {
   private final PreparedStatement addFloatStatement;
   private final PreparedStatement addDoubleStatement;
   private final PreparedStatement addLongStatement;
+
+  /**
+   * Statement to fetch the data points of a single time series between two timestamps.
+   */
+  private final PreparedStatement fetchTimeSeriesStatement;
+
   private PreparedStatement insertTagsStatement;
   /**
    * The statement used by the {@link #createLabel} method.
@@ -111,6 +121,9 @@ public class CassandraStore extends Store {
     this.addFloatStatement = addPointStatements.addFloatStatement();
     this.addDoubleStatement = addPointStatements.addDoubleStatement();
     this.addLongStatement = addPointStatements.addLongStatement();
+
+    final FetchDataPointsStatements fetchPointsStatements = new FetchDataPointsStatements(session);
+    this.fetchTimeSeriesStatement = fetchPointsStatements.selectDataPointsStatement();
 
     prepareStatements();
   }
@@ -380,6 +393,30 @@ public class CassandraStore extends Store {
   @Override
   public ListenableFuture<Boolean> updateMeta(LabelMeta meta) {
     throw new UnsupportedOperationException("Not implemented yet");
+  }
+
+  protected ListenableFuture<Iterator<? extends DataPoint>> fetchTimeSeries(
+      final ByteBuffer timeSeriesId,
+      final long startTime,
+      final long endTime) {
+    final ResultSetFuture rowsFuture = fetchTimeSeriesRows(timeSeriesId, startTime, endTime);
+
+    return transform(rowsFuture, new Function<ResultSet, Iterator<? extends DataPoint>>() {
+      @Override
+      public Iterator<? extends DataPoint> apply(final ResultSet rows) {
+        return DataPointIterator.iteratorFor(rows);
+      }
+    });
+  }
+
+  private ResultSetFuture fetchTimeSeriesRows(final ByteBuffer timeSeriesId,
+                                              final long startTime,
+                                              final long endTime) {
+    final long startBaseTime = BaseTimes.baseTimeFor(startTime);
+    final long endBaseTime = BaseTimes.baseTimeFor(endTime);
+
+    return session.executeAsync(fetchTimeSeriesStatement.bind(
+        startBaseTime, endBaseTime, startTime, endTime));
   }
 
   /**
