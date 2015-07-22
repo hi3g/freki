@@ -117,108 +117,6 @@ public class CassandraStore extends Store {
     prepareStatements();
   }
 
-  /**
-   * In this method we prepare all the statements used for accessing Cassandra.
-   */
-  private void prepareStatements() {
-    checkNotNull(session);
-
-    createIdStatement = session.prepare(
-        batch(
-            insertInto(Tables.ID_TO_NAME)
-                .value("label_id", bindMarker())
-                .value("type", bindMarker())
-                .value("creation_time", bindMarker())
-                .value("name", bindMarker()),
-            insertInto(Tables.NAME_TO_ID)
-                .value("name", bindMarker())
-                .value("type", bindMarker())
-                .value("creation_time", bindMarker())
-                .value("label_id", bindMarker())))
-        .setConsistencyLevel(ConsistencyLevel.ALL);
-
-    updateUidNameStatement = session.prepare(
-        update(Tables.ID_TO_NAME)
-            .with(set("name", bindMarker()))
-            .where(eq("label_id", bindMarker()))
-            .and(eq("type", bindMarker())));
-
-    updateNameUidStatement = session.prepare(
-        batch(
-            delete()
-                .from(Tables.NAME_TO_ID)
-                .where(eq("name", bindMarker()))
-                .and(eq("type", bindMarker())),
-            insertInto(Tables.NAME_TO_ID)
-                .value("name", bindMarker())
-                .value("type", bindMarker())
-                .value("label_id", bindMarker())));
-
-    getNameStatement = session.prepare(
-        select()
-            .all()
-            .from(Tables.ID_TO_NAME)
-            .where(eq("label_id", bindMarker()))
-            .and(eq("type", bindMarker()))
-            .limit(2));
-
-    getIdStatement = session.prepare(
-        select()
-            .all()
-            .from(Tables.NAME_TO_ID)
-            .where(eq("name", bindMarker()))
-            .and(eq("type", bindMarker()))
-            .limit(2));
-
-    insertTagsStatement = session.prepare(
-        insertInto(Tables.TS_INVERTED_INDEX)
-            .value("label_id", bindMarker())
-            .value("type", bindMarker())
-            .value("timeseries_id", bindMarker()));
-  }
-
-  public Session getSession() {
-    return session;
-  }
-
-  @Nonnull
-  @Override
-  public ListenableFuture<Annotation> getAnnotation(final LabelId metric,
-                                                    final ImmutableMap<LabelId, LabelId> tags,
-                                                    final long startTime) {
-    throw new UnsupportedOperationException("Not implemented yet");
-  }
-
-  @Nonnull
-  @Override
-  public ListenableFuture<Void> addPoint(final TimeSeriesId tsuid,
-                                         final long timestamp,
-                                         final float value) {
-    final BoundStatement addPointStatement = addFloatStatement.bind()
-        .setFloat(AddPointStatementMarkers.VALUE.ordinal(), value);
-    return addPoint(addPointStatement, tsuid.metric(), tsuid.tags(), timestamp);
-  }
-
-  @Nonnull
-  @Override
-  public ListenableFuture<Void> addPoint(final TimeSeriesId tsuid,
-                                         final long timestamp,
-                                         final double value) {
-    final BoundStatement addPointStatement = addDoubleStatement.bind()
-        .setDouble(AddPointStatementMarkers.VALUE.ordinal(), value);
-    return addPoint(addPointStatement, tsuid.metric(), tsuid.tags(), timestamp);
-  }
-
-  @Nonnull
-  @Override
-  public ListenableFuture<Void> addPoint(final TimeSeriesId tsuid,
-                                         final long timestamp,
-                                         final long value) {
-    final BoundStatement addPointStatement = addLongStatement.bind()
-        .setLong(AddPointStatementMarkers.VALUE.ordinal(), value);
-    return addPoint(addPointStatement, tsuid.metric(), tsuid.tags(), timestamp);
-  }
-
   @Nonnull
   private ListenableFuture<Void> addPoint(final BoundStatement addPointStatement,
                                           final LabelId metric,
@@ -243,162 +141,6 @@ public class CassandraStore extends Store {
     final ResultSetFuture future = session.executeAsync(addPointStatement);
 
     return transform(future, new ToVoidFunction());
-  }
-
-  private void writeTimeseriesIdIndex(final LabelId metric,
-                                      final Map<LabelId, LabelId> tags,
-                                      final ByteBuffer tsid) {
-    session.executeAsync(insertTagsStatement.bind()
-        .setLong(0, toLong(metric))
-        .setString(1, LabelType.METRIC.toValue())
-        .setBytesUnsafe(2, tsid));
-
-    for (final Map.Entry<LabelId, LabelId> entry : tags.entrySet()) {
-      session.executeAsync(insertTagsStatement.bind()
-          .setLong(0, toLong(entry.getKey()))
-          .setString(1, LabelType.TAGK.toValue())
-          .setBytesUnsafe(2, tsid));
-
-      session.executeAsync(insertTagsStatement.bind()
-          .setLong(0, toLong(entry.getValue()))
-          .setString(1, LabelType.TAGV.toValue())
-          .setBytesUnsafe(2, tsid));
-    }
-  }
-
-  @Override
-  public void close() {
-    cluster.close();
-  }
-
-  @Nonnull
-  @Override
-  public ListenableFuture<Optional<LabelId>> getId(final String name,
-                                                   final LabelType type) {
-    ListenableFuture<List<LabelId>> idsFuture = getIds(name, type);
-    return transform(idsFuture, new FirstOrAbsentFunction<LabelId>());
-  }
-
-  /**
-   * Fetch the first two IDs that are associated with the provided name and type.
-   *
-   * @param name The name to fetch IDs for
-   * @param type The type of IDs to fetch
-   * @return A future with a list of the first two found IDs
-   */
-  @Nonnull
-  ListenableFuture<List<LabelId>> getIds(final String name,
-                                         final LabelType type) {
-    ResultSetFuture idsFuture = session.executeAsync(
-        getIdStatement.bind(name, type.toValue()));
-
-    return transform(idsFuture, new Function<ResultSet, List<LabelId>>() {
-      @Override
-      public List<LabelId> apply(final ResultSet result) {
-        ImmutableList.Builder<LabelId> builder = ImmutableList.builder();
-
-        for (final Row row : result) {
-          final long id = row.getLong("label_id");
-          builder.add(fromLong(id));
-        }
-
-        final ImmutableList<LabelId> ids = builder.build();
-
-        if (ids.size() > 1) {
-          LOG.error("Found duplicate IDs for ({}, {})", name, type);
-        }
-
-        return ids;
-      }
-    });
-  }
-
-  @Nonnull
-  @Override
-  public ListenableFuture<Optional<String>> getName(final LabelId id,
-                                                    final LabelType type) {
-    ListenableFuture<List<String>> namesFuture = getNames(id, type);
-    return transform(namesFuture, new FirstOrAbsentFunction<String>());
-  }
-
-  /**
-   * Fetch the first two names that are associated with the provided id and type.
-   *
-   * @param id The id to fetch names for
-   * @param type The type of names to fetch
-   * @return A future with a list of the first two found names
-   */
-  @Nonnull
-  ListenableFuture<List<String>> getNames(final LabelId id,
-                                          final LabelType type) {
-    ResultSetFuture namesFuture = session.executeAsync(
-        getNameStatement.bind(toLong(id), type.toValue()));
-
-    return transform(namesFuture, new Function<ResultSet, List<String>>() {
-      @Override
-      public List<String> apply(final ResultSet result) {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-        for (final Row row : result) {
-          final String name = row.getString("name");
-          builder.add(name);
-        }
-
-        final ImmutableList<String> names = builder.build();
-
-        if (names.size() > 1) {
-          LOG.error("Found duplicate names for ({}, {})", id, type);
-        }
-
-        return names;
-      }
-    });
-  }
-
-  @Nonnull
-  @Override
-  public ListenableFuture<LabelMeta> getMeta(final LabelId uid,
-                                             final LabelType type) {
-    throw new UnsupportedOperationException("Not implemented yet");
-  }
-
-  @Nonnull
-  @Override
-  public ListenableFuture<Boolean> updateMeta(LabelMeta meta) {
-    throw new UnsupportedOperationException("Not implemented yet");
-  }
-
-  @Nonnull
-  @Override
-  public ListenableFuture<Void> deleteLabel(final String name,
-                                            final LabelType type) {
-    throw new UnsupportedOperationException("Not implemented yet");
-  }
-
-  /**
-   * Check if (id, type) is available and return a future that contains a boolean that will be true
-   * if the id is available or false if otherwise.
-   *
-   * @param id The name to check
-   * @param type The type to check
-   * @return A future that contains a boolean that indicates if the id was available
-   */
-  private ListenableFuture<Boolean> isIdAvailable(final long id,
-                                                  final LabelType type) {
-    return transform(getNames(fromLong(id), type), new IsEmptyFunction());
-  }
-
-  /**
-   * Check if (name, type) is available and return a future that contains a boolean that will be
-   * true if the name is available or false if otherwise.
-   *
-   * @param name The name to check
-   * @param type The type to check
-   * @return A future that contains a boolean that indicates if the name was available
-   */
-  private ListenableFuture<Boolean> isNameAvailable(final String name,
-                                                    final LabelType type) {
-    return transform(getIds(name, type), new IsEmptyFunction());
   }
 
   /**
@@ -439,6 +181,11 @@ public class CassandraStore extends Store {
         return Futures.immediateFuture(null);
       }
     });
+  }
+
+  @Override
+  public void close() {
+    cluster.close();
   }
 
   /**
@@ -540,15 +287,72 @@ public class CassandraStore extends Store {
 
   @Nonnull
   @Override
-  public ListenableFuture<Void> deleteAnnotation(final LabelId metric,
-                                                 final ImmutableMap<LabelId, LabelId> tags,
-                                                 final long startTime) {
+  public ListenableFuture<Void> deleteLabel(final String name,
+                                            final LabelType type) {
+    throw new UnsupportedOperationException("Not implemented yet");
+  }
+
+  @Override
+  public ListenableFuture<List<byte[]>> executeTimeSeriesQuery(final Object query) {
     throw new UnsupportedOperationException("Not implemented yet");
   }
 
   @Nonnull
   @Override
-  public ListenableFuture<Boolean> updateAnnotation(Annotation annotation) {
+  public ListenableFuture<Optional<LabelId>> getId(final String name,
+                                                   final LabelType type) {
+    ListenableFuture<List<LabelId>> idsFuture = getIds(name, type);
+    return transform(idsFuture, new FirstOrAbsentFunction<LabelId>());
+  }
+
+  @Nonnull
+  @Override
+  public ListenableFuture<Optional<String>> getName(final LabelId id,
+                                                    final LabelType type) {
+    ListenableFuture<List<String>> namesFuture = getNames(id, type);
+    return transform(namesFuture, new FirstOrAbsentFunction<String>());
+  }
+
+  @Nonnull
+  @Override
+  public ListenableFuture<Void> addPoint(final TimeSeriesId tsuid,
+                                         final long timestamp,
+                                         final float value) {
+    final BoundStatement addPointStatement = addFloatStatement.bind()
+        .setFloat(AddPointStatementMarkers.VALUE.ordinal(), value);
+    return addPoint(addPointStatement, tsuid.metric(), tsuid.tags(), timestamp);
+  }
+
+  @Nonnull
+  @Override
+  public ListenableFuture<Void> addPoint(final TimeSeriesId tsuid,
+                                         final long timestamp,
+                                         final double value) {
+    final BoundStatement addPointStatement = addDoubleStatement.bind()
+        .setDouble(AddPointStatementMarkers.VALUE.ordinal(), value);
+    return addPoint(addPointStatement, tsuid.metric(), tsuid.tags(), timestamp);
+  }
+
+  @Nonnull
+  @Override
+  public ListenableFuture<Void> addPoint(final TimeSeriesId tsuid,
+                                         final long timestamp,
+                                         final long value) {
+    final BoundStatement addPointStatement = addLongStatement.bind()
+        .setLong(AddPointStatementMarkers.VALUE.ordinal(), value);
+    return addPoint(addPointStatement, tsuid.metric(), tsuid.tags(), timestamp);
+  }
+
+  @Override
+  public ListenableFuture<ImmutableList<Object>> executeQuery(Object query) {
+    throw new UnsupportedOperationException("Not implemented yet");
+  }
+
+  @Nonnull
+  @Override
+  public ListenableFuture<Void> deleteAnnotation(final LabelId metric,
+                                                 final ImmutableMap<LabelId, LabelId> tags,
+                                                 final long startTime) {
     throw new UnsupportedOperationException("Not implemented yet");
   }
 
@@ -561,13 +365,209 @@ public class CassandraStore extends Store {
     throw new UnsupportedOperationException("Not implemented yet");
   }
 
+  @Nonnull
   @Override
-  public ListenableFuture<ImmutableList<Object>> executeQuery(Object query) {
+  public ListenableFuture<Annotation> getAnnotation(final LabelId metric,
+                                                    final ImmutableMap<LabelId, LabelId> tags,
+                                                    final long startTime) {
     throw new UnsupportedOperationException("Not implemented yet");
   }
 
+  @Nonnull
   @Override
-  public ListenableFuture<List<byte[]>> executeTimeSeriesQuery(final Object query) {
+  public ListenableFuture<Boolean> updateAnnotation(Annotation annotation) {
     throw new UnsupportedOperationException("Not implemented yet");
+  }
+
+  @Nonnull
+  @Override
+  public ListenableFuture<LabelMeta> getMeta(final LabelId uid,
+                                             final LabelType type) {
+    throw new UnsupportedOperationException("Not implemented yet");
+  }
+
+  @Nonnull
+  @Override
+  public ListenableFuture<Boolean> updateMeta(LabelMeta meta) {
+    throw new UnsupportedOperationException("Not implemented yet");
+  }
+
+  /**
+   * Fetch the first two IDs that are associated with the provided name and type.
+   *
+   * @param name The name to fetch IDs for
+   * @param type The type of IDs to fetch
+   * @return A future with a list of the first two found IDs
+   */
+  @Nonnull
+  ListenableFuture<List<LabelId>> getIds(final String name,
+                                         final LabelType type) {
+    ResultSetFuture idsFuture = session.executeAsync(
+        getIdStatement.bind(name, type.toValue()));
+
+    return transform(idsFuture, new Function<ResultSet, List<LabelId>>() {
+      @Override
+      public List<LabelId> apply(final ResultSet result) {
+        ImmutableList.Builder<LabelId> builder = ImmutableList.builder();
+
+        for (final Row row : result) {
+          final long id = row.getLong("label_id");
+          builder.add(fromLong(id));
+        }
+
+        final ImmutableList<LabelId> ids = builder.build();
+
+        if (ids.size() > 1) {
+          LOG.error("Found duplicate IDs for ({}, {})", name, type);
+        }
+
+        return ids;
+      }
+    });
+  }
+
+  /**
+   * Fetch the first two names that are associated with the provided id and type.
+   *
+   * @param id The id to fetch names for
+   * @param type The type of names to fetch
+   * @return A future with a list of the first two found names
+   */
+  @Nonnull
+  ListenableFuture<List<String>> getNames(final LabelId id,
+                                          final LabelType type) {
+    ResultSetFuture namesFuture = session.executeAsync(
+        getNameStatement.bind(toLong(id), type.toValue()));
+
+    return transform(namesFuture, new Function<ResultSet, List<String>>() {
+      @Override
+      public List<String> apply(final ResultSet result) {
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+        for (final Row row : result) {
+          final String name = row.getString("name");
+          builder.add(name);
+        }
+
+        final ImmutableList<String> names = builder.build();
+
+        if (names.size() > 1) {
+          LOG.error("Found duplicate names for ({}, {})", id, type);
+        }
+
+        return names;
+      }
+    });
+  }
+
+  public Session getSession() {
+    return session;
+  }
+
+  /**
+   * Check if (id, type) is available and return a future that contains a boolean that will be true
+   * if the id is available or false if otherwise.
+   *
+   * @param id The name to check
+   * @param type The type to check
+   * @return A future that contains a boolean that indicates if the id was available
+   */
+  private ListenableFuture<Boolean> isIdAvailable(final long id,
+                                                  final LabelType type) {
+    return transform(getNames(fromLong(id), type), new IsEmptyFunction());
+  }
+
+  /**
+   * Check if (name, type) is available and return a future that contains a boolean that will be
+   * true if the name is available or false if otherwise.
+   *
+   * @param name The name to check
+   * @param type The type to check
+   * @return A future that contains a boolean that indicates if the name was available
+   */
+  private ListenableFuture<Boolean> isNameAvailable(final String name,
+                                                    final LabelType type) {
+    return transform(getIds(name, type), new IsEmptyFunction());
+  }
+
+  /**
+   * In this method we prepare all the statements used for accessing Cassandra.
+   */
+  private void prepareStatements() {
+    checkNotNull(session);
+
+    createIdStatement = session.prepare(
+        batch(
+            insertInto(Tables.ID_TO_NAME)
+                .value("label_id", bindMarker())
+                .value("type", bindMarker())
+                .value("creation_time", bindMarker())
+                .value("name", bindMarker()),
+            insertInto(Tables.NAME_TO_ID)
+                .value("name", bindMarker())
+                .value("type", bindMarker())
+                .value("creation_time", bindMarker())
+                .value("label_id", bindMarker())))
+        .setConsistencyLevel(ConsistencyLevel.ALL);
+
+    updateUidNameStatement = session.prepare(
+        update(Tables.ID_TO_NAME)
+            .with(set("name", bindMarker()))
+            .where(eq("label_id", bindMarker()))
+            .and(eq("type", bindMarker())));
+
+    updateNameUidStatement = session.prepare(
+        batch(
+            delete()
+                .from(Tables.NAME_TO_ID)
+                .where(eq("name", bindMarker()))
+                .and(eq("type", bindMarker())),
+            insertInto(Tables.NAME_TO_ID)
+                .value("name", bindMarker())
+                .value("type", bindMarker())
+                .value("label_id", bindMarker())));
+
+    getNameStatement = session.prepare(
+        select()
+            .all()
+            .from(Tables.ID_TO_NAME)
+            .where(eq("label_id", bindMarker()))
+            .and(eq("type", bindMarker()))
+            .limit(2));
+
+    getIdStatement = session.prepare(
+        select()
+            .all()
+            .from(Tables.NAME_TO_ID)
+            .where(eq("name", bindMarker()))
+            .and(eq("type", bindMarker()))
+            .limit(2));
+
+    insertTagsStatement = session.prepare(
+        insertInto(Tables.TS_INVERTED_INDEX)
+            .value("label_id", bindMarker())
+            .value("type", bindMarker())
+            .value("timeseries_id", bindMarker()));
+  }
+
+  private void writeTimeseriesIdIndex(final LabelId metric,
+                                      final Map<LabelId, LabelId> tags,
+                                      final ByteBuffer tsid) {
+    session.executeAsync(insertTagsStatement.bind()
+        .setLong(0, toLong(metric))
+        .setString(1, LabelType.METRIC.toValue())
+        .setBytesUnsafe(2, tsid));
+
+    for (final Map.Entry<LabelId, LabelId> entry : tags.entrySet()) {
+      session.executeAsync(insertTagsStatement.bind()
+          .setLong(0, toLong(entry.getKey()))
+          .setString(1, LabelType.TAGK.toValue())
+          .setBytesUnsafe(2, tsid));
+
+      session.executeAsync(insertTagsStatement.bind()
+          .setLong(0, toLong(entry.getValue()))
+          .setString(1, LabelType.TAGV.toValue())
+          .setBytesUnsafe(2, tsid));
+    }
   }
 }
