@@ -6,6 +6,7 @@ import static se.tre.freki.storage.cassandra.BaseTimes.baseTimesBetween;
 
 import org.junit.Test;
 
+import java.util.NoSuchElementException;
 import java.util.PrimitiveIterator;
 
 public class BaseTimesTest {
@@ -14,6 +15,14 @@ public class BaseTimesTest {
     final long timestamp = 1434545416154L;
     final long baseTime = 1434542400000L;
     assertEquals(baseTime, BaseTimes.baseTimeFor(timestamp));
+  }
+
+  @Test(expected = NoSuchElementException.class)
+  public void testBaseTimesBetweenThrowsAtEnd() throws Exception {
+    final long baseTime = 1434542400000L;
+    final PrimitiveIterator.OfLong baseTimes = baseTimesBetween(baseTime, baseTime);
+    baseTimes.nextLong();
+    baseTimes.nextLong();
   }
 
   @Test
