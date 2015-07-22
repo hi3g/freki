@@ -1,4 +1,4 @@
-package se.tre.freki.idmanager;
+package se.tre.freki.labelmanager;
 
 import se.tre.freki.core.ConfigModule;
 import se.tre.freki.core.CoreModule;
@@ -18,8 +18,8 @@ import javax.inject.Singleton;
         StoreModule.class
     })
 @Singleton
-public interface AssignComponent {
-  Assign assign();
+public interface CreateLabelComponent {
+  CreateLabel createLabel();
 
   Store store();
 }

@@ -93,10 +93,4 @@ public abstract class StoreTest<K extends Store> {
     store.renameLabel("newname", id, LabelType.TAGK).get();
     assertFalse(store.getId("name", LabelType.TAGK).get().isPresent());
   }
-
-  @Test
-  @Ignore
-  public void testRenameIdNotFound() throws Exception {
-    store.renameLabel("name", missingLabelId(), LabelType.TAGK).get();
-  }
 }

@@ -1,5 +1,5 @@
 
 @ParametersAreNonnullByDefault
-package se.tre.freki.idmanager;
+package se.tre.freki.labelmanager;
 
 import javax.annotation.ParametersAreNonnullByDefault;

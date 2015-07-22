@@ -3,6 +3,8 @@ package se.tre.freki.labels;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -29,6 +31,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 
 public final class LabelClientTypeContextTest {
@@ -151,5 +154,46 @@ public final class LabelClientTypeContextTest {
         MAX_CACHE_SIZE);
     typeContext.createId("foo").get();
     verify(eventBus).post(any(LabelCreatedEvent.class));
+  }
+
+  @Test
+  public void testRenameNewNameExists() throws Exception {
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
+        MAX_CACHE_SIZE);
+    // Can not rename to a name that is already taken
+    typeContext.createId("newName").get();
+    try {
+      typeContext.rename("oldName", "newName").get();
+      fail("Should have thrown an exception, can not rename to a name that is already taken.");
+    } catch (ExecutionException exception) {
+      assertTrue(exception.getCause() instanceof IllegalArgumentException);
+    }
+  }
+
+  @Test
+  public void testRenameIdNotFoundOnOldName() throws Exception {
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
+        MAX_CACHE_SIZE);
+    //No previous label called "oldName" return Failed future
+    try {
+      typeContext.rename("oldName", "newName").get();
+      fail("Rename should have failed when it did not find the current name.");
+    } catch (ExecutionException exception) {
+      assertTrue(exception.getCause() instanceof LabelException);
+    }
+
+  }
+
+  @Test
+  public void testRename() throws Exception {
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
+        MAX_CACHE_SIZE);
+
+    final LabelId labelId = typeContext.createId("oldName").get();
+    typeContext.rename("oldName", "newName").get();
+
+    Optional<String> optional = typeContext.getName(labelId).get();
+
+    assertEquals("newName", optional.get());
   }
 }

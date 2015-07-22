@@ -25,12 +25,23 @@ public abstract class Store implements Closeable {
   //
   @Nonnull
   public abstract ListenableFuture<LabelId> createLabel(final String name,
-                                                          final LabelType type);
+                                                        final LabelType type);
 
+  /**
+   * Renames a old LabelId to the new {@code newName}. This method makes no checks if this is a
+   * valid rename. The method calling this function needs to make sure this is done before. There
+   * are 2 checks that needs to be done. Firstly we can not rename to a name that already exists.
+   * Secondly old {@code LabelId} needs to exist.
+   *
+   * @param newName The new name that we are renaming to.
+   * @param id The old label ID.
+   * @param type The label type.
+   * @return The LabelId that was used.
+   */
   @Nonnull
-  public abstract ListenableFuture<LabelId> renameLabel(final String name,
-                                                          final LabelId id,
-                                                          final LabelType type);
+  public abstract ListenableFuture<LabelId> renameLabel(final String newName,
+                                                        final LabelId id,
+                                                        final LabelType type);
 
   @Nonnull
   public abstract ListenableFuture<Void> deleteLabel(final String name, final LabelType type);

@@ -38,8 +38,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -152,18 +150,10 @@ public class CassandraStore extends Store {
                                           final LabelId metric,
                                           final List<LabelId> tags,
                                           final long timestamp) {
-    Hasher tsidHasher = Hashing.murmur3_128().newHasher()
-        .putLong(toLong(metric));
-
-    for (final LabelId tag : tags) {
-      tsidHasher.putLong(toLong(tag));
-    }
-
-    final ByteBuffer tsid = ByteBuffer.wrap(tsidHasher.hash().asBytes());
-
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric, tags);
     final long baseTime = BaseTimes.baseTimeFor(timestamp);
 
-    addPointStatement.setBytesUnsafe(AddPointStatementMarkers.ID.ordinal(), tsid);
+    addPointStatement.setBytesUnsafe(AddPointStatementMarkers.ID.ordinal(), timeSeriesId);
     addPointStatement.setLong(AddPointStatementMarkers.BASE_TIME.ordinal(), baseTime);
     addPointStatement.setLong(AddPointStatementMarkers.TIMESTAMP.ordinal(), timestamp);
     addPointStatement.setLong(AddPointStatementMarkers.USING_TIMESTAMP.ordinal(), timestamp);

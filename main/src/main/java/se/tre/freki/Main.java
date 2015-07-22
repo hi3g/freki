@@ -1,6 +1,6 @@
 package se.tre.freki;
 
-import se.tre.freki.idmanager.Assign;
+import se.tre.freki.labelmanager.CreateLabel;
 import se.tre.freki.utils.KillingUncaughtHandler;
 import se.tre.freki.web.HttpServer;
 
@@ -23,7 +23,7 @@ public class Main {
     }
 
     switch (args[0]) {
-      case "id":
+      case "label":
         handleIdManager(args);
         break;
       case "web":
@@ -38,8 +38,8 @@ public class Main {
   }
 
   private static void handleIdManager(final String[] args) {
-    if ("assign".equals(args[1])) {
-      Assign.main(Arrays.copyOfRange(args, 2, args.length));
+    if ("create".equals(args[1])) {
+      CreateLabel.main(Arrays.copyOfRange(args, 2, args.length));
     }
   }
 
