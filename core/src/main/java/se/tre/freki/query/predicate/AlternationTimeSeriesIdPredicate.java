@@ -6,4 +6,8 @@ import com.google.common.collect.ImmutableSet;
 
 public class AlternationTimeSeriesIdPredicate extends TimeSeriesIdPredicate {
   private final ImmutableSet<LabelId> ids;
+
+  public AlternationTimeSeriesIdPredicate(final ImmutableSet<LabelId> ids) {
+    this.ids = ids;
+  }
 }

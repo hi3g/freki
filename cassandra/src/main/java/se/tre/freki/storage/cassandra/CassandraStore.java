@@ -27,7 +27,7 @@ import se.tre.freki.storage.cassandra.functions.ToVoidFunction;
 import se.tre.freki.storage.cassandra.query.DataPointIterator;
 import se.tre.freki.storage.cassandra.statements.AddPointStatements;
 import se.tre.freki.storage.cassandra.statements.AddPointStatements.AddPointStatementMarkers;
-import se.tre.freki.storage.cassandra.statements.FetchDataPointsStatements;
+import se.tre.freki.storage.cassandra.statements.FetchPointsStatements;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
@@ -122,7 +122,7 @@ public class CassandraStore extends Store {
     this.addDoubleStatement = addPointStatements.addDoubleStatement();
     this.addLongStatement = addPointStatements.addLongStatement();
 
-    final FetchDataPointsStatements fetchPointsStatements = new FetchDataPointsStatements(session);
+    final FetchPointsStatements fetchPointsStatements = new FetchPointsStatements(session);
     this.fetchTimeSeriesStatement = fetchPointsStatements.selectDataPointsStatement();
 
     prepareStatements();
@@ -416,7 +416,7 @@ public class CassandraStore extends Store {
     final long endBaseTime = BaseTimes.baseTimeFor(endTime);
 
     return session.executeAsync(fetchTimeSeriesStatement.bind(
-        startBaseTime, endBaseTime, startTime, endTime));
+        timeSeriesId, startBaseTime, endBaseTime, startTime, endTime));
   }
 
   /**

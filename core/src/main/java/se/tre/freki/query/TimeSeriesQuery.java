@@ -7,4 +7,12 @@ public class TimeSeriesQuery {
 
   private final long startTime;
   private final long endTime;
+
+  public TimeSeriesQuery(final TimeSeriesQueryPredicate predicate,
+                         final long startTime,
+                         final long endTime) {
+    this.predicate = predicate;
+    this.startTime = startTime;
+    this.endTime = endTime;
+  }
 }
