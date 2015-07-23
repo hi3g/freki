@@ -10,7 +10,6 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.transform;
-import static se.tre.freki.storage.cassandra.BaseTimes.baseTimesBetween;
 import static se.tre.freki.storage.cassandra.CassandraLabelId.fromLong;
 import static se.tre.freki.storage.cassandra.CassandraLabelId.toLong;
 
@@ -26,6 +25,7 @@ import se.tre.freki.storage.cassandra.functions.FirstOrAbsentFunction;
 import se.tre.freki.storage.cassandra.functions.IsEmptyFunction;
 import se.tre.freki.storage.cassandra.functions.ToVoidFunction;
 import se.tre.freki.storage.cassandra.query.DataPointIterator;
+import se.tre.freki.storage.cassandra.query.SpeculativePartitionIterator;
 import se.tre.freki.storage.cassandra.statements.AddPointStatements;
 import se.tre.freki.storage.cassandra.statements.AddPointStatements.AddPointStatementMarkers;
 import se.tre.freki.storage.cassandra.statements.FetchPointsStatements;
@@ -55,8 +55,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.PrimitiveIterator;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * An implementation of {@link Store} that uses Cassandra as the underlying storage backend.
@@ -398,36 +398,27 @@ public class CassandraStore extends Store {
     throw new UnsupportedOperationException("Not implemented yet");
   }
 
-  protected ListenableFuture<Iterator<? extends DataPoint>> fetchTimeSeries(
+  protected Iterator<? extends DataPoint> fetchTimeSeries(
       final ByteBuffer timeSeriesId,
       final long startTime,
       final long endTime) {
-    final ResultSetFuture rowsFuture = fetchTimeSeriesRows(timeSeriesId, startTime, endTime);
+    final Iterator<Row> rows = new SpeculativePartitionIterator<>(
+        BaseTimes.baseTimesBetween(startTime, endTime),
+        new Function<Long, ResultSetFuture>() {
+          @Nullable
+          @Override
+          public ResultSetFuture apply(final Long baseTime) {
+            return fetchTimeSeriesPartition(timeSeriesId, baseTime, startTime, endTime);
+          }
+        });
 
-    return transform(rowsFuture, new Function<ResultSet, Iterator<? extends DataPoint>>() {
-      @Override
-      public Iterator<? extends DataPoint> apply(final ResultSet rows) {
-        return DataPointIterator.iteratorFor(rows);
-      }
-    });
+    return DataPointIterator.iteratorFor(rows);
   }
 
-  private ResultSetFuture fetchTimeSeriesRows(final ByteBuffer timeSeriesId,
-                                              final long startTime,
-                                              final long endTime) {
-    final PrimitiveIterator.OfLong baseTimes = baseTimesBetween(startTime, endTime);
-
-    while (baseTimes.hasNext()) {
-      fetchTimeSeriesRows(timeSeriesId, baseTimes.nextLong(), startTime, endTime);
-    }
-
-  }
-
-
-  private ResultSetFuture fetchTimeSeriesRows(final ByteBuffer timeSeriesId,
-                                              final long baseTime,
-                                              final long startTime,
-                                              final long endTime) {
+  protected ResultSetFuture fetchTimeSeriesPartition(final ByteBuffer timeSeriesId,
+                                                     final long baseTime,
+                                                     final long startTime,
+                                                     final long endTime) {
     return session.executeAsync(fetchTimeSeriesStatement.bind()
         .setBytesUnsafe(SelectPointStatementMarkers.ID.ordinal(), timeSeriesId)
         .setLong(SelectPointStatementMarkers.BASE_TIME.ordinal(), baseTime)
