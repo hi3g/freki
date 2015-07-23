@@ -96,7 +96,7 @@ public class CassandraStore extends Store {
 
   /**
    * The statements used when trying to get {@link #getMeta(LabelId, LabelType)} or update meta
-   * {@link #updateMeta(LabelMeta)}
+   * {@link #updateMeta(LabelMeta)}.
    */
   private PreparedStatement getMetaStatement;
   private PreparedStatement updateMetaStatement;
@@ -380,39 +380,96 @@ public class CassandraStore extends Store {
   @Nonnull
   @Override
   public ListenableFuture<Optional<LabelMeta>> getMeta(final LabelId id,
-                                             final LabelType type) {
+                                                       final LabelType type) {
 
-    final ListenableFuture<List<LabelMeta>> metas = getMetas(id, type);
-    return transform(metas, new FirstOrAbsentFunction<LabelMeta>());
+    final ListenableFuture<Optional<Row>> metas = getOptionalMeta(id, type);
+    return transform(metas, new Function<Optional<Row>, Optional<LabelMeta>>() {
+      @Nullable
+      @Override
+      public Optional<LabelMeta> apply(@Nullable final Optional<Row> result) {
+        if (!result.isPresent()) {
+          return Optional.absent();
+        }
+
+        final Row row = result.get();
+
+        return Optional.of(
+            LabelMeta.create(id, type, row.getString("name"), row.getString("meta"), 0));
+      }
+    });
 
   }
 
   @Nonnull
-  ListenableFuture<List<LabelMeta>> getMetas(final LabelId id,
-                                             final LabelType type) {
+  ListenableFuture<Optional<Row>> getOptionalMeta(final LabelId id,
+                                                  final LabelType type) {
 
-    final ResultSetFuture metaFuture = session.executeAsync(
+    final ListenableFuture<List<Row>> rowFuture = checkForDuplicates(id, type,
         getMetaStatement.bind(toLong(id), type.toValue()));
 
-    return transform(metaFuture, new Function<ResultSet, List<LabelMeta>>() {
+    return transform(rowFuture, new FirstOrAbsentFunction<Row>());
+  }
+
+  /**
+   * Use this function to check for duplicates.
+   *
+   * @param id The LabelId we were looking for in the statement. For logging purpose.
+   * @param type The type we were looking for in the statement. For logging purpose.
+   * @param statement The statement we wish to execute.
+   * @return Returns a list of rows.
+   */
+  @Nonnull
+  ListenableFuture<List<Row>> checkForDuplicates(final LabelId id,
+                                                 final LabelType type,
+                                                 final BoundStatement statement) {
+
+    final ResultSetFuture future = session.executeAsync(statement);
+
+    return transform(future, new Function<ResultSet, List<Row>>() {
       @Nullable
       @Override
-      public List<LabelMeta> apply(final ResultSet result) {
-        ImmutableList.Builder<LabelMeta> builder = ImmutableList.builder();
+      public List<Row> apply(@Nullable final ResultSet result) {
 
-        for (final Row row : result) {
-          builder.add(LabelMeta.create(id, type, row.getString("name"), row.getString("meta"), 0));
-        }
-        final ImmutableList<LabelMeta> metas = builder.build();
+        final List<Row> rows = result.all();
 
-        if (metas.size() > 1) {
-          LOG.error("Found duplicate for ({}, {}) when fetching meta", id, type);
+        if (rows.size() > 1) {
+          LOG.error("Found duplicate IDs for ({}, {})", id, type);
         }
 
-        return metas;
+        return result.all();
       }
     });
+  }
 
+  /**
+   * Use this function to check for duplicates.
+   *
+   * @param name The name we were looking for in the statement. For logging purpose.
+   * @param type The type we were looking for in the statement. For logging purpose.
+   * @param statement The statement we wish to execute.
+   * @return Returns a list of rows.
+   */
+  @Nonnull
+  ListenableFuture<List<Row>> checkForDuplicates(final String name,
+                                                 final LabelType type,
+                                                 final BoundStatement statement) {
+
+    final ResultSetFuture future = session.executeAsync(statement);
+
+    return transform(future, new Function<ResultSet, List<Row>>() {
+      @Nullable
+      @Override
+      public List<Row> apply(@Nullable final ResultSet result) {
+
+        final List<Row> rows = result.all();
+
+        if (rows.size() > 1) {
+          LOG.error("Found duplicate IDs for ({}, {})", name, type);
+        }
+
+        return result.all();
+      }
+    });
   }
 
   @Nonnull
@@ -422,7 +479,7 @@ public class CassandraStore extends Store {
   }
 
   /**
-   * Fetch the first two IDs that are associated with the provided name and type.
+   * Fetch at the most first two IDs that are associated with the provided name and type.
    *
    * @param name The name to fetch IDs for
    * @param type The type of IDs to fetch
@@ -431,26 +488,22 @@ public class CassandraStore extends Store {
   @Nonnull
   ListenableFuture<List<LabelId>> getIds(final String name,
                                          final LabelType type) {
-    ResultSetFuture idsFuture = session.executeAsync(
+
+    final ListenableFuture<List<Row>> idFuture = checkForDuplicates(name, type,
         getIdStatement.bind(name, type.toValue()));
 
-    return transform(idsFuture, new Function<ResultSet, List<LabelId>>() {
+    return transform(idFuture, new Function<List<Row>, List<LabelId>>() {
+      @Nullable
       @Override
-      public List<LabelId> apply(final ResultSet result) {
+      public List<LabelId> apply(@Nullable final List<Row> rows) {
         ImmutableList.Builder<LabelId> builder = ImmutableList.builder();
 
-        for (final Row row : result) {
+        for (final Row row : rows) {
           final long id = row.getLong("label_id");
           builder.add(fromLong(id));
         }
 
-        final ImmutableList<LabelId> ids = builder.build();
-
-        if (ids.size() > 1) {
-          LOG.error("Found duplicate IDs for ({}, {})", name, type);
-        }
-
-        return ids;
+        return builder.build();
       }
     });
   }
@@ -465,26 +518,21 @@ public class CassandraStore extends Store {
   @Nonnull
   ListenableFuture<List<String>> getNames(final LabelId id,
                                           final LabelType type) {
-    ResultSetFuture namesFuture = session.executeAsync(
+
+    final ListenableFuture<List<Row>> namesFuture = checkForDuplicates(id, type,
         getNameStatement.bind(toLong(id), type.toValue()));
 
-    return transform(namesFuture, new Function<ResultSet, List<String>>() {
+    return transform(namesFuture, new Function<List<Row>, List<String>>() {
+      @Nullable
       @Override
-      public List<String> apply(final ResultSet result) {
+      public List<String> apply(@Nullable final List<Row> rows) {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-        for (final Row row : result) {
+        for (final Row row : rows) {
           final String name = row.getString("name");
           builder.add(name);
         }
-
-        final ImmutableList<String> names = builder.build();
-
-        if (names.size() > 1) {
-          LOG.error("Found duplicate names for ({}, {})", id, type);
-        }
-
-        return names;
+        return builder.build();
       }
     });
   }

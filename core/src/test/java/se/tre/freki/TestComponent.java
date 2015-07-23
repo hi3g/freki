@@ -5,6 +5,7 @@ import se.tre.freki.core.CoreModule;
 import se.tre.freki.core.LabelClientTest;
 import se.tre.freki.core.MetaClientAnnotationTest;
 import se.tre.freki.core.MetaClientLabelMetaTest;
+import se.tre.freki.core.MetaClientTest;
 import se.tre.freki.labels.LabelClientTypeContextTest;
 import se.tre.freki.labels.WildcardIdLookupStrategyTest;
 import se.tre.freki.plugins.PluginsModule;
@@ -49,6 +50,8 @@ public interface TestComponent {
   void inject(IdChangeIndexerListenerTest idChangeIndexerListenerTest);
 
   void inject(WildcardIdLookupStrategyTest wildcardIdLookupStrategyTest);
+
+  void inject(MetaClientTest metaClientTest);
 
   SearchPlugin searchPlugin();
 
