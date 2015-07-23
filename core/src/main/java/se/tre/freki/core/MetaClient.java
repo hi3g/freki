@@ -3,10 +3,8 @@ package se.tre.freki.core;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.addCallback;
-import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.transform;
 
-import se.tre.freki.labels.LabelException;
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
 import se.tre.freki.meta.Annotation;
@@ -122,22 +120,9 @@ public class MetaClient {
    * @param id The id of the label to lookup the meta information about
    * @return A future that on completion contains the meta object
    */
-  public ListenableFuture<LabelMeta> getLabelMeta(final LabelType type,
-                                                  final LabelId id) {
-    // Verify that the identifier exists before fetching the meta object. The future that
-    // #getLabelName returns will contain an exception if it does not exist.
-    return transform(labelClient.getLabelName(type, id),
-        new AsyncFunction<Optional<String>, LabelMeta>() {
-          @Override
-          public ListenableFuture<LabelMeta> apply(final Optional<String> name) throws Exception {
-            if (name.isPresent()) {
-              return store.getMeta(id, type);
-            }
-
-            return immediateFailedFuture(new LabelException(id, type,
-                "Could not find label meta information for id " + id + " and " + type));
-          }
-        });
+  public ListenableFuture<Optional<LabelMeta>> getLabelMeta(final LabelType type,
+                                                            final LabelId id) {
+    return store.getMeta(id, type);
   }
 
   /**
@@ -198,13 +183,17 @@ public class MetaClient {
    */
   public ListenableFuture<Boolean> update(final LabelMeta meta) {
     return transform(getLabelMeta(meta.type(), meta.identifier()),
-        new AsyncFunction<LabelMeta, Boolean>() {
+        new AsyncFunction<Optional<LabelMeta>, Boolean>() {
           @Override
-          public ListenableFuture<Boolean> apply(final LabelMeta storedMeta) throws Exception {
-            if (!storedMeta.equals(meta)) {
+          public ListenableFuture<Boolean> apply(final Optional<LabelMeta> storedMeta)
+              throws Exception {
+            if (!storedMeta.isPresent()) {
               return store.updateMeta(meta);
             }
 
+            if (!storedMeta.get().equals(meta)) {
+              return store.updateMeta(meta);
+            }
             LOG.debug("{} does not have any changes, skipping update", meta);
             return Futures.immediateFuture(Boolean.FALSE);
           }

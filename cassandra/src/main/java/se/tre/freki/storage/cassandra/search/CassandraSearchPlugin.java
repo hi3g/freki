@@ -28,6 +28,8 @@ import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -114,16 +116,23 @@ public class CassandraSearchPlugin extends SearchPlugin {
     final NGramGenerator ngrams = new NGramGenerator(query);
     final List<ResultSetFuture> resultSets = fetchLabelIds(ngrams);
 
-    return transform(
-        successfulAsList(resultSets),
+    return transform(successfulAsList(resultSets),
         new AsyncFunction<List<ResultSet>, Iterable<LabelMeta>>() {
           @Override
-          public ListenableFuture<Iterable<LabelMeta>> apply(final List<ResultSet> resultSets) {
+          public ListenableFuture<Iterable<LabelMeta>> apply(final List<ResultSet> resultSets)
+              throws Exception {
             return transform(fetchLabelMetas(resultSets),
-                new Function<Iterable<LabelMeta>, Iterable<LabelMeta>>() {
+                new Function<Iterable<Optional<LabelMeta>>, Iterable<LabelMeta>>() {
                   @Override
-                  public Iterable<LabelMeta> apply(final Iterable<LabelMeta> input) {
-                    return input;
+                  public Iterable<LabelMeta> apply(final Iterable<Optional<LabelMeta>> metas) {
+                    final ImmutableList.Builder<LabelMeta> builder = ImmutableList.builder();
+
+                    for (final Optional<LabelMeta> meta : metas) {
+                      if (meta.isPresent()) {
+                        builder.add(meta.get());
+                      }
+                    }
+                    return builder.build();
                   }
                 });
           }
@@ -137,10 +146,10 @@ public class CassandraSearchPlugin extends SearchPlugin {
    * @param resultSets A List of ResultSets
    * @return A {@link ListenableFuture} with a {@link List} of {@link LabelMeta}s.
    */
-  protected ListenableFuture<? extends Iterable<LabelMeta>> fetchLabelMetas(
+  protected ListenableFuture<? extends Iterable<Optional<LabelMeta>>> fetchLabelMetas(
       final List<ResultSet> resultSets) {
 
-    final List<ListenableFuture<LabelMeta>> metas = new ArrayList<>();
+    final List<ListenableFuture<Optional<LabelMeta>>> metas = new ArrayList<>();
 
     for (final ResultSet resultSet : resultSets) {
       for (final Row row : resultSet) {

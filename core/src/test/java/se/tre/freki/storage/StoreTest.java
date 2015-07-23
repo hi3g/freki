@@ -52,7 +52,7 @@ public abstract class StoreTest<K extends Store> {
   }
 
   @Test
-  public void testAllocateLabelNotExisting() throws Exception {
+  public void testCreateLabelNotExisting() throws Exception {
     final LabelId label = store.createLabel(NEW, TYPE).get();
     final Optional<LabelId> fetchedLabel = store.getId(NEW, TYPE).get();
     assertEquals(label, fetchedLabel.get());
