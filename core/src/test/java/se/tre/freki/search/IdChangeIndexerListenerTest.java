@@ -15,6 +15,7 @@ import se.tre.freki.labels.LabelType;
 import se.tre.freki.meta.LabelMeta;
 import se.tre.freki.storage.Store;
 
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.Before;
@@ -42,7 +43,7 @@ public class IdChangeIndexerListenerTest {
     final LabelId id = mock(LabelId.class);
     LabelMeta labelMeta = LabelMeta.create(id, METRIC, "sys.cpu.0", "Description", 1328140801);
     when(store.getMeta(any(LabelId.class), eq(METRIC))).thenReturn(
-        Futures.immediateFuture(labelMeta));
+        Futures.immediateFuture(Optional.of(labelMeta)));
 
     when(searchPlugin.indexLabelMeta(labelMeta)).thenAnswer(
         new Answer<ListenableFuture<Void>>() {

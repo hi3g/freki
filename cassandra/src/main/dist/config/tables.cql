@@ -1,5 +1,5 @@
 
-// Pipe me into cqlsh to let me add this for you.
+// Pipe me into cqlsh to let me add this for you. Example: cat tables.cql | cqlsh
 
 DROP KEYSPACE IF EXISTS "freki";
 
@@ -21,6 +21,7 @@ CREATE TABLE freki.id_to_name (
   type varchar,
   creation_time timestamp,
   name varchar,
+  meta varchar,
   PRIMARY KEY ((label_id, type), creation_time)
 ) WITH CLUSTERING ORDER BY (creation_time ASC);
 

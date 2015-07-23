@@ -122,14 +122,15 @@ public class MetaClient {
    * @param id The id of the label to lookup the meta information about
    * @return A future that on completion contains the meta object
    */
-  public ListenableFuture<LabelMeta> getLabelMeta(final LabelType type,
-                                                  final LabelId id) {
+  public ListenableFuture<Optional<LabelMeta>> getLabelMeta(final LabelType type,
+                                                            final LabelId id) {
     // Verify that the identifier exists before fetching the meta object. The future that
     // #getLabelName returns will contain an exception if it does not exist.
     return transform(labelClient.getLabelName(type, id),
-        new AsyncFunction<Optional<String>, LabelMeta>() {
+        new AsyncFunction<Optional<String>, Optional<LabelMeta>>() {
           @Override
-          public ListenableFuture<LabelMeta> apply(final Optional<String> name) throws Exception {
+          public ListenableFuture<Optional<LabelMeta>> apply(final Optional<String> name)
+              throws Exception {
             if (name.isPresent()) {
               return store.getMeta(id, type);
             }
@@ -198,13 +199,18 @@ public class MetaClient {
    */
   public ListenableFuture<Boolean> update(final LabelMeta meta) {
     return transform(getLabelMeta(meta.type(), meta.identifier()),
-        new AsyncFunction<LabelMeta, Boolean>() {
+        new AsyncFunction<Optional<LabelMeta>, Boolean>() {
           @Override
-          public ListenableFuture<Boolean> apply(final LabelMeta storedMeta) throws Exception {
-            if (!storedMeta.equals(meta)) {
-              return store.updateMeta(meta);
+          public ListenableFuture<Boolean> apply(final Optional<LabelMeta> storedMeta)
+              throws Exception {
+            if (!storedMeta.isPresent()) {
+              LOG.debug("{} was not found.", meta);
+              return Futures.immediateFuture(Boolean.FALSE);
             }
 
+            if (!storedMeta.get().equals(meta)) {
+              return store.updateMeta(meta);
+            }
             LOG.debug("{} does not have any changes, skipping update", meta);
             return Futures.immediateFuture(Boolean.FALSE);
           }

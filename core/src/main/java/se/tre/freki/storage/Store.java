@@ -96,7 +96,7 @@ public abstract class Store implements Closeable {
   // LabelMeta
   //
   @Nonnull
-  public abstract ListenableFuture<LabelMeta> getMeta(final LabelId uid,
+  public abstract ListenableFuture<Optional<LabelMeta>> getMeta(final LabelId uid,
                                                       final LabelType type);
 
   @Nonnull

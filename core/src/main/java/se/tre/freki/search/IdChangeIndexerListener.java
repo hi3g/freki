@@ -8,6 +8,7 @@ import se.tre.freki.meta.LabelMeta;
 import se.tre.freki.plugins.PluginError;
 import se.tre.freki.storage.Store;
 
+import com.google.common.base.Optional;
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.FutureCallback;
@@ -49,11 +50,15 @@ public class IdChangeIndexerListener {
   @AllowConcurrentEvents
   public final void recordLabelCreated(final LabelCreatedEvent event) {
     addCallback(store.getMeta(event.getId(), event.getType()),
-        new FutureCallback<LabelMeta>() {
+        new FutureCallback<Optional<LabelMeta>>() {
           @Override
-          public void onSuccess(final LabelMeta meta) {
-            LOG.info("Indexing {}", meta);
-            addCallback(searchPlugin.indexLabelMeta(meta), pluginError);
+          public void onSuccess(final Optional<LabelMeta> meta) {
+            if (meta.isPresent()) {
+              LOG.info("Indexing {}", meta.get());
+              addCallback(searchPlugin.indexLabelMeta(meta.get()), pluginError);
+            }
+            LOG.error("Unable to fetch LabelMeta object for {}[{}]",
+                event.getId(), event.getType());
           }
 
           @Override

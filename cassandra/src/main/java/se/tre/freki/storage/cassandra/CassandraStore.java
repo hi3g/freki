@@ -50,6 +50,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * An implementation of {@link Store} that uses Cassandra as the underlying storage backend.
@@ -92,6 +93,13 @@ public class CassandraStore extends Store {
    */
   private PreparedStatement getNameStatement;
   private PreparedStatement getIdStatement;
+
+  /**
+   * The statements used when trying to get {@link #getMeta(LabelId, LabelType)} or update meta
+   * {@link #updateMeta(LabelMeta)}
+   */
+  private PreparedStatement getMetaStatement;
+  private PreparedStatement updateMetaStatement;
 
   /**
    * Create a new instance that will use the provided Cassandra cluster and session instances.
@@ -272,8 +280,8 @@ public class CassandraStore extends Store {
   }
 
   /**
-   * Renames a label that already exists to a new given value. This method
-   * is used by the function {@link se.tre.freki.labels.LabelClientTypeContext#rename}.
+   * Renames a label that already exists to a new given value. This method is used by the function
+   * {@link se.tre.freki.labels.LabelClientTypeContext#rename}.
    *
    * @param newName The name to write.
    * @param id The uid to use.
@@ -371,9 +379,40 @@ public class CassandraStore extends Store {
 
   @Nonnull
   @Override
-  public ListenableFuture<LabelMeta> getMeta(final LabelId uid,
+  public ListenableFuture<Optional<LabelMeta>> getMeta(final LabelId id,
                                              final LabelType type) {
-    throw new UnsupportedOperationException("Not implemented yet");
+
+    final ListenableFuture<List<LabelMeta>> metas = getMetas(id, type);
+    return transform(metas, new FirstOrAbsentFunction<LabelMeta>());
+
+  }
+
+  @Nonnull
+  ListenableFuture<List<LabelMeta>> getMetas(final LabelId id,
+                                             final LabelType type) {
+
+    final ResultSetFuture metaFuture = session.executeAsync(
+        getMetaStatement.bind(toLong(id), type.toValue()));
+
+    return transform(metaFuture, new Function<ResultSet, List<LabelMeta>>() {
+      @Nullable
+      @Override
+      public List<LabelMeta> apply(final ResultSet result) {
+        ImmutableList.Builder<LabelMeta> builder = ImmutableList.builder();
+
+        for (final Row row : result) {
+          builder.add(LabelMeta.create(id, type, row.getString("name"), row.getString("meta"), 0));
+        }
+        final ImmutableList<LabelMeta> metas = builder.build();
+
+        if (metas.size() > 1) {
+          LOG.error("Found duplicate for ({}, {}) when fetching meta", id, type);
+        }
+
+        return metas;
+      }
+    });
+
   }
 
   @Nonnull
@@ -492,7 +531,8 @@ public class CassandraStore extends Store {
                 .value("label_id", bindMarker())
                 .value("type", bindMarker())
                 .value("creation_time", bindMarker())
-                .value("name", bindMarker()),
+                .value("name", bindMarker())
+                .value("meta", ""),
             insertInto(Tables.NAME_TO_ID)
                 .value("name", bindMarker())
                 .value("type", bindMarker())
@@ -538,6 +578,21 @@ public class CassandraStore extends Store {
             .value("label_id", bindMarker())
             .value("type", bindMarker())
             .value("timeseries_id", bindMarker()));
+
+    getMetaStatement = session.prepare(
+        select()
+            .column("meta")
+            .column("name")
+            .from(Tables.ID_TO_NAME)
+            .where(eq("label_id", bindMarker()))
+            .and(eq("type", bindMarker()))
+            .limit(2));
+
+    updateMetaStatement = session.prepare(
+        update(Tables.ID_TO_NAME)
+            .with(set("meta", bindMarker()))
+            .where(eq("label_id", bindMarker()))
+            .and(eq("type", bindMarker())));
   }
 
   private void writeTimeseriesIdIndex(final LabelId metric,
