@@ -272,8 +272,8 @@ public class CassandraStore extends Store {
   }
 
   /**
-   * Renames a label that already exists to a new given value. This method
-   * is used by the function {@link se.tre.freki.labels.LabelClientTypeContext#rename}.
+   * Renames a label that already exists to a new given value. This method is used by the function
+   * {@link se.tre.freki.labels.LabelClientTypeContext#rename}.
    *
    * @param newName The name to write.
    * @param id The uid to use.
@@ -286,14 +286,13 @@ public class CassandraStore extends Store {
                                                final LabelId id,
                                                final LabelType type) {
     // Get old name
-    final ResultSetFuture oldNameFuture = session.executeAsync(
+    final ListenableFuture<List<Row>> oldNameFuture = getNameRows(id, type);
 
-        getNameStatement.bind(toLong(id), type.toValue()));
-
-    return transform(oldNameFuture, new Function<ResultSet, LabelId>() {
+    return transform(oldNameFuture, new Function<List<Row>, LabelId>() {
       @Override
-      public LabelId apply(final ResultSet rows) {
-        final String oldName = rows.one().getString("name");
+      public LabelId apply(final List<Row> rows) {
+
+        String oldName = rows.get(0).getString("name");
 
         session.executeAsync(updateUidNameStatement.bind(newName, toLong(id), type.toValue()));
         session.executeAsync(
@@ -426,28 +425,45 @@ public class CassandraStore extends Store {
   @Nonnull
   ListenableFuture<List<String>> getNames(final LabelId id,
                                           final LabelType type) {
-    ResultSetFuture namesFuture = session.executeAsync(
-        getNameStatement.bind(toLong(id), type.toValue()));
+    ListenableFuture<List<Row>> namesFuture = getNameRows(id, type);
 
-    return transform(namesFuture, new Function<ResultSet, List<String>>() {
+    return transform(namesFuture, new Function<List<Row>, List<String>>() {
       @Override
-      public List<String> apply(final ResultSet result) {
+      public List<String> apply(final List<Row> rows) {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-        for (final Row row : result) {
+        for (final Row row : rows) {
           final String name = row.getString("name");
           builder.add(name);
         }
-
         final ImmutableList<String> names = builder.build();
-
-        if (names.size() > 1) {
-          LOG.error("Found duplicate names for ({}, {})", id, type);
-        }
 
         return names;
       }
     });
+  }
+
+  @Nonnull
+  ListenableFuture<List<Row>> getNameRows(final LabelId id,
+                                          final LabelType type) {
+
+    ResultSetFuture namesFuture = session.executeAsync(
+        getNameStatement.bind(toLong(id), type.toValue()));
+
+    return transform(namesFuture, new Function<ResultSet, List<Row>>() {
+      @Override
+      public List<Row> apply(final ResultSet result) {
+
+        final ImmutableList<Row> rows = ImmutableList.copyOf(result.all());
+
+        if (rows.size() > 1) {
+          LOG.error("Found duplicate ID to name mapping for ID {} with type {}", id, type);
+        }
+
+        return rows;
+      }
+    });
+
   }
 
   public Session getSession() {
