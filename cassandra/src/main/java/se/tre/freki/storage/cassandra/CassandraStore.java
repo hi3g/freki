@@ -292,11 +292,15 @@ public class CassandraStore extends Store {
       @Override
       public LabelId apply(final List<Row> rows) {
 
-        String oldName = rows.get(0).getString("name");
+        Row row = rows.get(0);
+        String oldName = row.getString("name");
+        Date creationTime = row.getDate("creation_time");
 
-        session.executeAsync(updateUidNameStatement.bind(newName, toLong(id), type.toValue()));
         session.executeAsync(
-            updateNameUidStatement.bind(oldName, type.toValue(), newName, type.toValue(),
+            updateUidNameStatement.bind(newName, toLong(id), type.toValue(), creationTime));
+        session.executeAsync(
+            updateNameUidStatement.bind(oldName, type.toValue(), creationTime, newName,
+                type.toValue(), creationTime,
                 toLong(id)));
 
         return id;
@@ -520,17 +524,20 @@ public class CassandraStore extends Store {
         update(Tables.ID_TO_NAME)
             .with(set("name", bindMarker()))
             .where(eq("label_id", bindMarker()))
-            .and(eq("type", bindMarker())));
+            .and(eq("type", bindMarker()))
+            .and(eq("creation_time", bindMarker())));
 
     updateNameUidStatement = session.prepare(
         batch(
             delete()
                 .from(Tables.NAME_TO_ID)
                 .where(eq("name", bindMarker()))
-                .and(eq("type", bindMarker())),
+                .and(eq("type", bindMarker()))
+                .and(eq("creation_time", bindMarker())),
             insertInto(Tables.NAME_TO_ID)
                 .value("name", bindMarker())
                 .value("type", bindMarker())
+                .value("creation_time", bindMarker())
                 .value("label_id", bindMarker())));
 
     getNameStatement = session.prepare(
