@@ -50,6 +50,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * An implementation of {@link Store} that uses Cassandra as the underlying storage backend.
@@ -83,9 +84,8 @@ public class CassandraStore extends Store {
    */
   private PreparedStatement createIdStatement;
   /**
-   * Used for {@link #createLabel}, the one that does rename.
+   * Used for {@link #renameLabel}, the one that does rename.
    */
-  private PreparedStatement updateUidNameStatement;
   private PreparedStatement updateNameUidStatement;
   /**
    * The statement used when trying to get name or id.
@@ -272,8 +272,8 @@ public class CassandraStore extends Store {
   }
 
   /**
-   * Renames a label that already exists to a new given value. This method
-   * is used by the function {@link se.tre.freki.labels.LabelClientTypeContext#rename}.
+   * Renames a label that already exists to a new given value. This method is used by the function
+   * {@link se.tre.freki.labels.LabelClientTypeContext#rename}.
    *
    * @param newName The name to write.
    * @param id The uid to use.
@@ -282,25 +282,36 @@ public class CassandraStore extends Store {
    */
   @Nonnull
   @Override
-  public ListenableFuture<LabelId> renameLabel(final String newName,
+  public ListenableFuture<Boolean> renameLabel(final String newName,
                                                final LabelId id,
                                                final LabelType type) {
     // Get old name
-    final ResultSetFuture oldNameFuture = session.executeAsync(
+    final ListenableFuture<List<Row>> oldNameFuture = getNameRows(id, type);
 
-        getNameStatement.bind(toLong(id), type.toValue()));
-
-    return transform(oldNameFuture, new Function<ResultSet, LabelId>() {
+    return transform(oldNameFuture, new AsyncFunction<List<Row>, Boolean>() {
       @Override
-      public LabelId apply(final ResultSet rows) {
-        final String oldName = rows.one().getString("name");
+      public ListenableFuture<Boolean> apply(final List<Row> rows) {
 
-        session.executeAsync(updateUidNameStatement.bind(newName, toLong(id), type.toValue()));
-        session.executeAsync(
-            updateNameUidStatement.bind(oldName, type.toValue(), newName, type.toValue(),
+        Row row = rows.get(0);
+        String oldName = row.getString("name");
+        Date creationTime = row.getDate("creation_time");
+        final ResultSetFuture nameIdFuture = session.executeAsync(
+            updateNameUidStatement.bind(newName, toLong(id), type.toValue(), creationTime, oldName,
+                type.toValue(), creationTime, newName,
+                type.toValue(), creationTime,
                 toLong(id)));
 
-        return id;
+        return transform(nameIdFuture, new Function<ResultSet, Boolean>() {
+          @Nullable
+          @Override
+          public Boolean apply(final ResultSet input) {
+            if (!input.wasApplied()) {
+              LOG.warn("A rename of a label was requested but could not be completed.");
+              return false;
+            }
+            return true;
+          }
+        });
       }
     });
   }
@@ -426,28 +437,45 @@ public class CassandraStore extends Store {
   @Nonnull
   ListenableFuture<List<String>> getNames(final LabelId id,
                                           final LabelType type) {
-    ResultSetFuture namesFuture = session.executeAsync(
-        getNameStatement.bind(toLong(id), type.toValue()));
+    ListenableFuture<List<Row>> namesFuture = getNameRows(id, type);
 
-    return transform(namesFuture, new Function<ResultSet, List<String>>() {
+    return transform(namesFuture, new Function<List<Row>, List<String>>() {
       @Override
-      public List<String> apply(final ResultSet result) {
+      public List<String> apply(final List<Row> rows) {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-        for (final Row row : result) {
+        for (final Row row : rows) {
           final String name = row.getString("name");
           builder.add(name);
         }
-
         final ImmutableList<String> names = builder.build();
-
-        if (names.size() > 1) {
-          LOG.error("Found duplicate names for ({}, {})", id, type);
-        }
 
         return names;
       }
     });
+  }
+
+  @Nonnull
+  ListenableFuture<List<Row>> getNameRows(final LabelId id,
+                                          final LabelType type) {
+
+    ResultSetFuture namesFuture = session.executeAsync(
+        getNameStatement.bind(toLong(id), type.toValue()));
+
+    return transform(namesFuture, new Function<ResultSet, List<Row>>() {
+      @Override
+      public List<Row> apply(final ResultSet result) {
+
+        final ImmutableList<Row> rows = ImmutableList.copyOf(result.all());
+
+        if (rows.size() > 1) {
+          LOG.error("Found duplicate ID to name mapping for ID {} with type {}", id, type);
+        }
+
+        return rows;
+      }
+    });
+
   }
 
   public Session getSession() {
@@ -500,21 +528,22 @@ public class CassandraStore extends Store {
                 .value("label_id", bindMarker())))
         .setConsistencyLevel(ConsistencyLevel.ALL);
 
-    updateUidNameStatement = session.prepare(
-        update(Tables.ID_TO_NAME)
-            .with(set("name", bindMarker()))
-            .where(eq("label_id", bindMarker()))
-            .and(eq("type", bindMarker())));
-
     updateNameUidStatement = session.prepare(
         batch(
+            update(Tables.ID_TO_NAME)
+                .with(set("name", bindMarker()))
+                .where(eq("label_id", bindMarker()))
+                .and(eq("type", bindMarker()))
+                .and(eq("creation_time", bindMarker())),
             delete()
                 .from(Tables.NAME_TO_ID)
                 .where(eq("name", bindMarker()))
-                .and(eq("type", bindMarker())),
+                .and(eq("type", bindMarker()))
+                .and(eq("creation_time", bindMarker())),
             insertInto(Tables.NAME_TO_ID)
                 .value("name", bindMarker())
                 .value("type", bindMarker())
+                .value("creation_time", bindMarker())
                 .value("label_id", bindMarker())));
 
     getNameStatement = session.prepare(

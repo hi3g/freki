@@ -39,7 +39,7 @@ public abstract class Store implements Closeable {
    * @return The LabelId that was used.
    */
   @Nonnull
-  public abstract ListenableFuture<LabelId> renameLabel(final String newName,
+  public abstract ListenableFuture<Boolean> renameLabel(final String newName,
                                                         final LabelId id,
                                                         final LabelType type);
 
