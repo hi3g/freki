@@ -16,4 +16,14 @@ public class TimeSeriesTagPredicate {
   enum TimeSeriesTagOperator {
     EQUALS, NOT_EQUALS
   }
+
+  public static TimeSeriesTagPredicate eq(final TimeSeriesIdPredicate key,
+                                          final TimeSeriesIdPredicate value) {
+    return new TimeSeriesTagPredicate(key, value, TimeSeriesTagOperator.EQUALS);
+  }
+
+  public static TimeSeriesTagPredicate neq(final TimeSeriesIdPredicate key,
+                                           final TimeSeriesIdPredicate value) {
+    return new TimeSeriesTagPredicate(key, value, TimeSeriesTagOperator.NOT_EQUALS);
+  }
 }

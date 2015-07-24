@@ -8,4 +8,8 @@ public class SimpleTimeSeriesIdPredicate extends TimeSeriesIdPredicate {
   public SimpleTimeSeriesIdPredicate(final LabelId id) {
     this.id = id;
   }
+
+  public static SimpleTimeSeriesIdPredicate id(final LabelId id) {
+    return new SimpleTimeSeriesIdPredicate(id);
+  }
 }
