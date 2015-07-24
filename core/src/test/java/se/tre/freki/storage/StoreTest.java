@@ -83,13 +83,6 @@ public abstract class StoreTest<K extends Store> {
   }
 
   @Test
-  public void testRenameLabel() throws Exception {
-    store.renameLabel(NEW, NAME_ID, TYPE).get();
-    final LabelId newNameId = store.getId(NEW, TYPE).get().get();
-    assertEquals(NAME_ID, newNameId);
-  }
-
-  @Test
   public void testRenameIdFoundOnNewName() throws Exception {
     store.renameLabel(NEW, NAME_ID, TYPE).get();
     final LabelId newNameId = store.getId(NEW, TYPE).get().get();
@@ -100,15 +93,5 @@ public abstract class StoreTest<K extends Store> {
   public void testRenameIdNotFoundOnOldName() throws Exception {
     store.renameLabel(NEW, NAME_ID, TYPE).get();
     assertFalse(store.getId(NAME, TYPE).get().isPresent());
-  }
-
-  @Test
-  public void testRenameIdNotFound() {
-    try {
-      store.renameLabel(NAME, missingLabelId(), LabelType.TAGK).get();
-      fail("Should have thrown an Exception");
-    } catch (Exception exception) {
-      assertTrue(exception.getCause() instanceof IndexOutOfBoundsException);
-    }
   }
 }
