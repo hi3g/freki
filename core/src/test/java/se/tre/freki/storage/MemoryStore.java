@@ -131,7 +131,8 @@ public class MemoryStore extends Store {
   @Nonnull
   @Override
   public ListenableFuture<Void> deleteLabel(final String name, LabelType type) {
-    throw new UnsupportedOperationException("Not implemented yet");
+    identifierForward.remove(name, type);
+    return Futures.immediateFuture(null);
   }
 
   @Override
@@ -161,9 +162,6 @@ public class MemoryStore extends Store {
   public ListenableFuture<Boolean> renameLabel(final String name,
                                                final LabelId id,
                                                final LabelType type) {
-    if (identifierReverse.contains(id, type)) {
-      throw new IllegalArgumentException("An ID with " + id + " already exists");
-    }
 
     identifierReverse.put(id, type, name);
 
