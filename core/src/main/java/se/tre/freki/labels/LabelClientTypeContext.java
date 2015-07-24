@@ -238,38 +238,38 @@ public class LabelClientTypeContext {
   }
 
   /**
-   * Rename the label with the name {@code oldname} to {@code newname}.
+   * Rename the label with the name {@code oldName} to {@code newName}.
    *
-   * @param oldname The current name of the label
-   * @param newname The desired new name of the label
+   * @param oldName The current name of the label
+   * @param newName The desired new name of the label
    * @return A future that indicates the completion of the request
    */
-  public ListenableFuture<Void> rename(final String oldname, final String newname) {
-    return transform(checkUidExists(newname), new AsyncFunction<Boolean, Void>() {
+  public ListenableFuture<Void> rename(final String oldName, final String newName) {
+    return transform(checkUidExists(newName), new AsyncFunction<Boolean, Void>() {
       @Override
       public ListenableFuture<Void> apply(final Boolean exists) throws Exception {
         if (exists) {
-          throw new IllegalArgumentException("An UID with name " + newname + ' '
+          throw new IllegalArgumentException("An UID with name " + newName + ' '
                                              + "for " + type + " already exists");
         }
 
-        return transform(getId(oldname), new AsyncFunction<Optional<LabelId>, Void>() {
+        return transform(getId(oldName), new AsyncFunction<Optional<LabelId>, Void>() {
           @Override
           public ListenableFuture<Void> apply(final Optional<LabelId> oldUid) throws Exception {
             if (!oldUid.isPresent()) {
-              return Futures.immediateFailedFuture(new LabelException(oldname, type,
+              return Futures.immediateFailedFuture(new LabelException(oldName, type,
                   "No label with that name"));
             }
 
-            store.renameLabel(newname, oldUid.get(), type);
+            store.renameLabel(newName, oldUid.get(), type);
 
             // Update cache.
-            addIdToCache(newname, oldUid.get());  // add     new name -> ID
-            idCache.put(oldUid.get(), newname);   // update  ID -> new name
-            nameCache.invalidate(oldname);  // remove  old name -> ID
+            addIdToCache(newName, oldUid.get());  // add     new name -> ID
+            idCache.put(oldUid.get(), newName);   // update  ID -> new name
+            nameCache.invalidate(oldName);  // remove  old name -> ID
 
             // Delete the old forward mapping.
-            return store.deleteLabel(oldname, type);
+            return store.deleteLabel(oldName, type);
           }
         });
       }
