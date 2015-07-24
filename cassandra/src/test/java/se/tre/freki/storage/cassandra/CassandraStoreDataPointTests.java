@@ -10,7 +10,6 @@ import static se.tre.freki.storage.cassandra.CassandraLabelId.fromLong;
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.StaticTimeSeriesId;
 import se.tre.freki.query.DataPoint;
-import se.tre.freki.query.LongDataPoint;
 
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.ResultSet;
@@ -130,8 +129,8 @@ public class CassandraStoreDataPointTests {
     final Iterator<? extends DataPoint> dataPoints = store.fetchTimeSeries(timeSeriesId, pointTime,
         pointTime + BASE_TIME_PERIOD);
 
-    assertEquals(firstValue, ((LongDataPoint) dataPoints.next()).value());
-    assertEquals(secondValue, ((LongDataPoint) dataPoints.next()).value());
+    assertEquals(firstValue, ((DataPoint.LongDataPoint) dataPoints.next()).value());
+    assertEquals(secondValue, ((DataPoint.LongDataPoint) dataPoints.next()).value());
     assertFalse(dataPoints.hasNext());
   }
 }

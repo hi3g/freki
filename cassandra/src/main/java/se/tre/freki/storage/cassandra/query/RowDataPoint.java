@@ -19,4 +19,25 @@ abstract class RowDataPoint implements DataPoint {
   public long timestamp() {
     return row().getLong("timestamp");
   }
+
+  static class RowLongDataPoint extends RowDataPoint implements LongDataPoint {
+    @Override
+    public long value() {
+      return row().getLong("long_value");
+    }
+  }
+
+  static class RowFloatDataPoint extends RowDataPoint implements FloatDataPoint {
+    @Override
+    public float value() {
+      return row().getFloat("float_value");
+    }
+  }
+
+  static class RowDoubleDataPoint extends RowDataPoint implements DoubleDataPoint {
+    @Override
+    public double value() {
+      return row().getDouble("double_value");
+    }
+  }
 }

@@ -1,7 +1,6 @@
 package se.tre.freki.storage.cassandra.query;
 
 import se.tre.freki.query.DataPoint;
-import se.tre.freki.query.LongDataPoint;
 
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.Row;
@@ -55,13 +54,6 @@ public class DataPointIterator implements Iterator<DataPoint> {
     return typeStrategy.dataPoint(rows.next());
   }
 
-  private static class RowLongDataPoint extends RowDataPoint implements LongDataPoint {
-    @Override
-    public long value() {
-      return row().getLong("long_value");
-    }
-  }
-
   private interface TypeStrategy {
     RowDataPoint dataPoint(final Row row);
   }
@@ -85,7 +77,11 @@ public class DataPointIterator implements Iterator<DataPoint> {
       final ColumnDefinitions columnDefinitions = row.getColumnDefinitions();
 
       if (columnDefinitions.contains("long_value")) {
-        return new RowLongDataPoint();
+        return new RowDataPoint.RowLongDataPoint();
+      } else if (columnDefinitions.contains("float_value")) {
+        return new RowDataPoint.RowFloatDataPoint();
+      } else if (columnDefinitions.contains("double_value")) {
+        return new RowDataPoint.RowDoubleDataPoint();
       } else {
         throw new AssertionError("row does not contain any known type");
       }
