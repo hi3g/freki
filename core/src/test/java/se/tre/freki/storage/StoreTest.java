@@ -84,14 +84,14 @@ public abstract class StoreTest<K extends Store> {
 
   @Test
   public void testRenameIdFoundOnNewName() throws Exception {
-    store.renameLabel(NEW, NAME_ID, TYPE).get();
+    store.renameLabel(NEW, NAME_ID, TYPE).get().get();
     final LabelId newNameId = store.getId(NEW, TYPE).get().get();
     assertEquals(NAME_ID, newNameId);
   }
 
   @Test
   public void testRenameIdNotFoundOnOldName() throws Exception {
-    store.renameLabel(NEW, NAME_ID, TYPE).get();
+    store.renameLabel(NEW, NAME_ID, TYPE).get().get();
     assertFalse(store.getId(NAME, TYPE).get().isPresent());
   }
 }
