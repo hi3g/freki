@@ -77,7 +77,13 @@ public class SpeculativePartitionIterator<K> implements Iterator<Row> {
     try {
       final ListenableFuture<ResultSet> fetchedResultSet = nextResultSet;
       nextResultSet = fetchNextPartition();
-      LOG.debug("Waiting for next partition {} to finish loading", nextResultSet);
+
+      if (!fetchedResultSet.isDone()) {
+        LOG.debug("Waiting for next partition {} to finish loading", nextResultSet);
+      } else {
+        LOG.trace("Load of next partition {} already finished", nextResultSet);
+      }
+
       return fetchedResultSet.get();
     } catch (ExecutionException e) {
       throw new QueryException("Fetch of next partition threw an exception", e.getCause());
@@ -88,14 +94,14 @@ public class SpeculativePartitionIterator<K> implements Iterator<Row> {
 
   private ListenableFuture<ResultSet> fetchNextPartition() {
     if (!partitionKeyGenerator.hasNext()) {
-      LOG.debug("Told to fetch the next partition but partition key generator is exhausted");
+      LOG.trace("Told to fetch the next partition but partition key generator is exhausted");
       return Futures.immediateFuture(new ExhaustedResultSet());
     }
 
     final K nextPartitionKey = partitionKeyGenerator.next();
     final ResultSetFuture nextPartition = fetchFunction.apply(nextPartitionKey);
 
-    LOG.debug("Initiated load of next partition in {} with key {}",
+    LOG.trace("Initiated load of next partition in {} with key {}",
         nextPartition, nextPartitionKey);
     return nextPartition;
   }
