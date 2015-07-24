@@ -7,27 +7,21 @@ import se.tre.freki.meta.Annotation;
 import se.tre.freki.meta.LabelMeta;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Table;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import javax.annotation.Nonnull;
 
 public class MemoryStore extends Store {
-  private static final Charset ASCII = Charsets.ISO_8859_1;
-
   private final Table<LabelId, String, LabelMeta> labelMetas;
   private final Table<TimeSeriesKey, Long, Annotation> annotations;
 
@@ -135,11 +129,6 @@ public class MemoryStore extends Store {
     return Futures.immediateFuture(null);
   }
 
-  @Override
-  public ListenableFuture<List<byte[]>> executeTimeSeriesQuery(final Object query) {
-    throw new UnsupportedOperationException("Not implemented yet");
-  }
-
   @Nonnull
   @Override
   public ListenableFuture<LabelId> createLabel(final String name,
@@ -218,11 +207,6 @@ public class MemoryStore extends Store {
                                                     final long startTime) {
     final TimeSeriesKey row = TimeSeriesKey.create(metric, tags);
     return Futures.immediateFuture(annotations.get(row, startTime));
-  }
-
-  @Override
-  public ListenableFuture<ImmutableList<Object>> executeQuery(final Object query) {
-    throw new UnsupportedOperationException("Not implemented yet");
   }
 
   /**

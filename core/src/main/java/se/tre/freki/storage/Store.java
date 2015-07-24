@@ -7,12 +7,10 @@ import se.tre.freki.meta.Annotation;
 import se.tre.freki.meta.LabelMeta;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.Closeable;
-import java.util.List;
 import javax.annotation.Nonnull;
 
 /**
@@ -46,9 +44,6 @@ public abstract class Store implements Closeable {
   @Nonnull
   public abstract ListenableFuture<Void> deleteLabel(final String name, final LabelType type);
 
-  public abstract ListenableFuture<List<byte[]>> executeTimeSeriesQuery(
-      final Object query);
-
   @Nonnull
   public abstract ListenableFuture<Optional<LabelId>> getId(final String name,
                                                             final LabelType type);
@@ -74,9 +69,6 @@ public abstract class Store implements Closeable {
   public abstract ListenableFuture<Void> addPoint(final TimeSeriesId tsuid,
                                                   final long timestamp,
                                                   final long value);
-
-  // TODO
-  public abstract ListenableFuture<ImmutableList<Object>> executeQuery(final Object query);
 
   //
   // Annotations

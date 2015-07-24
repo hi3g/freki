@@ -328,11 +328,6 @@ public class CassandraStore extends Store {
     throw new UnsupportedOperationException("Not implemented yet");
   }
 
-  @Override
-  public ListenableFuture<List<byte[]>> executeTimeSeriesQuery(final Object query) {
-    throw new UnsupportedOperationException("Not implemented yet");
-  }
-
   @Nonnull
   @Override
   public ListenableFuture<Optional<LabelId>> getId(final String name,
@@ -347,11 +342,6 @@ public class CassandraStore extends Store {
                                                     final LabelType type) {
     ListenableFuture<List<String>> namesFuture = getNames(id, type);
     return transform(namesFuture, new FirstOrAbsentFunction<String>());
-  }
-
-  @Override
-  public ListenableFuture<ImmutableList<Object>> executeQuery(Object query) {
-    throw new UnsupportedOperationException("Not implemented yet");
   }
 
   @Nonnull
