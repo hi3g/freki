@@ -137,7 +137,7 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   public void testRenameIdNotFound() {
     try {
       store.renameLabel("anyUnusedName", missingLabelId(), LabelType.TAGK).get();
-      fail("Should have thrown an Exception");
+      fail("Should not have found row containing the old name");
     } catch (Exception exception) {
       assertTrue(exception.getCause() instanceof IndexOutOfBoundsException);
     }

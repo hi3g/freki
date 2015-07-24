@@ -50,7 +50,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * An implementation of {@link Store} that uses Cassandra as the underlying storage backend.
@@ -291,25 +290,22 @@ public class CassandraStore extends Store {
     return transform(oldNameFuture, new AsyncFunction<List<Row>, Boolean>() {
       @Override
       public ListenableFuture<Boolean> apply(final List<Row> rows) {
+        final Row firstrow = rows.get(0);
+        final String oldName = firstrow.getString("name");
+        final Date creationTime = firstrow.getDate("creation_time");
 
-        Row row = rows.get(0);
-        String oldName = row.getString("name");
-        Date creationTime = row.getDate("creation_time");
         final ResultSetFuture nameIdFuture = session.executeAsync(
             updateNameUidStatement.bind(newName, toLong(id), type.toValue(), creationTime, oldName,
-                type.toValue(), creationTime, newName,
-                type.toValue(), creationTime,
-                toLong(id)));
+                type.toValue(), creationTime, newName, type.toValue(), creationTime, toLong(id)));
 
         return transform(nameIdFuture, new Function<ResultSet, Boolean>() {
-          @Nullable
           @Override
-          public Boolean apply(final ResultSet input) {
-            if (!input.wasApplied()) {
+          public Boolean apply(final ResultSet update) {
+            if (!update.wasApplied()) {
               LOG.warn("A rename of a label was requested but could not be completed.");
-              return false;
             }
-            return true;
+
+            return update.wasApplied();
           }
         });
       }
@@ -437,20 +433,19 @@ public class CassandraStore extends Store {
   @Nonnull
   ListenableFuture<List<String>> getNames(final LabelId id,
                                           final LabelType type) {
-    ListenableFuture<List<Row>> namesFuture = getNameRows(id, type);
+    final ListenableFuture<List<Row>> namesFuture = getNameRows(id, type);
 
     return transform(namesFuture, new Function<List<Row>, List<String>>() {
       @Override
       public List<String> apply(final List<Row> rows) {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        final ImmutableList.Builder<String> names = ImmutableList.builder();
 
         for (final Row row : rows) {
           final String name = row.getString("name");
-          builder.add(name);
+          names.add(name);
         }
-        final ImmutableList<String> names = builder.build();
 
-        return names;
+        return names.build();
       }
     });
   }

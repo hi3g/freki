@@ -23,14 +23,14 @@ public abstract class StoreTest<K extends Store> {
   private static final String MISSING = "missing";
   private static final LabelType TYPE = LabelType.TAGK;
 
-  private LabelId NAME_ID;
+  private LabelId nameId;
 
   protected K store;
 
   @Before
   public void setUp() throws Exception {
     store = buildStore();
-    NAME_ID = store.createLabel(NAME, TYPE).get();
+    nameId = store.createLabel(NAME, TYPE).get();
   }
 
   protected abstract K buildStore();
@@ -61,7 +61,7 @@ public abstract class StoreTest<K extends Store> {
   @Test
   public void testGetIdExisting() throws Exception {
     final Optional<LabelId> fetchedLabel = store.getId(NAME, TYPE).get();
-    assertEquals(NAME_ID, fetchedLabel.get());
+    assertEquals(nameId, fetchedLabel.get());
   }
 
   @Test
@@ -72,7 +72,7 @@ public abstract class StoreTest<K extends Store> {
 
   @Test
   public void testGetNameExisting() throws Exception {
-    final Optional<String> fetchedLabel = store.getName(NAME_ID, TYPE).get();
+    final Optional<String> fetchedLabel = store.getName(nameId, TYPE).get();
     assertEquals(NAME, fetchedLabel.get());
   }
 
@@ -84,14 +84,14 @@ public abstract class StoreTest<K extends Store> {
 
   @Test
   public void testRenameIdFoundOnNewName() throws Exception {
-    store.renameLabel(NEW, NAME_ID, TYPE).get();
+    store.renameLabel(NEW, nameId, TYPE).get();
     final LabelId newNameId = store.getId(NEW, TYPE).get().get();
-    assertEquals(NAME_ID, newNameId);
+    assertEquals(nameId, newNameId);
   }
 
   @Test
   public void testRenameIdNotFoundOnOldName() throws Exception {
-    store.renameLabel(NEW, NAME_ID, TYPE).get();
+    store.renameLabel(NEW, nameId, TYPE).get();
     assertFalse(store.getId(NAME, TYPE).get().isPresent());
   }
 }
