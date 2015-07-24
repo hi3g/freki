@@ -9,6 +9,14 @@ import com.datastax.driver.core.Row;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+/**
+ * An iterator that is capable of interpreting data points stored within a {@link Row}. This
+ * iterator is not thread safe and is effectively a view. The returned data point will change
+ * between each call to {@link #next()}.
+ *
+ * <p>The type of the data point will be decided using the first row in the iterator given to the
+ * constructor. The decision is based on which columns are present in the row.
+ */
 public class DataPointIterator implements Iterator<DataPoint> {
   private final Iterator<Row> rows;
   private TypeStrategy typeStrategy;
@@ -17,6 +25,13 @@ public class DataPointIterator implements Iterator<DataPoint> {
     this.rows = rows;
   }
 
+  /**
+   * Create a new data point iterator that will read each row in the provided iterator and represent
+   * it as a data point of the appropriate type.
+   *
+   * @param rows The rows to represent as data points
+   * @return A newly instantiated data point iterator
+   */
   public static DataPointIterator iteratorFor(final Iterator<Row> rows) {
     final DataPointIterator dataPointIterator = new DataPointIterator(rows);
     dataPointIterator.typeStrategy = new DetectingTypeStrategy(dataPointIterator);

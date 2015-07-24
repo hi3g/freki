@@ -398,6 +398,18 @@ public class CassandraStore extends Store {
     throw new UnsupportedOperationException("Not implemented yet");
   }
 
+  /**
+   * Fetch all data points for the given time series that are within the given time range indicated
+   * by {@code startTime} and {@code endTime}.
+   *
+   * <p>The returned iterator will try to prefetch as necessary to prevent blockage but may not
+   * always succeed in doing so.
+   *
+   * @param timeSeriesId The time series to fetch the data points for
+   * @param startTime The lower bound to timestamp to fetch data points within
+   * @param endTime The upper bound to timestamp to fetch data points within
+   * @return An iterator that will loop over all found data points.
+   */
   protected Iterator<? extends DataPoint> fetchTimeSeries(
       final ByteBuffer timeSeriesId,
       final long startTime,
@@ -415,6 +427,16 @@ public class CassandraStore extends Store {
     return DataPointIterator.iteratorFor(rows);
   }
 
+  /**
+   * Fetch the data points in the partition indicated by {@code timeSeriesId} and {@code baseTime}
+   * that are within the provided time bounds.
+   *
+   * @param timeSeriesId The time series to fetch the data points for
+   * @param baseTime The base time as normalized by {@link BaseTimes#baseTimeFor(long)}
+   * @param startTime The lower bound to timestamp to fetch data points within
+   * @param endTime The upper bound to timestamp to fetch data points within
+   * @return A future that on completion will contain a paged iterable of rows
+   */
   protected ResultSetFuture fetchTimeSeriesPartition(final ByteBuffer timeSeriesId,
                                                      final long baseTime,
                                                      final long startTime,
