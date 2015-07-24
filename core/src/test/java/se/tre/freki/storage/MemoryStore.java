@@ -150,12 +150,15 @@ public class MemoryStore extends Store {
       // Make sure the new id is unique
     } while (identifierReverse.containsRow(id));
 
-    return renameLabel(name, id, type);
+    identifierReverse.put(id, type, name);
+    identifierForward.put(name, type, id);
+
+    return Futures.immediateFuture(id);
   }
 
   @Nonnull
   @Override
-  public ListenableFuture<LabelId> renameLabel(final String name,
+  public ListenableFuture<Boolean> renameLabel(final String name,
                                                final LabelId id,
                                                final LabelType type) {
     if (identifierReverse.contains(id, type)) {
@@ -165,12 +168,12 @@ public class MemoryStore extends Store {
     identifierReverse.put(id, type, name);
 
     if (identifierForward.contains(name, type)) {
-      return Futures.immediateFuture(identifierForward.get(name, type));
+      return Futures.immediateFuture(identifierForward.contains(name, type));
     }
 
     identifierForward.put(name, type, id);
 
-    return Futures.immediateFuture(id);
+    return Futures.immediateFuture(true);
   }
 
   @Nonnull

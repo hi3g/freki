@@ -23,7 +23,7 @@ public abstract class StoreTest<K extends Store> {
   private static final String MISSING = "missing";
   private static final LabelType TYPE = LabelType.TAGK;
 
-  private static LabelId NAME_ID;
+  private LabelId NAME_ID;
 
   protected K store;
 
