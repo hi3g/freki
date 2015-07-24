@@ -73,6 +73,13 @@ public class SpeculativePartitionIterator<K> implements Iterator<Row> {
     }
   }
 
+  /**
+   * Blocks and waits for {@link #nextResultSet} to be done and starts fetching the next partition.
+   *
+   * @return The result set of the partition being loaded by {@link #nextResultSet}
+   * @throws QueryException if there was a problem when fetching the partition or if the curent
+   * thread was interrupted
+   */
   private ResultSet nextPartitionResultSet() {
     try {
       final ListenableFuture<ResultSet> fetchedResultSet = nextResultSet;
@@ -92,6 +99,12 @@ public class SpeculativePartitionIterator<K> implements Iterator<Row> {
     }
   }
 
+  /**
+   * Start fetching the next partition. If there are no more partitions to fetch an immidiate future
+   * will be returned with an exhausted result set.
+   *
+   * @return A future that on completion will contain the result set of the next partition
+   */
   private ListenableFuture<ResultSet> fetchNextPartition() {
     if (!partitionKeyGenerator.hasNext()) {
       LOG.trace("Told to fetch the next partition but partition key generator is exhausted");

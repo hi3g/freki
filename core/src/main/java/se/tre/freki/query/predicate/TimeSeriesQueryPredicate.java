@@ -11,6 +11,10 @@ import com.google.common.collect.ImmutableSet;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * The internal representation of the specification of which time series to return information about
+ * in a "select" query.
+ */
 public class TimeSeriesQueryPredicate {
   private final LabelId metric;
   private final ImmutableSet<TimeSeriesTagPredicate> tagPredicates;

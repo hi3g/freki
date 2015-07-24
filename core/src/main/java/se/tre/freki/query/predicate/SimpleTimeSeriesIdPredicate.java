@@ -2,6 +2,9 @@ package se.tre.freki.query.predicate;
 
 import se.tre.freki.labels.LabelId;
 
+/**
+ * An ID predicate that represents a single ID.
+ */
 public class SimpleTimeSeriesIdPredicate extends TimeSeriesIdPredicate {
   private final LabelId id;
 
