@@ -16,6 +16,7 @@ import com.google.common.base.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Date;
 import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 
@@ -36,7 +37,7 @@ public class MetaClientTest {
     DaggerTestComponent.create().inject(this);
 
     sysCpu0 = store.createLabel(name, METRIC).get();
-    store.updateMeta(LabelMeta.create(sysCpu0, METRIC, name, description, 0));
+    store.updateMeta(LabelMeta.create(sysCpu0, METRIC, name, description, new Date(0)));
     miss = MemoryLabelId.randomLabelId();
   }
 

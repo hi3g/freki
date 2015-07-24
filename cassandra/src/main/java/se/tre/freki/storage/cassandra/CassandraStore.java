@@ -394,7 +394,7 @@ public class CassandraStore extends Store {
         final Row row = result.get();
 
         return Optional.of(
-            LabelMeta.create(id, type, row.getString("name"), row.getString("meta"), 0));
+            LabelMeta.create(id, type, row.getString("name"), row.getString("meta"), new Date(0)));
       }
     });
 
@@ -475,7 +475,17 @@ public class CassandraStore extends Store {
   @Nonnull
   @Override
   public ListenableFuture<Boolean> updateMeta(LabelMeta meta) {
-    throw new UnsupportedOperationException("Not implemented yet");
+    final ResultSetFuture updateMetaFuture = session.executeAsync(
+        updateMetaStatement.bind(meta.description(), toLong(meta.identifier()),
+            meta.type().toValue(), meta.created()));
+
+    return transform(updateMetaFuture, new Function<ResultSet, Boolean>() {
+      @Nullable
+      @Override
+      public Boolean apply(@Nullable final ResultSet input) {
+        return input.wasApplied();
+      }
+    });
   }
 
   /**
@@ -640,7 +650,8 @@ public class CassandraStore extends Store {
         update(Tables.ID_TO_NAME)
             .with(set("meta", bindMarker()))
             .where(eq("label_id", bindMarker()))
-            .and(eq("type", bindMarker())));
+            .and(eq("type", bindMarker()))
+            .and(eq("creation_time", bindMarker())));
   }
 
   private void writeTimeseriesIdIndex(final LabelId metric,

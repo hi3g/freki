@@ -17,6 +17,7 @@ import com.google.common.collect.Iterators;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Date;
 import java.util.UUID;
 import javax.inject.Inject;
 
@@ -32,7 +33,8 @@ public class LabelMetaMixInTest {
   public void before() throws Exception {
     DaggerTestHttpComponent.create().inject(this);
 
-    labelMeta = LabelMeta.create(labelId, METRIC, "sys.cpu.0", "Description", 1328140801L);
+    labelMeta = LabelMeta.create(labelId, METRIC, "sys.cpu.0", "Description",
+        new Date(1328140801L));
   }
 
   @Test

@@ -7,6 +7,8 @@ import se.tre.freki.labels.LabelType;
 
 import com.google.auto.value.AutoValue;
 
+import java.util.Date;
+
 /**
  * LabelMeta objects are associated with individual labels. LabelMeta objects are generated at the
  * same time as the identifier they are associated with.
@@ -24,7 +26,7 @@ public abstract class LabelMeta {
                                  final LabelType type,
                                  final String name,
                                  final String description,
-                                 final long created) {
+                                 final Date created) {
     checkArgument(!name.isEmpty(), "Name may not be empty");
     checkArgument(!description.isEmpty(), "Description may not be empty");
     return new AutoValue_LabelMeta(identifier, type, name, description, created);
@@ -43,5 +45,5 @@ public abstract class LabelMeta {
   public abstract String description();
 
   /** The timestamp in milliseconds at which this label was created. */
-  public abstract long created();
+  public abstract Date created();
 }
