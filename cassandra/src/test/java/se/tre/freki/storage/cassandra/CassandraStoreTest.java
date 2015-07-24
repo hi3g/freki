@@ -2,6 +2,8 @@ package se.tre.freki.storage.cassandra;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
@@ -129,5 +131,15 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
 
     assertEquals(firstName, names.get(0));
     assertEquals(secondName, names.get(1));
+  }
+
+  @Test
+  public void testRenameIdNotFound() {
+    try {
+      store.renameLabel("anyUnusedName", missingLabelId(), LabelType.TAGK).get().get();
+      fail("Should have thrown an Exception");
+    } catch (Exception exception) {
+      assertTrue(exception.getCause() instanceof IndexOutOfBoundsException);
+    }
   }
 }

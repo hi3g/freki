@@ -28,9 +28,9 @@ public abstract class Store implements Closeable {
                                                           final LabelType type);
 
   @Nonnull
-  public abstract ListenableFuture<LabelId> renameLabel(final String name,
-                                                          final LabelId id,
-                                                          final LabelType type);
+  public abstract ListenableFuture<ListenableFuture<Boolean>> renameLabel(final String name,
+                                                                          final LabelId id,
+                                                                          final LabelType type);
 
   @Nonnull
   public abstract ListenableFuture<Void> deleteLabel(final String name, final LabelType type);

@@ -11,17 +11,26 @@ import se.tre.freki.labels.LabelType;
 
 import com.google.common.base.Optional;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
 
 public abstract class StoreTest<K extends Store> {
+
+
+  private static final String NAME = "oldName";
+  private static final String NEW = "new";
+  private static final String MISSING = "missing";
+  private static final LabelType TYPE = LabelType.TAGK;
+
+  private static LabelId NAME_ID;
+
   protected K store;
 
   @Before
   public void setUp() throws Exception {
     store = buildStore();
+    NAME_ID = store.createLabel(NAME, TYPE).get();
   }
 
   protected abstract K buildStore();
@@ -34,10 +43,8 @@ public abstract class StoreTest<K extends Store> {
 
   @Test
   public void testAllocateLabelExistingException() throws Exception {
-    store.createLabel("newname", LabelType.TAGK).get();
-
     try {
-      store.createLabel("newname", LabelType.TAGK).get();
+      store.createLabel(NAME, TYPE).get();
       fail("The second allocation with the same name should have thrown an exception");
     } catch (ExecutionException e) {
       assertTrue(e.getCause() instanceof LabelException);
@@ -46,57 +53,45 @@ public abstract class StoreTest<K extends Store> {
 
   @Test
   public void testAllocateLabelNotExisting() throws Exception {
-    final LabelId label = store.createLabel("newname", LabelType.TAGK).get();
-    final Optional<LabelId> fetchedLabel = store.getId("newname", LabelType.TAGK).get();
+    final LabelId label = store.createLabel(NEW, TYPE).get();
+    final Optional<LabelId> fetchedLabel = store.getId(NEW, TYPE).get();
     assertEquals(label, fetchedLabel.get());
   }
 
   @Test
   public void testGetIdExisting() throws Exception {
-    final LabelId newLabel = store.createLabel("newname", LabelType.TAGV).get();
-    final Optional<LabelId> fetchedLabel = store.getId("newname", LabelType.TAGV).get();
-    assertEquals(newLabel, fetchedLabel.get());
+    final Optional<LabelId> fetchedLabel = store.getId(NAME, TYPE).get();
+    assertEquals(NAME_ID, fetchedLabel.get());
   }
 
   @Test
   public void testGetIdMissingAbsent() throws Exception {
-    final Optional<LabelId> missing = store.getId("missing", LabelType.TAGV).get();
+    final Optional<LabelId> missing = store.getId(MISSING, TYPE).get();
     assertFalse(missing.isPresent());
   }
 
   @Test
   public void testGetNameExisting() throws Exception {
-    final LabelId newLabel = store.createLabel("newname", LabelType.TAGV).get();
-    final Optional<String> fetchedLabel = store.getName(newLabel, LabelType.TAGV).get();
-    assertEquals("newname", fetchedLabel.get());
+    final Optional<String> fetchedLabel = store.getName(NAME_ID, TYPE).get();
+    assertEquals(NAME, fetchedLabel.get());
   }
 
   @Test
   public void testGetNameMissingAbsent() throws Exception {
-    final Optional<String> missing = store.getName(missingLabelId(), LabelType.TAGV).get();
+    final Optional<String> missing = store.getName(missingLabelId(), TYPE).get();
     assertFalse(missing.isPresent());
   }
 
   @Test
-  @Ignore
   public void testRenameIdFoundOnNewName() throws Exception {
-    final LabelId id = store.createLabel("name", LabelType.TAGK).get();
-    store.renameLabel("newname", id, LabelType.TAGK).get();
-    final LabelId newNameId = store.getId("newname", LabelType.TAGK).get().get();
-    assertEquals(id, newNameId);
+    store.renameLabel(NEW, NAME_ID, TYPE).get().get();
+    final LabelId newNameId = store.getId(NEW, TYPE).get().get();
+    assertEquals(NAME_ID, newNameId);
   }
 
   @Test
-  @Ignore
   public void testRenameIdNotFoundOnOldName() throws Exception {
-    final LabelId id = store.createLabel("name", LabelType.TAGK).get();
-    store.renameLabel("newname", id, LabelType.TAGK).get();
-    assertFalse(store.getId("name", LabelType.TAGK).get().isPresent());
-  }
-
-  @Test
-  @Ignore
-  public void testRenameIdNotFound() throws Exception {
-    store.renameLabel("name", missingLabelId(), LabelType.TAGK).get();
+    store.renameLabel(NEW, NAME_ID, TYPE).get().get();
+    assertFalse(store.getId(NAME, TYPE).get().isPresent());
   }
 }
