@@ -11,7 +11,6 @@ include ":freki-grpc"
 project(':freki-main').projectDir = "$rootDir/main" as File
 project(':freki-core').projectDir = "$rootDir/core" as File
 project(':freki-cassandra').projectDir = "$rootDir/cassandra" as File
-project(':label-manager:freki-create').projectDir = "$rootDir/label-manager/createlabel" as File
+project(':label-manager:freki-create').projectDir = "$rootDir/label-manager/create-label" as File
 project(':freki-web').projectDir = "$rootDir/web" as File
 project(':freki-grpc').projectDir = "$rootDir/grpc" as File
-
