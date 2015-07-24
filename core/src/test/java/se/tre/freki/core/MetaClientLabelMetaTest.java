@@ -21,7 +21,6 @@ import org.junit.rules.Timeout;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Date;
 import javax.inject.Inject;
 
 public class MetaClientLabelMetaTest {
@@ -49,7 +48,7 @@ public class MetaClientLabelMetaTest {
     sysCpu0 = store.createLabel("sys.cpu.0", LabelType.METRIC).get();
 
     LabelMeta labelMeta = LabelMeta.create(sysCpu0, LabelType.METRIC, "sys.cpu.0", "Description",
-        new Date(1328140801));
+        1328140801);
 
     store.updateMeta(labelMeta);
   }

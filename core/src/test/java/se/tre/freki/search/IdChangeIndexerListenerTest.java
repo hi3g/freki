@@ -25,8 +25,6 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.util.Date;
-
 public class IdChangeIndexerListenerTest {
   private IdChangeIndexerListener idChangeIndexer;
 
@@ -43,8 +41,7 @@ public class IdChangeIndexerListenerTest {
   @Test
   public void createdLabelEventIndexesLabelMeta() {
     final LabelId id = mock(LabelId.class);
-    LabelMeta labelMeta = LabelMeta.create(id, METRIC, "sys.cpu.0", "Description",
-        new Date(1328140801));
+    LabelMeta labelMeta = LabelMeta.create(id, METRIC, "sys.cpu.0", "Description", 1328140801);
     when(store.getMeta(any(LabelId.class), eq(METRIC))).thenReturn(
         Futures.immediateFuture(Optional.of(labelMeta)));
 

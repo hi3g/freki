@@ -8,15 +8,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import java.util.Date;
-
 abstract class LabelMetaMixIn {
   @JsonCreator
   static LabelMeta create(@JsonProperty("identifier") final LabelId identifier,
                           @JsonProperty("type") final LabelType type,
                           @JsonProperty("name") final String name,
                           @JsonProperty("description") final String description,
-                          @JsonProperty("created") final Date created) {
+                          @JsonProperty("created") final long created) {
     return LabelMeta.create(identifier, type, name, description, created);
   }
 
@@ -35,5 +33,5 @@ abstract class LabelMetaMixIn {
   abstract String description();
 
   @JsonProperty
-  abstract Date created();
+  abstract long created();
 }

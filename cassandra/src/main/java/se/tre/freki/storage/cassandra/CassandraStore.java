@@ -394,7 +394,7 @@ public class CassandraStore extends Store {
         final Row row = result.get();
 
         return Optional.of(
-            LabelMeta.create(id, type, row.getString("name"), row.getString("meta"), new Date(0)));
+            LabelMeta.create(id, type, row.getString("name"), row.getString("meta"), 0));
       }
     });
 
@@ -477,7 +477,7 @@ public class CassandraStore extends Store {
   public ListenableFuture<Boolean> updateMeta(LabelMeta meta) {
     final ResultSetFuture updateMetaFuture = session.executeAsync(
         updateMetaStatement.bind(meta.description(), toLong(meta.identifier()),
-            meta.type().toValue(), meta.created()));
+            meta.type().toValue(), new Date(meta.created())));
 
     return transform(updateMetaFuture, new Function<ResultSet, Boolean>() {
       @Nullable

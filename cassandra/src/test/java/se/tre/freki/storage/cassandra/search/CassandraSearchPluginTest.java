@@ -15,8 +15,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Date;
-
 public class CassandraSearchPluginTest {
   private CassandraStoreDescriptor storeDescriptor;
   private Config config;
@@ -44,7 +42,7 @@ public class CassandraSearchPluginTest {
   @Test
   public void testNGram() throws Exception {
     LabelMeta meta = LabelMeta.create(CassandraLabelId.fromLong(23L), LabelType.METRIC, "jungle",
-        "and its description", new Date(0L));
+        "and its description", 0L);
 
     searchPlugin.indexLabelMeta(meta);
   }

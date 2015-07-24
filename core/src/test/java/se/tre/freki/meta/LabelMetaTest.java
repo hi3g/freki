@@ -10,14 +10,12 @@ import se.tre.freki.labels.LabelType;
 
 import org.junit.Test;
 
-import java.util.Date;
-
 public final class LabelMetaTest {
   private static final LabelId VALID_UID = mock(LabelId.class);
   private static final LabelType VALID_TYPE = METRIC;
   private static final String VALID_NAME = "valid_name";
   private static final String VALID_DESCRIPTION = "valid_description";
-  private static final Date VALID_CREATED = new Date(100L);
+  private static final long VALID_CREATED = 100L;
 
   @Test(expected = NullPointerException.class)
   public void testCtorNullId() {
