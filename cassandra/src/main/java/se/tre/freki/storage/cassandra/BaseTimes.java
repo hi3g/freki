@@ -1,5 +1,8 @@
 package se.tre.freki.storage.cassandra;
 
+import java.util.NoSuchElementException;
+import java.util.PrimitiveIterator;
+
 /**
  * Utility class for working with the base times as used in the Cassandra store.
  */
@@ -12,5 +15,45 @@ final class BaseTimes {
    */
   static long baseTimeFor(final long timestamp) {
     return (timestamp - (timestamp % CassandraConst.BASE_TIME_PERIOD));
+  }
+
+  /**
+   * Build an iterator that will yield all base times (inclusive) between the provided start and end
+   * timestamp.
+   *
+   * @param start The timestamp the iterator will start yielding base times from
+   * @param end The timestamp the iterator will stop yielding base times at
+   * @return A primitive iterator that yields base times within the provided timestamps
+   * @see se.tre.freki.storage.cassandra.BaseTimes.BaseTimeGenerator
+   */
+  static PrimitiveIterator.OfLong baseTimesBetween(final long start, final long end) {
+    return new BaseTimeGenerator(start, end);
+  }
+
+  private static class BaseTimeGenerator implements PrimitiveIterator.OfLong {
+    private final long end;
+
+    private long current;
+
+    public BaseTimeGenerator(final long start, final long end) {
+      this.end = end;
+      this.current = start;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return current < end + CassandraConst.BASE_TIME_PERIOD - 1;
+    }
+
+    @Override
+    public long nextLong() {
+      if (!hasNext()) {
+        throw new NoSuchElementException("End of time range has been reached");
+      }
+
+      final long baseTime = baseTimeFor(current);
+      current += CassandraConst.BASE_TIME_PERIOD;
+      return baseTime;
+    }
   }
 }

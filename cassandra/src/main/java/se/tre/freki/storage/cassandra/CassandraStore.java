@@ -19,12 +19,17 @@ import se.tre.freki.labels.LabelType;
 import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.meta.Annotation;
 import se.tre.freki.meta.LabelMeta;
+import se.tre.freki.query.DataPoint;
 import se.tre.freki.storage.Store;
 import se.tre.freki.storage.cassandra.functions.FirstOrAbsentFunction;
 import se.tre.freki.storage.cassandra.functions.IsEmptyFunction;
 import se.tre.freki.storage.cassandra.functions.ToVoidFunction;
+import se.tre.freki.storage.cassandra.query.DataPointIterator;
+import se.tre.freki.storage.cassandra.query.SpeculativePartitionIterator;
 import se.tre.freki.storage.cassandra.statements.AddPointStatements;
 import se.tre.freki.storage.cassandra.statements.AddPointStatements.AddPointStatementMarkers;
+import se.tre.freki.storage.cassandra.statements.FetchPointsStatements;
+import se.tre.freki.storage.cassandra.statements.FetchPointsStatements.SelectPointStatementMarkers;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
@@ -47,9 +52,11 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * An implementation of {@link Store} that uses Cassandra as the underlying storage backend.
@@ -77,6 +84,12 @@ public class CassandraStore extends Store {
   private final PreparedStatement addFloatStatement;
   private final PreparedStatement addDoubleStatement;
   private final PreparedStatement addLongStatement;
+
+  /**
+   * Statement to fetch the data points of a single time series between two timestamps.
+   */
+  private final PreparedStatement fetchTimeSeriesStatement;
+
   private PreparedStatement insertTagsStatement;
   /**
    * The statement used by the {@link #createLabel} method.
@@ -111,6 +124,9 @@ public class CassandraStore extends Store {
     this.addFloatStatement = addPointStatements.addFloatStatement();
     this.addDoubleStatement = addPointStatements.addDoubleStatement();
     this.addLongStatement = addPointStatements.addLongStatement();
+
+    final FetchPointsStatements fetchPointsStatements = new FetchPointsStatements(session);
+    this.fetchTimeSeriesStatement = fetchPointsStatements.selectDataPointsStatement();
 
     prepareStatements();
   }
@@ -312,11 +328,6 @@ public class CassandraStore extends Store {
     throw new UnsupportedOperationException("Not implemented yet");
   }
 
-  @Override
-  public ListenableFuture<List<byte[]>> executeTimeSeriesQuery(final Object query) {
-    throw new UnsupportedOperationException("Not implemented yet");
-  }
-
   @Nonnull
   @Override
   public ListenableFuture<Optional<LabelId>> getId(final String name,
@@ -331,11 +342,6 @@ public class CassandraStore extends Store {
                                                     final LabelType type) {
     ListenableFuture<List<String>> namesFuture = getNames(id, type);
     return transform(namesFuture, new FirstOrAbsentFunction<String>());
-  }
-
-  @Override
-  public ListenableFuture<ImmutableList<Object>> executeQuery(Object query) {
-    throw new UnsupportedOperationException("Not implemented yet");
   }
 
   @Nonnull
@@ -380,6 +386,56 @@ public class CassandraStore extends Store {
   @Override
   public ListenableFuture<Boolean> updateMeta(LabelMeta meta) {
     throw new UnsupportedOperationException("Not implemented yet");
+  }
+
+  /**
+   * Fetch all data points for the given time series that are within the given time range indicated
+   * by {@code startTime} and {@code endTime}.
+   *
+   * <p>The returned iterator will try to prefetch as necessary to prevent blockage but may not
+   * always succeed in doing so.
+   *
+   * @param timeSeriesId The time series to fetch the data points for
+   * @param startTime The lower bound to timestamp to fetch data points within
+   * @param endTime The upper bound to timestamp to fetch data points within
+   * @return An iterator that will loop over all found data points.
+   */
+  protected Iterator<? extends DataPoint> fetchTimeSeries(
+      final ByteBuffer timeSeriesId,
+      final long startTime,
+      final long endTime) {
+    final Iterator<Row> rows = new SpeculativePartitionIterator<>(
+        BaseTimes.baseTimesBetween(startTime, endTime),
+        new Function<Long, ResultSetFuture>() {
+          @Nullable
+          @Override
+          public ResultSetFuture apply(final Long baseTime) {
+            return fetchTimeSeriesPartition(timeSeriesId, baseTime, startTime, endTime);
+          }
+        });
+
+    return DataPointIterator.iteratorFor(rows);
+  }
+
+  /**
+   * Fetch the data points in the partition indicated by {@code timeSeriesId} and {@code baseTime}
+   * that are within the provided time bounds.
+   *
+   * @param timeSeriesId The time series to fetch the data points for
+   * @param baseTime The base time as normalized by {@link BaseTimes#baseTimeFor(long)}
+   * @param startTime The lower bound to timestamp to fetch data points within
+   * @param endTime The upper bound to timestamp to fetch data points within
+   * @return A future that on completion will contain a paged iterable of rows
+   */
+  protected ResultSetFuture fetchTimeSeriesPartition(final ByteBuffer timeSeriesId,
+                                                     final long baseTime,
+                                                     final long startTime,
+                                                     final long endTime) {
+    return session.executeAsync(fetchTimeSeriesStatement.bind()
+        .setBytesUnsafe(SelectPointStatementMarkers.ID.ordinal(), timeSeriesId)
+        .setLong(SelectPointStatementMarkers.BASE_TIME.ordinal(), baseTime)
+        .setLong(SelectPointStatementMarkers.LOWER_TIMESTAMP.ordinal(), startTime)
+        .setLong(SelectPointStatementMarkers.UPPER_TIMESTAMP.ordinal(), endTime));
   }
 
   /**

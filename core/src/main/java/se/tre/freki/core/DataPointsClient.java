@@ -201,10 +201,4 @@ public class DataPointsClient {
 
     return addPointComplete;
   }
-
-  // TODO
-  public ListenableFuture<Object[]> executeQuery(Object query) {
-    //return store.executeQuery(query);
-    return null;
-  }
 }
