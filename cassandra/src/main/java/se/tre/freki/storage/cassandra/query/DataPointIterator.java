@@ -20,7 +20,13 @@ public class DataPointIterator implements Iterator<DataPoint> {
   private final Iterator<Row> rows;
   private TypeStrategy typeStrategy;
 
-  protected DataPointIterator(final Iterator<Row> rows) {
+  /**
+   * Create a new data point iterator. Consumers of this interface should most likely use the {@link
+   * #iteratorFor(Iterator)} factory method.
+   *
+   * @param rows The rows this iterator will expose as data points
+   */
+  private DataPointIterator(final Iterator<Row> rows) {
     this.rows = rows;
   }
 
@@ -74,16 +80,16 @@ public class DataPointIterator implements Iterator<DataPoint> {
     }
 
     private RowDataPoint dataPointFor(final Row row) {
-      final ColumnDefinitions columnDefinitions = row.getColumnDefinitions();
+      final ColumnDefinitions columns = row.getColumnDefinitions();
 
-      if (columnDefinitions.contains("long_value")) {
+      if (columns.contains("long_value")) {
         return new RowDataPoint.RowLongDataPoint();
-      } else if (columnDefinitions.contains("float_value")) {
+      } else if (columns.contains("float_value")) {
         return new RowDataPoint.RowFloatDataPoint();
-      } else if (columnDefinitions.contains("double_value")) {
+      } else if (columns.contains("double_value")) {
         return new RowDataPoint.RowDoubleDataPoint();
       } else {
-        throw new AssertionError("row does not contain any known type");
+        throw new IllegalStateException("row does not contain any known type: " + columns);
       }
     }
   }
