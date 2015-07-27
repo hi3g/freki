@@ -104,7 +104,7 @@ public class CassandraStore extends Store {
   private PreparedStatement getNameStatement;
   private PreparedStatement getIdStatement;
 
-  private final IndexStrategy onlineIndexingStrategy;
+  private final IndexStrategy addPointIndexingStrategy;
 
   /**
    * Create a new instance that will use the provided Cassandra cluster and session instances.
@@ -116,12 +116,12 @@ public class CassandraStore extends Store {
   public CassandraStore(final Cluster cluster,
                         final Session session,
                         final Clock clock,
-                        final IndexStrategy onlineIndexingStrategy) {
+                        final IndexStrategy addPointIndexingStrategy) {
     this.cluster = checkNotNull(cluster);
     this.session = checkNotNull(session);
     this.clock = checkNotNull(clock);
 
-    this.onlineIndexingStrategy = checkNotNull(onlineIndexingStrategy);
+    this.addPointIndexingStrategy = checkNotNull(addPointIndexingStrategy);
 
     final AddPointStatements addPointStatements = new AddPointStatements(session);
     this.addFloatStatement = addPointStatements.addFloatStatement();
@@ -179,7 +179,7 @@ public class CassandraStore extends Store {
 
     final ResultSetFuture future = session.executeAsync(addPointStatement);
 
-    onlineIndexingStrategy.indexTimeseriesId(metric, tags, timeSeriesId);
+    addPointIndexingStrategy.indexTimeseriesId(metric, tags, timeSeriesId);
 
     return transform(future, new ToVoidFunction());
   }

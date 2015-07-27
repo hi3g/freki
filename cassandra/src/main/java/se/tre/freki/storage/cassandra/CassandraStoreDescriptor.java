@@ -75,10 +75,10 @@ public class CassandraStoreDescriptor extends StoreDescriptor {
     final Session session = connectTo(cluster, keyspace);
     registerMetrics(cluster, metrics);
 
-    final IndexStrategy onlineIndexStrategy = indexStrategyFor(session,
-        config.getBoolean("freki.storage.cassandra.online_index"));
+    final IndexStrategy addPointIndexStrategy = indexStrategyFor(session,
+        config.getBoolean("freki.storage.cassandra.index_on_add_point"));
 
-    return new CassandraStore(cluster, session, Clock.systemDefaultZone(), onlineIndexStrategy);
+    return new CassandraStore(cluster, session, Clock.systemDefaultZone(), addPointIndexStrategy);
   }
 
   @Nonnull
