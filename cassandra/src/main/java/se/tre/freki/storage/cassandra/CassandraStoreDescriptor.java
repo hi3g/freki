@@ -74,7 +74,11 @@ public class CassandraStoreDescriptor extends StoreDescriptor {
     final String keyspace = config.getString("freki.storage.cassandra.keyspace");
     final Session session = connectTo(cluster, keyspace);
     registerMetrics(cluster, metrics);
-    return new CassandraStore(cluster, session, Clock.systemDefaultZone());
+
+    final IndexStrategy onlineIndexStrategy = indexStrategyFor(session,
+        config.getBoolean("freki.storage.cassandra.online_index"));
+
+    return new CassandraStore(cluster, session, Clock.systemDefaultZone(), onlineIndexStrategy);
   }
 
   @Nonnull
@@ -87,6 +91,16 @@ public class CassandraStoreDescriptor extends StoreDescriptor {
   @Override
   public LabelId.LabelIdDeserializer labelIdDeserializer() {
     return new CassandraLabelId.CassandraLabelIdDeserializer();
+  }
+
+  @Nonnull
+  private IndexStrategy indexStrategyFor(final Session session,
+                                         final boolean shouldWrite) {
+    if (shouldWrite) {
+      return new IndexStrategy.IndexingStrategy(session);
+    }
+
+    return new IndexStrategy.NoOpIndexingStrategy();
   }
 
   /**

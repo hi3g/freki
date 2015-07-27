@@ -54,7 +54,6 @@ import java.time.Clock;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -90,7 +89,6 @@ public class CassandraStore extends Store {
    */
   private final PreparedStatement fetchTimeSeriesStatement;
 
-  private PreparedStatement insertTagsStatement;
   /**
    * The statement used by the {@link #createLabel} method.
    */
@@ -106,6 +104,8 @@ public class CassandraStore extends Store {
   private PreparedStatement getNameStatement;
   private PreparedStatement getIdStatement;
 
+  private final IndexStrategy onlineIndexingStrategy;
+
   /**
    * Create a new instance that will use the provided Cassandra cluster and session instances.
    *
@@ -115,10 +115,13 @@ public class CassandraStore extends Store {
    */
   public CassandraStore(final Cluster cluster,
                         final Session session,
-                        final Clock clock) {
+                        final Clock clock,
+                        final IndexStrategy onlineIndexingStrategy) {
     this.cluster = checkNotNull(cluster);
     this.session = checkNotNull(session);
     this.clock = checkNotNull(clock);
+
+    this.onlineIndexingStrategy = checkNotNull(onlineIndexingStrategy);
 
     final AddPointStatements addPointStatements = new AddPointStatements(session);
     this.addFloatStatement = addPointStatements.addFloatStatement();
@@ -175,6 +178,8 @@ public class CassandraStore extends Store {
     addPointStatement.setLong(AddPointStatementMarkers.USING_TIMESTAMP.ordinal(), timestamp);
 
     final ResultSetFuture future = session.executeAsync(addPointStatement);
+
+    onlineIndexingStrategy.indexTimeseriesId(metric, tags, timeSeriesId);
 
     return transform(future, new ToVoidFunction());
   }
@@ -588,32 +593,5 @@ public class CassandraStore extends Store {
             .where(eq("name", bindMarker()))
             .and(eq("type", bindMarker()))
             .limit(2));
-
-    insertTagsStatement = session.prepare(
-        insertInto(Tables.TS_INVERTED_INDEX)
-            .value("label_id", bindMarker())
-            .value("type", bindMarker())
-            .value("timeseries_id", bindMarker()));
-  }
-
-  private void writeTimeseriesIdIndex(final LabelId metric,
-                                      final Map<LabelId, LabelId> tags,
-                                      final ByteBuffer tsid) {
-    session.executeAsync(insertTagsStatement.bind()
-        .setLong(0, toLong(metric))
-        .setString(1, LabelType.METRIC.toValue())
-        .setBytesUnsafe(2, tsid));
-
-    for (final Map.Entry<LabelId, LabelId> entry : tags.entrySet()) {
-      session.executeAsync(insertTagsStatement.bind()
-          .setLong(0, toLong(entry.getKey()))
-          .setString(1, LabelType.TAGK.toValue())
-          .setBytesUnsafe(2, tsid));
-
-      session.executeAsync(insertTagsStatement.bind()
-          .setLong(0, toLong(entry.getValue()))
-          .setString(1, LabelType.TAGV.toValue())
-          .setBytesUnsafe(2, tsid));
-    }
   }
 }
