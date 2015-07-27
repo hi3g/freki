@@ -415,6 +415,14 @@ public class CassandraStore extends Store {
 
   }
 
+  /**
+   * A helper function to getMeta. It gets a Row containing meta information from the label with the
+   * LabelId id and LabelType type.
+   *
+   * @param id The label id to fetch.
+   * @param type the label type to fetch.
+   * @return Returns absent if there was no meta for that id and type.
+   */
   @Nonnull
   ListenableFuture<Optional<Row>> getOptionalMeta(final LabelId id,
                                                   final LabelType type) {
@@ -502,7 +510,6 @@ public class CassandraStore extends Store {
   }
 
   /**
-<<<<<<< HEAD
    * Fetch all data points for the given time series that are within the given time range indicated
    * by {@code startTime} and {@code endTime}.
    *
