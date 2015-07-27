@@ -58,7 +58,11 @@ public interface IdLookupStrategy {
           new AsyncFunction<Optional<LabelId>, LabelId>() {
             @Override
             public ListenableFuture<LabelId> apply(final Optional<LabelId> input) throws Exception {
-              return labelClientTypeContext.createId(name);
+              if (!input.isPresent()) {
+                return labelClientTypeContext.createId(name);
+              }
+
+              return Futures.immediateFuture(input.get());
             }
           });
     }
