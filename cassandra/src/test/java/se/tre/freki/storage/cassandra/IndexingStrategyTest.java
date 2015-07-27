@@ -49,10 +49,23 @@ public class IndexingStrategyTest {
   }
 
   @Test(expected = NoSuchElementException.class)
-  public void testThrowsOnOddTags() throws Exception {
+  public void testIndexTimeseriesIdThrowsOnOddTags() throws Exception {
     final LabelId metric = fromLong(1L);
 
     final ImmutableList<LabelId> tags = ImmutableList.<LabelId>of(
+        fromLong(2L));
+
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric, tags);
+
+    indexingStrategy.indexTimeseriesId(metric, tags, timeSeriesId);
+  }
+
+  @Test
+  public void testIndexTimeseriesId() throws Exception {
+    final LabelId metric = fromLong(1L);
+
+    final ImmutableList<LabelId> tags = ImmutableList.<LabelId>of(
+        fromLong(3L),
         fromLong(2L));
 
     final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric, tags);
