@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
 import se.tre.freki.storage.StoreTest;
+import se.tre.freki.storage.cassandra.IndexStrategy.NoOpIndexingStrategy;
 
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.Cluster;
@@ -52,7 +53,9 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
     final String keyspace = config.getString("freki.storage.cassandra.keyspace");
     final Cluster cluster = storeDescriptor.createCluster(config);
     final Session session = storeDescriptor.connectTo(cluster, keyspace);
-    assertNotNull(new CassandraStore(cluster, session, Clock.systemDefaultZone()));
+    final Clock clock = Clock.systemDefaultZone();
+    final IndexStrategy indexingStrategy = new NoOpIndexingStrategy();
+    assertNotNull(new CassandraStore(cluster, session, clock, indexingStrategy));
   }
 
   @Test(expected = NullPointerException.class)
@@ -60,7 +63,8 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
     final String keyspace = config.getString("freki.storage.cassandra.keyspace");
     final Cluster cluster = storeDescriptor.createCluster(config);
     final Session session = storeDescriptor.connectTo(cluster, keyspace);
-    new CassandraStore(cluster, session, null);
+    final IndexStrategy indexingStrategy = new NoOpIndexingStrategy();
+    new CassandraStore(cluster, session, null, indexingStrategy);
   }
 
   @Test(expected = NullPointerException.class)
@@ -68,13 +72,17 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
     final String keyspace = config.getString("freki.storage.cassandra.keyspace");
     final Cluster cluster = storeDescriptor.createCluster(config);
     final Session session = storeDescriptor.connectTo(cluster, keyspace);
-    new CassandraStore(null, session, Clock.systemDefaultZone());
+    final Clock clock = Clock.systemDefaultZone();
+    final IndexStrategy indexingStrategy = new NoOpIndexingStrategy();
+    new CassandraStore(null, session, clock, indexingStrategy);
   }
 
   @Test(expected = NullPointerException.class)
   public void constructorNullSession() throws IOException {
     final Cluster cluster = storeDescriptor.createCluster(config);
-    new CassandraStore(cluster, null, Clock.systemDefaultZone());
+    final Clock clock = Clock.systemDefaultZone();
+    final IndexStrategy indexingStrategy = new NoOpIndexingStrategy();
+    new CassandraStore(cluster, null, clock, indexingStrategy);
   }
 
   @Override
