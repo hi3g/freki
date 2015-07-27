@@ -10,6 +10,7 @@ import static se.tre.freki.storage.cassandra.CassandraLabelId.fromLong;
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.StaticTimeSeriesId;
 import se.tre.freki.query.DataPoint;
+import se.tre.freki.query.DataPoint.LongDataPoint;
 
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.ResultSet;
@@ -129,8 +130,30 @@ public class CassandraStoreDataPointTests {
     final Iterator<? extends DataPoint> dataPoints = store.fetchTimeSeries(timeSeriesId, pointTime,
         pointTime + BASE_TIME_PERIOD);
 
-    assertEquals(firstValue, ((DataPoint.LongDataPoint) dataPoints.next()).value());
-    assertEquals(secondValue, ((DataPoint.LongDataPoint) dataPoints.next()).value());
+    assertEquals(firstValue, ((LongDataPoint) dataPoints.next()).value());
+    assertEquals(secondValue, ((LongDataPoint) dataPoints.next()).value());
     assertFalse(dataPoints.hasNext());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testFetchTimeSeriesMixedTypes() throws Exception {
+    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric, tags1);
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric, tags1);
+
+    final long pointTime = 123123123;
+    final long pointLongValue = 123123;
+    final double pointDoubleValue = 123.32d;
+
+    store.addPoint(staticTimeSeriesId, pointTime, pointLongValue).get();
+    store.addPoint(staticTimeSeriesId, pointTime + 5, pointDoubleValue).get();
+
+    final Iterator<? extends DataPoint> dataPoints = store.fetchTimeSeries(timeSeriesId, pointTime,
+        pointTime + 5);
+
+    final DataPoint firstDataPoint = dataPoints.next();
+    assertTrue(firstDataPoint instanceof LongDataPoint);
+
+    final LongDataPoint secondDataPoint = (LongDataPoint) dataPoints.next();
+    secondDataPoint.value();
   }
 }
