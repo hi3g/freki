@@ -286,15 +286,6 @@ public class CassandraStore extends Store {
     });
   }
 
-  /**
-   * Renames a label that already exists to a new given value. This method is used by the function
-   * {@link se.tre.freki.labels.LabelClientTypeContext#rename}.
-   *
-   * @param newName The name to write.
-   * @param id The uid to use.
-   * @param type The type of UID
-   * @return The uid that was used.
-   */
   @Nonnull
   @Override
   public ListenableFuture<Boolean> renameLabel(final String newName,
