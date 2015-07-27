@@ -160,11 +160,10 @@ public final class LabelClientTypeContextTest {
   public void testRenameNewNameExists() throws Exception {
     typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
         MAX_CACHE_SIZE);
-    // Can not rename to a name that is already taken
     typeContext.createId("newName").get();
     try {
       typeContext.rename("oldName", "newName").get();
-      fail("Should have thrown an exception, can not rename to a name that is already taken.");
+      fail("Can not rename to a name that is already taken");
     } catch (ExecutionException exception) {
       assertTrue(exception.getCause() instanceof IllegalArgumentException);
     }
@@ -174,10 +173,9 @@ public final class LabelClientTypeContextTest {
   public void testRenameIdNotFoundOnOldName() throws Exception {
     typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
         MAX_CACHE_SIZE);
-    //No previous label called "oldName" return Failed future
     try {
       typeContext.rename("oldName", "newName").get();
-      fail("Rename should have failed when it did not find the current name.");
+      fail("Can not rename a name that does not exist");
     } catch (ExecutionException exception) {
       assertTrue(exception.getCause() instanceof LabelException);
     }

@@ -57,7 +57,7 @@ public class WildcardIdLookupStrategyTest {
   public void testResolveIdGetsMissingId() throws Exception {
     try {
       lookupStrategy.getId(uid, "nosuchname").get();
-      fail("Future should have contained future but did not!");
+      fail("The wildcard lookup strategy should fail on missing names");
     } catch (ExecutionException e) {
       assertTrue(e.getCause() instanceof LabelException);
     }
