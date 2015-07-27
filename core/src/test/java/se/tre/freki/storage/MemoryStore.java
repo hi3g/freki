@@ -104,11 +104,11 @@ public class MemoryStore extends Store {
 
   @Nonnull
   @Override
-  public ListenableFuture<LabelMeta> getMeta(final LabelId uid,
+  public ListenableFuture<Optional<LabelMeta>> getMeta(final LabelId uid,
                                              final LabelType type) {
     final String qualifier = type.toString().toLowerCase() + "_meta";
     final LabelMeta meta = labelMetas.get(uid, qualifier);
-    return Futures.immediateFuture(meta);
+    return Futures.immediateFuture(Optional.fromNullable(meta));
   }
 
   @Nonnull

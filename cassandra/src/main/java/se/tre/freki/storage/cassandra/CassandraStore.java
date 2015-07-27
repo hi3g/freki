@@ -106,6 +106,13 @@ public class CassandraStore extends Store {
   private final IndexStrategy addPointIndexingStrategy;
 
   /**
+   * The statements used when trying to get {@link #getMeta(LabelId, LabelType)} or update meta
+   * {@link #updateMeta(LabelMeta)}.
+   */
+  private PreparedStatement getMetaStatement;
+  private PreparedStatement updateMetaStatement;
+
+  /**
    * Create a new instance that will use the provided Cassandra cluster and session instances.
    *
    * @param cluster A built and configured cluster instance
@@ -380,15 +387,122 @@ public class CassandraStore extends Store {
 
   @Nonnull
   @Override
-  public ListenableFuture<LabelMeta> getMeta(final LabelId uid,
-                                             final LabelType type) {
-    throw new UnsupportedOperationException("Not implemented yet");
+  public ListenableFuture<Optional<LabelMeta>> getMeta(final LabelId id,
+                                                       final LabelType type) {
+
+    final ListenableFuture<Optional<Row>> metas = getOptionalMeta(id, type);
+    return transform(metas, new Function<Optional<Row>, Optional<LabelMeta>>() {
+      @Nullable
+      @Override
+      public Optional<LabelMeta> apply(final Optional<Row> result) {
+        if (!result.isPresent()) {
+          return Optional.absent();
+        }
+
+        final Row row = result.get();
+
+        return Optional.of(
+            LabelMeta.create(CassandraLabelId.fromLong(row.getLong("label_id")),
+                LabelType.fromValue(row.getString("type")), row.getString("name"),
+                row.getString("meta_description"),
+                row.getDate("creation_time").getTime()));
+      }
+    });
+
+  }
+
+  /**
+   * A helper function to getMeta. It gets a Row containing meta information from the label with the
+   * LabelId id and LabelType type.
+   *
+   * @param id The label id to fetch.
+   * @param type the label type to fetch.
+   * @return Returns absent if there was no meta for that id and type.
+   */
+  @Nonnull
+  ListenableFuture<Optional<Row>> getOptionalMeta(final LabelId id,
+                                                  final LabelType type) {
+
+    final ListenableFuture<List<Row>> rowFuture = fetchLabelRows(id, type,
+        getMetaStatement.bind(toLong(id), type.toValue()));
+
+    return transform(rowFuture, new FirstOrAbsentFunction<Row>());
+  }
+
+  /**
+   * Use this function to check for duplicates.
+   *
+   * @param id The LabelId we were looking for in the statement. For logging purpose.
+   * @param type The type we were looking for in the statement. For logging purpose.
+   * @param statement The statement we wish to execute.
+   * @return Returns a list of rows.
+   */
+  @Nonnull
+  ListenableFuture<List<Row>> fetchLabelRows(final LabelId id,
+                                             final LabelType type,
+                                             final BoundStatement statement) {
+
+    final ResultSetFuture future = session.executeAsync(statement);
+
+    return transform(future, new Function<ResultSet, List<Row>>() {
+      @Override
+      public List<Row> apply(final ResultSet result) {
+
+        final List<Row> rows = result.all();
+
+        if (rows.size() > 1) {
+          LOG.error("Found duplicate IDs for ({}, {})", id, type);
+        }
+
+        return rows;
+      }
+    });
+  }
+
+  /**
+   * Use this function to check for duplicates.
+   *
+   * @param name The name we were looking for in the statement. For logging purpose.
+   * @param type The type we were looking for in the statement. For logging purpose.
+   * @param statement The statement we wish to execute.
+   * @return Returns a list of rows.
+   */
+  @Nonnull
+  ListenableFuture<List<Row>> fetchLabelRows(final String name,
+                                             final LabelType type,
+                                             final BoundStatement statement) {
+
+    final ResultSetFuture future = session.executeAsync(statement);
+
+    return transform(future, new Function<ResultSet, List<Row>>() {
+      @Override
+      public List<Row> apply(final ResultSet result) {
+
+        final List<Row> rows = result.all();
+
+        if (rows.size() > 1) {
+          LOG.error("Found duplicate IDs for ({}, {})", name, type);
+        }
+
+        return rows;
+      }
+    });
   }
 
   @Nonnull
   @Override
   public ListenableFuture<Boolean> updateMeta(LabelMeta meta) {
-    throw new UnsupportedOperationException("Not implemented yet");
+    final ResultSetFuture updateMetaFuture = session.executeAsync(
+        updateMetaStatement.bind(meta.description(), toLong(meta.identifier()),
+            meta.type().toValue(), new Date(meta.created())));
+
+    return transform(updateMetaFuture, new Function<ResultSet, Boolean>() {
+      @Nullable
+      @Override
+      public Boolean apply(final ResultSet input) {
+        return input.wasApplied();
+      }
+    });
   }
 
   /**
@@ -451,26 +565,22 @@ public class CassandraStore extends Store {
   @Nonnull
   ListenableFuture<List<LabelId>> getIds(final String name,
                                          final LabelType type) {
-    ResultSetFuture idsFuture = session.executeAsync(
+
+    final ListenableFuture<List<Row>> idFuture = fetchLabelRows(name, type,
         getIdStatement.bind(name, type.toValue()));
 
-    return transform(idsFuture, new Function<ResultSet, List<LabelId>>() {
+    return transform(idFuture, new Function<List<Row>, List<LabelId>>() {
+      @Nullable
       @Override
-      public List<LabelId> apply(final ResultSet result) {
+      public List<LabelId> apply(final List<Row> rows) {
         ImmutableList.Builder<LabelId> builder = ImmutableList.builder();
 
-        for (final Row row : result) {
+        for (final Row row : rows) {
           final long id = row.getLong("label_id");
           builder.add(fromLong(id));
         }
 
-        final ImmutableList<LabelId> ids = builder.build();
-
-        if (ids.size() > 1) {
-          LOG.error("Found duplicate IDs for ({}, {})", name, type);
-        }
-
-        return ids;
+        return builder.build();
       }
     });
   }
@@ -485,7 +595,9 @@ public class CassandraStore extends Store {
   @Nonnull
   ListenableFuture<List<String>> getNames(final LabelId id,
                                           final LabelType type) {
-    final ListenableFuture<List<Row>> namesFuture = getNameRows(id, type);
+
+    final ListenableFuture<List<Row>> namesFuture = fetchLabelRows(id, type,
+        getNameStatement.bind(toLong(id), type.toValue()));
 
     return transform(namesFuture, new Function<List<Row>, List<String>>() {
       @Override
@@ -567,7 +679,8 @@ public class CassandraStore extends Store {
                 .value("label_id", bindMarker())
                 .value("type", bindMarker())
                 .value("creation_time", bindMarker())
-                .value("name", bindMarker()),
+                .value("name", bindMarker())
+                .value("meta_description", null),
             insertInto(Tables.NAME_TO_ID)
                 .value("name", bindMarker())
                 .value("type", bindMarker())
@@ -608,5 +721,20 @@ public class CassandraStore extends Store {
             .where(eq("name", bindMarker()))
             .and(eq("type", bindMarker()))
             .limit(2));
+
+    getMetaStatement = session.prepare(
+        select()
+            .all()
+            .from(Tables.ID_TO_NAME)
+            .where(eq("label_id", bindMarker()))
+            .and(eq("type", bindMarker()))
+            .limit(2));
+
+    updateMetaStatement = session.prepare(
+        update(Tables.ID_TO_NAME)
+            .with(set("meta_description", bindMarker()))
+            .where(eq("label_id", bindMarker()))
+            .and(eq("type", bindMarker()))
+            .and(eq("creation_time", bindMarker())));
   }
 }
