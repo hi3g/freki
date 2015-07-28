@@ -27,11 +27,19 @@ public class TimeSeriesQueryPredicate {
     this.tagPredicates = tagPredicates;
   }
 
+  public LabelId metric() {
+    return metric;
+  }
+
+  public ImmutableSet<TimeSeriesTagPredicate> tagPredicates() {
+    return tagPredicates;
+  }
+
   public static Builder builder() {
     return new Builder();
   }
 
-  private static class Builder {
+  public static class Builder {
     private LabelId metric;
     private Set<TimeSeriesTagPredicate> tagPredicates = new HashSet<>();
 
@@ -43,6 +51,10 @@ public class TimeSeriesQueryPredicate {
       tagPredicates.add(tagPredicate);
     }
 
+    /**
+     * Returns a newly instantiated {@code TimeSeriesQueryPredicate} with the arguments provided to
+     * this builder.
+     */
     public TimeSeriesQueryPredicate build() {
       checkState(metric != null);
       checkState(!tagPredicates.isEmpty());

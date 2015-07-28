@@ -13,6 +13,18 @@ public class TimeSeriesTagPredicate {
     this.operator = operator;
   }
 
+  public TimeSeriesIdPredicate key() {
+    return key;
+  }
+
+  public TimeSeriesIdPredicate value() {
+    return value;
+  }
+
+  public TimeSeriesTagOperator operator() {
+    return operator;
+  }
+
   enum TimeSeriesTagOperator {
     EQUALS, NOT_EQUALS
   }

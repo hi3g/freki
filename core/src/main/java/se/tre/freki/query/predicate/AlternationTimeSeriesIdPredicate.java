@@ -19,4 +19,8 @@ public class AlternationTimeSeriesIdPredicate extends TimeSeriesIdPredicate {
     final ImmutableSet<LabelId> immutableIds = ImmutableSet.copyOf(ids);
     return new AlternationTimeSeriesIdPredicate(immutableIds);
   }
+
+  public ImmutableSet<LabelId> ids() {
+    return ids;
+  }
 }

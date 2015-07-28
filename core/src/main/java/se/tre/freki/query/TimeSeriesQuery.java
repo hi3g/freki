@@ -26,4 +26,16 @@ public class TimeSeriesQuery {
     this.startTime = startTime;
     this.endTime = endTime;
   }
+
+  public TimeSeriesQueryPredicate predicate() {
+    return predicate;
+  }
+
+  public long startTime() {
+    return startTime;
+  }
+
+  public long endTime() {
+    return endTime;
+  }
 }
