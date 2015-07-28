@@ -35,7 +35,7 @@ public class StopTimerCallback<T> implements FutureCallback<T> {
    */
   public static <T> void stopOn(final Timer.Context timerContext,
                                 final ListenableFuture<T> future) {
-    Futures.addCallback(future, new StopTimerCallback<T>(timerContext));
+    Futures.addCallback(future, new StopTimerCallback<>(timerContext));
   }
 
   @Override

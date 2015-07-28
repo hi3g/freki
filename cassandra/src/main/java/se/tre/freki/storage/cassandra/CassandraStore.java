@@ -343,7 +343,7 @@ public class CassandraStore extends Store {
   public ListenableFuture<Optional<LabelId>> getId(final String name,
                                                    final LabelType type) {
     ListenableFuture<List<LabelId>> idsFuture = getIds(name, type);
-    return transform(idsFuture, new FirstOrAbsentFunction<LabelId>());
+    return transform(idsFuture, new FirstOrAbsentFunction<>());
   }
 
   @Nonnull
@@ -351,7 +351,7 @@ public class CassandraStore extends Store {
   public ListenableFuture<Optional<String>> getName(final LabelId id,
                                                     final LabelType type) {
     ListenableFuture<List<String>> namesFuture = getNames(id, type);
-    return transform(namesFuture, new FirstOrAbsentFunction<String>());
+    return transform(namesFuture, new FirstOrAbsentFunction<>());
   }
 
   @Nonnull
@@ -426,7 +426,7 @@ public class CassandraStore extends Store {
     final ListenableFuture<List<Row>> rowFuture = fetchLabelRows(id, type,
         getMetaStatement.bind(toLong(id), type.toValue()));
 
-    return transform(rowFuture, new FirstOrAbsentFunction<Row>());
+    return transform(rowFuture, new FirstOrAbsentFunction<>());
   }
 
   /**
