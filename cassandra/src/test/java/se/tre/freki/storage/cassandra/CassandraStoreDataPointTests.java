@@ -3,14 +3,19 @@ package se.tre.freki.storage.cassandra;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static se.tre.freki.query.predicate.SimpleTimeSeriesIdPredicate.id;
+import static se.tre.freki.query.predicate.TimeSeriesTagPredicate.eq;
 import static se.tre.freki.storage.cassandra.BaseTimes.baseTimeFor;
 import static se.tre.freki.storage.cassandra.CassandraConst.BASE_TIME_PERIOD;
 import static se.tre.freki.storage.cassandra.CassandraLabelId.fromLong;
 
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.StaticTimeSeriesId;
+import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.DataPoint.LongDataPoint;
+import se.tre.freki.query.TimeSeriesQuery;
+import se.tre.freki.query.predicate.TimeSeriesQueryPredicate;
 
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.ResultSet;
@@ -25,6 +30,7 @@ import org.junit.rules.Timeout;
 
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.Map;
 
 public class CassandraStoreDataPointTests {
   @Rule
@@ -32,7 +38,8 @@ public class CassandraStoreDataPointTests {
 
   private CassandraStore store;
 
-  private LabelId metric;
+  private LabelId metric1;
+  private LabelId metric2;
   private ImmutableList<LabelId> tags1;
   private ImmutableList<LabelId> tags2;
 
@@ -48,7 +55,8 @@ public class CassandraStoreDataPointTests {
 
     store = storeDescriptor.createStore(config, new MetricRegistry());
 
-    metric = fromLong(1L);
+    metric1 = fromLong(1L);
+    metric1 = fromLong(2L);
 
     tags1 = ImmutableList.<LabelId>of(
         fromLong(1L),
@@ -65,8 +73,8 @@ public class CassandraStoreDataPointTests {
 
   @Test
   public void testFetchTimeSeriesPartitionFindsExactTime() throws Exception {
-    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric, tags1);
-    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric, tags1);
+    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric1, tags1);
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric1, tags1);
 
     final long pointTime = 123123123;
     final long pointValue = 123123;
@@ -82,8 +90,8 @@ public class CassandraStoreDataPointTests {
 
   @Test
   public void testFetchTimeSeriesPartitionDoesNotFindOutsideTime() throws Exception {
-    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric, tags1);
-    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric, tags1);
+    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric1, tags1);
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric1, tags1);
 
     final long pointTime = 123123123;
     final long pointValue = 123123;
@@ -99,11 +107,11 @@ public class CassandraStoreDataPointTests {
   @Test
   public void testFetchTimeSeriesPartitionDoesNotFindOtherTimeSeries() throws Exception {
     // Create a time series id for use with the add point call
-    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric, tags1);
+    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric1, tags1);
 
     // A second different time series id that should not find the point added to the above time
     // series.
-    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric, tags2);
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric1, tags2);
 
     final long pointTime = 123123123;
     final long pointValue = 123123;
@@ -118,8 +126,8 @@ public class CassandraStoreDataPointTests {
 
   @Test
   public void testFetchTimeSeriesMultiplePartitions() throws Exception {
-    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric, tags1);
-    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric, tags1);
+    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric1, tags1);
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric1, tags1);
 
     final long pointTime = 123123123;
     final long firstValue = 123123;
@@ -139,8 +147,8 @@ public class CassandraStoreDataPointTests {
   @Ignore
   @Test(expected = IllegalArgumentException.class)
   public void testFetchTimeSeriesMixedTypes() throws Exception {
-    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric, tags1);
-    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric, tags1);
+    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric1, tags1);
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric1, tags1);
 
     final long pointTime = 123123123;
     final long pointLongValue = 123123;
@@ -157,5 +165,33 @@ public class CassandraStoreDataPointTests {
 
     final LongDataPoint secondDataPoint = (LongDataPoint) dataPoints.next();
     secondDataPoint.value();
+  }
+
+  @Test
+  public void testQueryFetchesData() throws Exception {
+    final StaticTimeSeriesId staticTimeSeriesId1 = new StaticTimeSeriesId(metric1, tags1);
+
+    final long startTime = 123123123;
+    final long value = 123123;
+
+    for (long time = startTime; time < startTime + 10; time++) {
+      store.addPoint(staticTimeSeriesId1, time, value).get();
+    }
+
+    final TimeSeriesQueryPredicate.Builder builder = TimeSeriesQueryPredicate.builder();
+    builder.metric(metric1);
+    builder.addTagPredicate(eq(id(tags1.get(0)), id(tags1.get(1))));
+
+    final TimeSeriesQuery query = new TimeSeriesQuery(builder.build(), 123123123, 123123123 + 10);
+    final Map<TimeSeriesId, Iterator<? extends DataPoint>> dataPoints = store.query(query).get();
+
+    assertEquals(1, dataPoints.keySet().size());
+
+    final TimeSeriesId timeSeriesId = dataPoints.keySet().iterator().next();
+    final Iterator<? extends DataPoint> iterator = dataPoints.get(timeSeriesId);
+
+    for (int dataPointIdx = 0; dataPointIdx < 10; dataPointIdx++) {
+      assertEquals(value, ((LongDataPoint) iterator.next()).value());
+    }
   }
 }
