@@ -2,7 +2,6 @@ package se.tre.freki.storage.cassandra.query;
 
 import se.tre.freki.query.DataPoint;
 
-import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.Row;
 
 import java.util.Iterator;
@@ -80,16 +79,15 @@ public class DataPointIterator implements Iterator<DataPoint> {
     }
 
     private RowDataPoint dataPointFor(final Row row) {
-      final ColumnDefinitions columns = row.getColumnDefinitions();
-
-      if (columns.contains("long_value")) {
+      if (!row.isNull("long_value")) {
         return new RowDataPoint.RowLongDataPoint();
-      } else if (columns.contains("float_value")) {
+      } else if (!row.isNull("float_value")) {
         return new RowDataPoint.RowFloatDataPoint();
-      } else if (columns.contains("double_value")) {
+      } else if (!row.isNull("double_value")) {
         return new RowDataPoint.RowDoubleDataPoint();
       } else {
-        throw new IllegalStateException("row does not contain any known type: " + columns);
+        throw new IllegalStateException(
+            "row does not contain any non-null field for any known known type");
       }
     }
   }

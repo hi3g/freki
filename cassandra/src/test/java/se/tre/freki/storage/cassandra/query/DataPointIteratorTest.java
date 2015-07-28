@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 
 import se.tre.freki.query.DataPoint;
 
-import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.Row;
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
@@ -17,9 +16,18 @@ import java.util.NoSuchElementException;
 public class DataPointIteratorTest {
   private Row mockRowWithColumnType(final String columnType) {
     final Row row = mock(Row.class);
-    final ColumnDefinitions columns = mock(ColumnDefinitions.class);
-    when(row.getColumnDefinitions()).thenReturn(columns);
-    when(columns.contains(columnType)).thenReturn(true);
+
+    final ImmutableList<String> valueColumns = ImmutableList.of(
+        "long_value", "float_value", "double_value");
+
+    for (final String valueColumn : valueColumns) {
+      if (valueColumn.equals(columnType)) {
+        when(row.isNull(valueColumn)).thenReturn(false);
+      } else {
+        when(row.isNull(valueColumn)).thenReturn(true);
+      }
+    }
+
     return row;
   }
 
