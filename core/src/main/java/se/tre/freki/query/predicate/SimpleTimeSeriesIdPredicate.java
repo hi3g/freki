@@ -15,4 +15,8 @@ public class SimpleTimeSeriesIdPredicate extends TimeSeriesIdPredicate {
   public static SimpleTimeSeriesIdPredicate id(final LabelId id) {
     return new SimpleTimeSeriesIdPredicate(id);
   }
+
+  public LabelId id() {
+    return id;
+  }
 }
