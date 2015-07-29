@@ -32,7 +32,7 @@ public class CassandraStoreDataPointTests {
 
   private CassandraStore store;
 
-  private LabelId metric;
+  private LabelId metric1;
   private ImmutableList<LabelId> tags1;
   private ImmutableList<LabelId> tags2;
 
@@ -48,7 +48,8 @@ public class CassandraStoreDataPointTests {
 
     store = storeDescriptor.createStore(config, new MetricRegistry());
 
-    metric = fromLong(1L);
+    metric1 = fromLong(1L);
+    metric1 = fromLong(2L);
 
     tags1 = ImmutableList.<LabelId>of(
         fromLong(1L),
@@ -65,8 +66,8 @@ public class CassandraStoreDataPointTests {
 
   @Test
   public void testFetchTimeSeriesPartitionFindsExactTime() throws Exception {
-    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric, tags1);
-    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric, tags1);
+    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric1, tags1);
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric1, tags1);
 
     final long pointTime = 123123123;
     final long pointValue = 123123;
@@ -82,8 +83,8 @@ public class CassandraStoreDataPointTests {
 
   @Test
   public void testFetchTimeSeriesPartitionDoesNotFindOutsideTime() throws Exception {
-    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric, tags1);
-    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric, tags1);
+    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric1, tags1);
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric1, tags1);
 
     final long pointTime = 123123123;
     final long pointValue = 123123;
@@ -99,11 +100,11 @@ public class CassandraStoreDataPointTests {
   @Test
   public void testFetchTimeSeriesPartitionDoesNotFindOtherTimeSeries() throws Exception {
     // Create a time series id for use with the add point call
-    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric, tags1);
+    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric1, tags1);
 
     // A second different time series id that should not find the point added to the above time
     // series.
-    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric, tags2);
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric1, tags2);
 
     final long pointTime = 123123123;
     final long pointValue = 123123;
@@ -118,8 +119,8 @@ public class CassandraStoreDataPointTests {
 
   @Test
   public void testFetchTimeSeriesMultiplePartitions() throws Exception {
-    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric, tags1);
-    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric, tags1);
+    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric1, tags1);
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric1, tags1);
 
     final long pointTime = 123123123;
     final long firstValue = 123123;
@@ -139,8 +140,8 @@ public class CassandraStoreDataPointTests {
   @Ignore
   @Test(expected = IllegalArgumentException.class)
   public void testFetchTimeSeriesMixedTypes() throws Exception {
-    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric, tags1);
-    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric, tags1);
+    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric1, tags1);
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric1, tags1);
 
     final long pointTime = 123123123;
     final long pointLongValue = 123123;

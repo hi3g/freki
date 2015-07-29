@@ -44,6 +44,8 @@ CREATE TABLE freki.ts_inverted_index (
   label_id bigint,
   type varchar,
   timeseries_id uuid,
+  metric bigint,
+  tags map<bigint, bigint>,
   PRIMARY KEY ((label_id, type), timeseries_id)
 );
 

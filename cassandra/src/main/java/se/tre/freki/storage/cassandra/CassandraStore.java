@@ -20,6 +20,8 @@ import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.meta.Annotation;
 import se.tre.freki.meta.LabelMeta;
 import se.tre.freki.query.DataPoint;
+import se.tre.freki.query.TimeSeriesQuery;
+import se.tre.freki.query.predicate.TimeSeriesQueryPredicate;
 import se.tre.freki.storage.Store;
 import se.tre.freki.storage.cassandra.functions.FirstOrAbsentFunction;
 import se.tre.freki.storage.cassandra.functions.IsEmptyFunction;
@@ -43,6 +45,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -54,6 +57,7 @@ import java.time.Clock;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -111,6 +115,8 @@ public class CassandraStore extends Store {
    */
   private PreparedStatement getMetaStatement;
   private PreparedStatement updateMetaStatement;
+
+  private PreparedStatement resolveTimeSeriesStatement;
 
   /**
    * Create a new instance that will use the provided Cassandra cluster and session instances.
@@ -736,5 +742,62 @@ public class CassandraStore extends Store {
             .where(eq("label_id", bindMarker()))
             .and(eq("type", bindMarker()))
             .and(eq("creation_time", bindMarker())));
+
+    resolveTimeSeriesStatement = session.prepare(
+        select()
+            .all()
+            .from(Tables.TS_INVERTED_INDEX)
+            .where(eq("label_id", bindMarker()))
+            .and(eq("type", bindMarker())));
+  }
+
+  @Nonnull
+  @Override
+  public ListenableFuture<Map<TimeSeriesId, Iterator<? extends DataPoint>>> query(
+      final TimeSeriesQuery query) {
+    final ListenableFuture<Iterable<CassandraTimeSeriesId>> timeSeries = resolve(query.predicate());
+
+    return transform(timeSeries,
+        new Function<Iterable<CassandraTimeSeriesId>,
+            Map<TimeSeriesId, Iterator<? extends DataPoint>>>() {
+          @Override
+          public Map<TimeSeriesId, Iterator<? extends DataPoint>> apply(
+              final Iterable<CassandraTimeSeriesId> timeSeries) {
+            final ImmutableMap.Builder<TimeSeriesId, Iterator<? extends DataPoint>> dataPoints =
+                ImmutableMap.builder();
+
+            for (final CassandraTimeSeriesId timeSerie : timeSeries) {
+              final Iterator<? extends DataPoint> timeSerieDataPoints = fetchTimeSeries(
+                  timeSerie.timeSeriesId(), query.startTime(), query.endTime());
+              dataPoints.put(timeSerie, timeSerieDataPoints);
+            }
+
+            return dataPoints.build();
+          }
+        });
+  }
+
+  @Nonnull
+  private ListenableFuture<Iterable<CassandraTimeSeriesId>> resolve(
+      final TimeSeriesQueryPredicate predicate) {
+    return resolve(predicate.metric(), LabelType.METRIC);
+  }
+
+  private ListenableFuture<Iterable<CassandraTimeSeriesId>> resolve(final LabelId id,
+                                                                    final LabelType type) {
+    final ResultSetFuture timeSeries = session.executeAsync(
+        resolveTimeSeriesStatement.bind(toLong(id), type.toValue()));
+
+    return transform(timeSeries, new Function<ResultSet, Iterable<CassandraTimeSeriesId>>() {
+      @Override
+      public Iterable<CassandraTimeSeriesId> apply(final ResultSet rows) {
+        return Iterables.transform(rows, new Function<Row, CassandraTimeSeriesId>() {
+          @Override
+          public CassandraTimeSeriesId apply(final Row row) {
+            return new CassandraTimeSeriesId(row);
+          }
+        });
+      }
+    });
   }
 }
