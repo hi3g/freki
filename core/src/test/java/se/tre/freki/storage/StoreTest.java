@@ -4,15 +4,29 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static se.tre.freki.labels.LabelType.METRIC;
+import static se.tre.freki.labels.LabelType.TAGK;
+import static se.tre.freki.labels.LabelType.TAGV;
+import static se.tre.freki.query.predicate.SimpleTimeSeriesIdPredicate.id;
+import static se.tre.freki.query.predicate.TimeSeriesTagPredicate.eq;
 
 import se.tre.freki.labels.LabelException;
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
+import se.tre.freki.labels.StaticTimeSeriesId;
+import se.tre.freki.labels.TimeSeriesId;
+import se.tre.freki.query.DataPoint;
+import se.tre.freki.query.TimeSeriesQuery;
+import se.tre.freki.query.predicate.TimeSeriesQueryPredicate;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public abstract class StoreTest<K extends Store> {
@@ -93,5 +107,37 @@ public abstract class StoreTest<K extends Store> {
   public void testRenameIdNotFoundOnOldName() throws Exception {
     store.renameLabel(NEW, nameId, TYPE).get();
     assertFalse(store.getId(NAME, TYPE).get().isPresent());
+  }
+
+  @Test
+  public void testQueryFetchesData() throws Exception {
+    final LabelId metric1 = store.createLabel("metric1", METRIC).get();
+    final LabelId tagk1 = store.createLabel("tagk1", TAGK).get();
+    final LabelId tagv1 = store.createLabel("tagv1", TAGV).get();
+    final List<LabelId> tags1 = ImmutableList.of(tagk1, tagv1);
+    final StaticTimeSeriesId staticTimeSeriesId1 = new StaticTimeSeriesId(metric1, tags1);
+
+    final long startTime = 123123123;
+    final long value = 123123;
+
+    for (long time = startTime; time < startTime + 10; time++) {
+      store.addPoint(staticTimeSeriesId1, time, value).get();
+    }
+
+    final TimeSeriesQueryPredicate.Builder builder = TimeSeriesQueryPredicate.builder();
+    builder.metric(metric1);
+    builder.addTagPredicate(eq(id(tags1.get(0)), id(tags1.get(1))));
+
+    final TimeSeriesQuery query = new TimeSeriesQuery(builder.build(), 123123123, 123123123 + 10);
+    final Map<TimeSeriesId, Iterator<? extends DataPoint>> dataPoints = store.query(query).get();
+
+    assertEquals(1, dataPoints.keySet().size());
+
+    final TimeSeriesId timeSeriesId = dataPoints.keySet().iterator().next();
+    final Iterator<? extends DataPoint> iterator = dataPoints.get(timeSeriesId);
+
+    for (int dataPointIdx = 0; dataPointIdx < 10; dataPointIdx++) {
+      assertEquals(value, ((DataPoint.LongDataPoint) iterator.next()).value());
+    }
   }
 }
