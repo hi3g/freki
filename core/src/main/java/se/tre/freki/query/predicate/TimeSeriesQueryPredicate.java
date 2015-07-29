@@ -57,7 +57,7 @@ public class TimeSeriesQueryPredicate {
      */
     public TimeSeriesQueryPredicate build() {
       checkState(metric != null);
-      checkState(!tagPredicates.isEmpty());
+      //checkState(!tagPredicates.isEmpty());
 
       return new TimeSeriesQueryPredicate(metric,
           ImmutableSet.copyOf(tagPredicates));

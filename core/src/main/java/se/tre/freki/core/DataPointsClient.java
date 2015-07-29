@@ -8,6 +8,7 @@ import se.tre.freki.labels.Labels;
 import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.plugins.PluginError;
 import se.tre.freki.plugins.RealTimePublisher;
+import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.QueryStringTranslator;
 import se.tre.freki.query.SelectLexer;
 import se.tre.freki.query.SelectParser;
@@ -29,6 +30,7 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import java.util.Iterator;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -208,7 +210,7 @@ public class DataPointsClient {
     return addPointComplete;
   }
 
-  public void query(final String query) {
+  public ListenableFuture<Map<TimeSeriesId, Iterator<? extends DataPoint>>> query(final String query) {
     final ANTLRInputStream input = new ANTLRInputStream(query);
     final SelectLexer lexer = new SelectLexer(input);
     final CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -216,6 +218,9 @@ public class DataPointsClient {
 
     final SelectParser.QueryContext tree = parser.query();
     final ParseTreeWalker treeWalker = new ParseTreeWalker();
-    treeWalker.walk(new QueryStringTranslator(labelClient), tree);
+    final QueryStringTranslator translator = new QueryStringTranslator(labelClient);
+    treeWalker.walk(translator, tree);
+
+    return store.query(translator.query());
   }
 }
