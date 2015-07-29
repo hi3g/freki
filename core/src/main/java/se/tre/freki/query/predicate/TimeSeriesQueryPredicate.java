@@ -1,6 +1,5 @@
 package se.tre.freki.query.predicate;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -23,7 +22,7 @@ public class TimeSeriesQueryPredicate {
                                      final ImmutableSet<TimeSeriesTagPredicate> tagPredicates) {
     this.metric = checkNotNull(metric);
 
-    checkArgument(!tagPredicates.isEmpty());
+    //checkArgument(!tagPredicates.isEmpty());
     this.tagPredicates = tagPredicates;
   }
 

@@ -12,6 +12,7 @@ import se.tre.freki.web.resources.DatapointsResource;
 import se.tre.freki.web.resources.LabelResource;
 import se.tre.freki.web.resources.MetricsResource;
 import se.tre.freki.web.resources.NotFoundResource;
+import se.tre.freki.web.resources.QueryResource;
 import se.tre.freki.web.resources.Resource;
 
 import com.codahale.metrics.MetricRegistry;
@@ -62,11 +63,13 @@ public class HttpModule {
                                                      final MetricRegistry metricRegistry,
                                                      final LabelClient labelClient) {
     final Resource datapointsResource = new DatapointsResource(dataPointsClient, objectMapper);
+    final Resource queryResource = new QueryResource(dataPointsClient, objectMapper);
     final Resource metricResource = new MetricsResource(objectMapper, metricRegistry);
     final Resource idResource = new LabelResource(labelClient, objectMapper);
 
     final ImmutableMap<String, Resource> resources = ImmutableMap.of(
         "datapoints", datapointsResource,
+        "query", queryResource,
         "admin/metrics", metricResource,
         "labels", idResource);
     final Resource defaultResource = new NotFoundResource();

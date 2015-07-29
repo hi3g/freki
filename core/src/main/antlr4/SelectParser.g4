@@ -7,7 +7,7 @@ options { tokenVocab=SelectLexer; }
 package se.tre.freki.query;
 }
 
-query 		: SELECT_KEYWORD (function|qualifier) BETWEEN_KEYWORD startTime=TIMESTAMP AND endTime=TIMESTAMP EOS;
+query 		: SELECT_KEYWORD (function|qualifier) BETWEEN_KEYWORD startTime=TIMESTAMP AND endTime=TIMESTAMP EOS*;
 
 function	: functionName=FUNCTION_NAME FUNCTION_START (function|qualifier) FUNCTION_STOP;
 
