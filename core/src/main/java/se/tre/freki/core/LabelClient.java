@@ -92,6 +92,28 @@ public class LabelClient {
   }
 
   /**
+   * Takes a {@link String} name and a {@link LabelType} and executes a lookup
+   * for the corresponding {@link LabelId} and returns it as {@link ListenableFuture}.
+   *
+   * @param name The name of the label.
+   * @param type The type of the label.
+   *
+   * @return A {@link ListenableFuture} with a {@link LabelId}.
+   */
+  public ListenableFuture<LabelId> lookupId(final String name, final LabelType type) {
+    switch (type) {
+      case METRIC:
+        return metricLookupStrategy.getId(metrics, name);
+      case TAGK:
+        return tagKeyLookupStrategy.getId(metrics, name);
+      case TAGV:
+        return tagValueLookupStrategy.getId(metrics, name);
+      default:
+        throw new IllegalArgumentException(type + " is unknown");
+    }
+  }
+
+  /**
    * Get the IDs for all tag keys and tag values in the provided {@link java.util.Map} using the
    * provided tag key and tag value {@link IdLookupStrategy}. The returned value is a future that on
    * completion contains a list of striped IDs with the tag key ID on odd indexes and tag value IDs

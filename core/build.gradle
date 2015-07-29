@@ -36,6 +36,7 @@ jmh {
 
 antlr4 {
     output = file("${project.buildDir}/generated-sources/main/java/")
+    mustRunAfter clean
 }
 
 configurations {
