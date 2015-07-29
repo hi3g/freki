@@ -128,7 +128,12 @@ public abstract class StoreTest<K extends Store> {
     builder.metric(metric1);
     builder.addTagPredicate(eq(id(tags1.get(0)), id(tags1.get(1))));
 
-    final TimeSeriesQuery query = new TimeSeriesQuery(builder.build(), 123123123, 123123123 + 10);
+    final TimeSeriesQuery query = TimeSeriesQuery.builder()
+        .startTime(123123123)
+        .endTime(123123123 + 10)
+        .predicate(builder.build())
+        .build();
+
     final Map<TimeSeriesId, Iterator<? extends DataPoint>> dataPoints = store.query(query).get();
 
     assertEquals(1, dataPoints.keySet().size());

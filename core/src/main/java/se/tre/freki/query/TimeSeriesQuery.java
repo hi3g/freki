@@ -1,41 +1,51 @@
 package se.tre.freki.query;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import se.tre.freki.query.predicate.TimeSeriesQueryPredicate;
+
+import com.google.auto.value.AutoValue;
 
 /**
  * The Java representation of a select query.
  */
-public class TimeSeriesQuery {
-  private final TimeSeriesQueryPredicate predicate;
+@AutoValue
+public abstract class TimeSeriesQuery {
+  public static Builder builder() {
+    return new AutoValue_TimeSeriesQuery.Builder();
+  }
 
-  private final long startTime;
-  private final long endTime;
+  @AutoValue.Builder
+  public abstract static class Builder {
+    abstract TimeSeriesQuery autoBuild();
+
+    /**
+     * Build an instance with the previously set information.
+     */
+    public TimeSeriesQuery build() {
+      final TimeSeriesQuery query = autoBuild();
+      checkState(query.startTime() > 0);
+      checkState(query.endTime() > 0);
+      checkState(query.endTime() >= query.startTime());
+      return query;
+    }
+
+    public abstract Builder startTime(final long startTime);
+
+    public abstract Builder endTime(final long endTime);
+
+    public abstract Builder predicate(final TimeSeriesQueryPredicate predicate);
+  }
 
   /**
-   * Create a new instance that will find time series matched by the {@code predicate} and data
-   * points within the provided time range.
-   *
-   * @param predicate A specification of the time series to find data points for
-   * @param startTime The lower bound to timestamp to fetch data points within
-   * @param endTime The upper bound to timestamp to fetch data points within
+   * Hide the constructor and prevent subclasses other than the one provided by {@link AutoValue}.
    */
-  public TimeSeriesQuery(final TimeSeriesQueryPredicate predicate,
-                         final long startTime,
-                         final long endTime) {
-    this.predicate = predicate;
-    this.startTime = startTime;
-    this.endTime = endTime;
+  TimeSeriesQuery() {
   }
 
-  public TimeSeriesQueryPredicate predicate() {
-    return predicate;
-  }
+  public abstract TimeSeriesQueryPredicate predicate();
 
-  public long startTime() {
-    return startTime;
-  }
+  public abstract long startTime();
 
-  public long endTime() {
-    return endTime;
-  }
+  public abstract long endTime();
 }
