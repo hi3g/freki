@@ -25,6 +25,7 @@ import se.tre.freki.query.predicate.TimeSeriesQueryPredicate;
 import se.tre.freki.storage.Store;
 import se.tre.freki.storage.cassandra.functions.FirstOrAbsentFunction;
 import se.tre.freki.storage.cassandra.functions.IsEmptyFunction;
+import se.tre.freki.storage.cassandra.functions.MultipleRowLoggingFunction;
 import se.tre.freki.storage.cassandra.functions.ToVoidFunction;
 import se.tre.freki.storage.cassandra.query.DataPointIterator;
 import se.tre.freki.storage.cassandra.query.SpeculativePartitionIterator;
@@ -429,70 +430,13 @@ public class CassandraStore extends Store {
   ListenableFuture<Optional<Row>> getOptionalMeta(final LabelId id,
                                                   final LabelType type) {
 
-    final ListenableFuture<List<Row>> rowFuture = fetchLabelRows(id, type,
-        getMetaStatement.bind(toLong(id), type.toValue()));
+    final BoundStatement getMetaBoundStatement = getMetaStatement.bind(toLong(id), type.toValue());
+
+    final ListenableFuture<List<Row>> rowFuture = transform(
+        session.executeAsync(getMetaBoundStatement),
+        new MultipleRowLoggingFunction("Found duplicate names for ({}, {})", id, type));
 
     return transform(rowFuture, new FirstOrAbsentFunction<>());
-  }
-
-  /**
-   * Use this function to check for duplicates.
-   *
-   * @param id The LabelId we were looking for in the statement. For logging purpose.
-   * @param type The type we were looking for in the statement. For logging purpose.
-   * @param statement The statement we wish to execute.
-   * @return Returns a list of rows.
-   */
-  @Nonnull
-  ListenableFuture<List<Row>> fetchLabelRows(final LabelId id,
-                                             final LabelType type,
-                                             final BoundStatement statement) {
-
-    final ResultSetFuture future = session.executeAsync(statement);
-
-    return transform(future, new Function<ResultSet, List<Row>>() {
-      @Override
-      public List<Row> apply(final ResultSet result) {
-
-        final List<Row> rows = result.all();
-
-        if (rows.size() > 1) {
-          LOG.error("Found duplicate IDs for ({}, {})", id, type);
-        }
-
-        return rows;
-      }
-    });
-  }
-
-  /**
-   * Use this function to check for duplicates.
-   *
-   * @param name The name we were looking for in the statement. For logging purpose.
-   * @param type The type we were looking for in the statement. For logging purpose.
-   * @param statement The statement we wish to execute.
-   * @return Returns a list of rows.
-   */
-  @Nonnull
-  ListenableFuture<List<Row>> fetchLabelRows(final String name,
-                                             final LabelType type,
-                                             final BoundStatement statement) {
-
-    final ResultSetFuture future = session.executeAsync(statement);
-
-    return transform(future, new Function<ResultSet, List<Row>>() {
-      @Override
-      public List<Row> apply(final ResultSet result) {
-
-        final List<Row> rows = result.all();
-
-        if (rows.size() > 1) {
-          LOG.error("Found duplicate IDs for ({}, {})", name, type);
-        }
-
-        return rows;
-      }
-    });
   }
 
   @Nonnull
@@ -572,8 +516,11 @@ public class CassandraStore extends Store {
   ListenableFuture<List<LabelId>> getIds(final String name,
                                          final LabelType type) {
 
-    final ListenableFuture<List<Row>> idFuture = fetchLabelRows(name, type,
-        getIdStatement.bind(name, type.toValue()));
+    BoundStatement getIdBoundStatement = getIdStatement.bind(name, type.toValue());
+
+    final ListenableFuture<List<Row>> idFuture = transform(
+        session.executeAsync(getIdBoundStatement),
+        new MultipleRowLoggingFunction("Found duplicate IDs for ({}, {})", name, type));
 
     return transform(idFuture, new Function<List<Row>, List<LabelId>>() {
       @Nullable
@@ -602,8 +549,11 @@ public class CassandraStore extends Store {
   ListenableFuture<List<String>> getNames(final LabelId id,
                                           final LabelType type) {
 
-    final ListenableFuture<List<Row>> namesFuture = fetchLabelRows(id, type,
-        getNameStatement.bind(toLong(id), type.toValue()));
+    BoundStatement getNameBoundStatement = getNameStatement.bind(toLong(id), type.toValue());
+
+    final ListenableFuture<List<Row>> namesFuture = transform(
+        session.executeAsync(getNameBoundStatement),
+        new MultipleRowLoggingFunction("Found duplicate IDs for ({}, {})", id, type));
 
     return transform(namesFuture, new Function<List<Row>, List<String>>() {
       @Override
