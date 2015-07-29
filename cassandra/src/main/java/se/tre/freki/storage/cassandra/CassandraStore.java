@@ -793,7 +793,7 @@ public class CassandraStore extends Store {
       public Iterable<CassandraTimeSeriesId> apply(final ResultSet rows) {
         return Iterables.transform(rows, new Function<Row, CassandraTimeSeriesId>() {
           @Override
-          public CassandraTimeSeriesId apply(@Nullable final Row row) {
+          public CassandraTimeSeriesId apply(final Row row) {
             return new CassandraTimeSeriesId(row);
           }
         });
