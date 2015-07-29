@@ -2,7 +2,6 @@ package se.tre.freki.web.jackson;
 
 import se.tre.freki.labels.LabelId;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.KeyDeserializer;
 
@@ -17,7 +16,7 @@ public class LabelIdJsonKeyDeserializer extends KeyDeserializer {
 
   @Override
   public Object deserializeKey(final String key, final DeserializationContext ctxt)
-      throws IOException, JsonProcessingException {
+      throws IOException {
     return deserializer.deserialize(key);
   }
 }
