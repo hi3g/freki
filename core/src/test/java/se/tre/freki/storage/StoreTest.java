@@ -133,8 +133,8 @@ public abstract class StoreTest<K extends Store> {
 
     assertEquals(1, dataPoints.keySet().size());
 
-    final TimeSeriesId timeSeriesId = dataPoints.keySet().iterator().next();
-    final Iterator<? extends DataPoint> iterator = dataPoints.get(timeSeriesId);
+    final Iterator<? extends DataPoint> iterator =
+        dataPoints.entrySet().iterator().next().getValue();
 
     for (int dataPointIdx = 0; dataPointIdx < 10; dataPointIdx++) {
       assertEquals(value, ((DataPoint.LongDataPoint) iterator.next()).value());

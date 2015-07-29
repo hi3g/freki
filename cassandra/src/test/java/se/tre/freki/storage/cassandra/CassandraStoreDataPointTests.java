@@ -33,7 +33,6 @@ public class CassandraStoreDataPointTests {
   private CassandraStore store;
 
   private LabelId metric1;
-  private LabelId metric2;
   private ImmutableList<LabelId> tags1;
   private ImmutableList<LabelId> tags2;
 
