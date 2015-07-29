@@ -60,26 +60,25 @@ public final class QueryResource extends Resource {
       jsonGenerator.writeStartObject();
 
       for (final Map.Entry<TimeSeriesId, Iterator<? extends DataPoint>> timeSeries : dataPoints.entrySet()) {
-        jsonGenerator.writeObjectFieldStart(timeSeries.getKey().toString());
+        jsonGenerator.writeArrayFieldStart(timeSeries.getKey().toString());
 
         final Iterator<? extends DataPoint> dps = timeSeries.getValue();
-        jsonGenerator.writeArrayFieldStart("dps");
 
         while (dps.hasNext()) {
           final DataPoint next = dps.next();
-          jsonGenerator.writeStartObject();
-          jsonGenerator.writeNumberField("timestamp", next.timestamp());
+          jsonGenerator.writeStartArray(2);
 
           if (next instanceof DataPoint.LongDataPoint) {
-            jsonGenerator.writeNumberField("value", ((DataPoint.LongDataPoint) next).value());
+            jsonGenerator.writeNumber(((DataPoint.LongDataPoint) next).value());
           }
 
-          jsonGenerator.writeEndObject();
+          jsonGenerator.writeNumber(next.timestamp());
+
+
+          jsonGenerator.writeEndArray();
         }
 
         jsonGenerator.writeEndArray();
-
-        jsonGenerator.writeEndObject();
       }
 
       jsonGenerator.writeEndObject();
