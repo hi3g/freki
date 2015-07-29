@@ -1,6 +1,10 @@
 
 lexer grammar SelectLexer;
 
+@header {
+package se.tre.freki.query;
+}
+
 SELECT_KEYWORD      : 'SELECT';
 BETWEEN_KEYWORD	    : 'BETWEEN' -> pushMode(TimeMode);
 
