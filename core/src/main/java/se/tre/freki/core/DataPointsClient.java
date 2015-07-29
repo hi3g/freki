@@ -8,6 +8,9 @@ import se.tre.freki.labels.Labels;
 import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.plugins.PluginError;
 import se.tre.freki.plugins.RealTimePublisher;
+import se.tre.freki.query.QueryStatementsLexer;
+import se.tre.freki.query.QueryStatementsParser;
+import se.tre.freki.query.QueryStringTranslator;
 import se.tre.freki.stats.Metrics;
 import se.tre.freki.stats.StopTimerCallback;
 import se.tre.freki.storage.Store;
@@ -22,6 +25,9 @@ import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.typesafe.config.Config;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import java.util.Map;
 import javax.inject.Inject;
@@ -200,5 +206,16 @@ public class DataPointsClient {
     StopTimerCallback.stopOn(time, addPointComplete);
 
     return addPointComplete;
+  }
+
+  public void query(final String query) {
+    final ANTLRInputStream input = new ANTLRInputStream(query);
+    final QueryStatementsLexer lexer = new QueryStatementsLexer(input);
+    final CommonTokenStream tokens = new CommonTokenStream(lexer);
+    final QueryStatementsParser parser = new QueryStatementsParser(tokens);
+
+    final QueryStatementsParser.QueryContext tree = parser.query();
+    final ParseTreeWalker treeWalker = new ParseTreeWalker();
+    treeWalker.walk(new QueryStringTranslator(labelClient), tree);
   }
 }
