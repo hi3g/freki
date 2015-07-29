@@ -104,7 +104,7 @@ public final class CreateLabel {
       String stringType = nonOptionArguments.get(0).toString();
       return LabelType.fromValue(stringType);
     } catch (IndexOutOfBoundsException e) {
-      throw new IllegalArgumentException("Missing identifier type to create label");
+      throw new IllegalArgumentException("Missing identifier type to create label", e);
     }
   }
 

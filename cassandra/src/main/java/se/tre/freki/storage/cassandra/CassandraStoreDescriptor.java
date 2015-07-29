@@ -35,7 +35,7 @@ public class CassandraStoreDescriptor extends StoreDescriptor {
           config.getInt("freki.storage.cassandra.protocolVersion"));
     } catch (IllegalArgumentException e) {
       throw new InvalidConfigException(config.getValue("freki.storage.cassandra.nodes"),
-          "One or more of the addresses in the cassandra config could not be parsed");
+          "One or more of the addresses in the cassandra config could not be parsed", e);
     }
   }
 

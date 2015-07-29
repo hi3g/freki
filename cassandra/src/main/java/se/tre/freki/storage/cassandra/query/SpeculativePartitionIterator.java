@@ -54,7 +54,13 @@ public class SpeculativePartitionIterator<K> implements Iterator<Row> {
   @Override
   public boolean hasNext() {
     if (currentResultSet.isExhausted()) {
-      currentResultSet = nextPartitionResultSet();
+      try {
+        currentResultSet = nextPartitionResultSet();
+      } catch (ExecutionException e) {
+        throw new QueryException("Fetch of next partition threw an exception", e);
+      } catch (InterruptedException e) {
+        throw new QueryException("Interrupted while waiting for next partition", e);
+      }
       return !currentResultSet.isExhausted();
     }
 
@@ -77,26 +83,21 @@ public class SpeculativePartitionIterator<K> implements Iterator<Row> {
    * Blocks and waits for {@link #nextResultSet} to be done and starts fetching the next partition.
    *
    * @return The result set of the partition being loaded by {@link #nextResultSet}
-   * @throws QueryException if there was a problem when fetching the partition or if the curent
-   * thread was interrupted
+   * @throws ExecutionException if an exception was thrown while fetching the next partition
+   * @throws InterruptedException if the thread was interrupted while waiting for the result to be
+   * fully fetched
    */
-  private ResultSet nextPartitionResultSet() {
-    try {
-      final ListenableFuture<ResultSet> fetchedResultSet = nextResultSet;
-      nextResultSet = fetchNextPartition();
+  private ResultSet nextPartitionResultSet() throws ExecutionException, InterruptedException {
+    final ListenableFuture<ResultSet> fetchedResultSet = nextResultSet;
+    nextResultSet = fetchNextPartition();
 
-      if (!fetchedResultSet.isDone()) {
-        LOG.debug("Waiting for next partition {} to finish loading", nextResultSet);
-      } else {
-        LOG.trace("Load of next partition {} already finished", nextResultSet);
-      }
-
-      return fetchedResultSet.get();
-    } catch (ExecutionException e) {
-      throw new QueryException("Fetch of next partition threw an exception", e.getCause());
-    } catch (InterruptedException e) {
-      throw new QueryException("Interrupted while waiting for next partition");
+    if (!fetchedResultSet.isDone()) {
+      LOG.debug("Waiting for next partition {} to finish loading", nextResultSet);
+    } else {
+      LOG.trace("Load of next partition {} already finished", nextResultSet);
     }
+
+    return fetchedResultSet.get();
   }
 
   /**

@@ -13,4 +13,10 @@ public class InvalidConfigException extends RuntimeException {
                                 final String message) {
     super(value.origin().description() + ": " + checkNotNull(message));
   }
+
+  public InvalidConfigException(final ConfigValue value,
+                                final String message,
+                                final Throwable cause) {
+    super(value.origin().description() + ": " + checkNotNull(message), cause);
+  }
 }
