@@ -224,9 +224,4 @@ public class LabelClient {
     return transform(getTagIds(tags, tagKeyLookupStrategy, tagValueLookupStrategy),
         new TransformToTimeSeriesId());
   }
-
-  // TODO
-  public ListenableFuture<List<byte[]>> executeTimeSeriesQuery(final Object query) {
-    return null;
-  }
 }
