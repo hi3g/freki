@@ -13,7 +13,11 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
-public class CassandraTimeSeriesId extends TimeSeriesId {
+/**
+ * A {@code TimeSeriesId} implementation that is capable of reading the information from a Cassandra
+ * {@link Row}. In addition it also exposes the internal representation of a time series ID.
+ */
+class CassandraTimeSeriesId extends TimeSeriesId {
   private final Row row;
 
   CassandraTimeSeriesId(final Row row) {

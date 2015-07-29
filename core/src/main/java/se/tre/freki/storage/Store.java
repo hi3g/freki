@@ -74,6 +74,13 @@ public abstract class Store implements Closeable {
                                                   final long timestamp,
                                                   final long value);
 
+  /**
+   * Perform a query against this store and get the data points that match.
+   *
+   * @param query A specification of which data points are sought.
+   * @return A map that is keyd on the time series that matched and an iterator of all data points
+   * within the limits.
+   */
   @Nonnull
   public abstract ListenableFuture<Map<TimeSeriesId, Iterator<? extends DataPoint>>> query(
       final TimeSeriesQuery query);
