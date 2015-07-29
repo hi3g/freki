@@ -5,12 +5,16 @@ import se.tre.freki.labels.LabelType;
 import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.meta.Annotation;
 import se.tre.freki.meta.LabelMeta;
+import se.tre.freki.query.DataPoint;
+import se.tre.freki.query.TimeSeriesQuery;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.Closeable;
+import java.util.Iterator;
+import java.util.Map;
 import javax.annotation.Nonnull;
 
 /**
@@ -69,6 +73,10 @@ public abstract class Store implements Closeable {
   public abstract ListenableFuture<Void> addPoint(final TimeSeriesId tsuid,
                                                   final long timestamp,
                                                   final long value);
+
+  @Nonnull
+  public abstract ListenableFuture<Map<TimeSeriesId, Iterator<? extends DataPoint>>> query(
+      final TimeSeriesQuery query);
 
   //
   // Annotations

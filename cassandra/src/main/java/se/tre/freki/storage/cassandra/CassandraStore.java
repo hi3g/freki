@@ -752,13 +752,17 @@ public class CassandraStore extends Store {
   }
 
   @Nonnull
-  public ListenableFuture<Map<TimeSeriesId, Iterator<? extends DataPoint>>> query(final TimeSeriesQuery query) {
+  @Override
+  public ListenableFuture<Map<TimeSeriesId, Iterator<? extends DataPoint>>> query(
+      final TimeSeriesQuery query) {
     final ListenableFuture<Iterable<CassandraTimeSeriesId>> timeSeries = resolve(query.predicate());
 
     return transform(timeSeries,
-        new Function<Iterable<CassandraTimeSeriesId>, Map<TimeSeriesId, Iterator<? extends DataPoint>>>() {
+        new Function<Iterable<CassandraTimeSeriesId>,
+            Map<TimeSeriesId, Iterator<? extends DataPoint>>>() {
           @Override
-          public Map<TimeSeriesId, Iterator<? extends DataPoint>> apply(final Iterable<CassandraTimeSeriesId> timeSeries) {
+          public Map<TimeSeriesId, Iterator<? extends DataPoint>> apply(
+              final Iterable<CassandraTimeSeriesId> timeSeries) {
             final ImmutableMap.Builder<TimeSeriesId, Iterator<? extends DataPoint>> dataPoints =
                 ImmutableMap.builder();
 
@@ -788,7 +792,6 @@ public class CassandraStore extends Store {
       @Override
       public Iterable<CassandraTimeSeriesId> apply(final ResultSet rows) {
         return Iterables.transform(rows, new Function<Row, CassandraTimeSeriesId>() {
-          @Nullable
           @Override
           public CassandraTimeSeriesId apply(@Nullable final Row row) {
             return new CassandraTimeSeriesId(row);
