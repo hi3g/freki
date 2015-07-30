@@ -139,7 +139,13 @@ public class LabelClient {
     return allAsList(tagIds.build());
   }
 
-  LabelClientTypeContext idContextForType(LabelType type) {
+  /**
+   * Lookup the label context for the provided type.
+   *
+   * @param type The label type to lookup the context for
+   * @return The label context for the provided type
+   */
+  public LabelClientTypeContext contextForType(LabelType type) {
     switch (type) {
       case METRIC:
         return metrics;
@@ -150,6 +156,27 @@ public class LabelClient {
       default:
         throw new IllegalArgumentException(type + " is unknown");
     }
+  }
+
+  /**
+   * Get the label context for metrics.
+   */
+  public LabelClientTypeContext metricContext() {
+    return metrics;
+  }
+
+  /**
+   * Get the label context for tag keys.
+   */
+  public LabelClientTypeContext tagKeyContext() {
+    return tagKeys;
+  }
+
+  /**
+   * Get the label context for tag values.
+   */
+  public LabelClientTypeContext tagValueContext() {
+    return tagValues;
   }
 
   /**
@@ -165,7 +192,7 @@ public class LabelClient {
                                             final String name) {
     Labels.checkLabelName(type.toString(), name);
 
-    final LabelClientTypeContext instance = idContextForType(type);
+    final LabelClientTypeContext instance = contextForType(type);
 
     return transform(instance.checkUidExists(name),
         new AsyncFunction<Boolean, LabelId>() {
@@ -192,7 +219,7 @@ public class LabelClient {
   public ListenableFuture<Optional<String>> getLabelName(final LabelType type,
                                                          final LabelId uid) {
     checkNotNull(uid, "Missing UID");
-    LabelClientTypeContext labelClientTypeContext = idContextForType(type);
+    LabelClientTypeContext labelClientTypeContext = contextForType(type);
     return labelClientTypeContext.getName(uid);
   }
 
@@ -207,7 +234,7 @@ public class LabelClient {
   public ListenableFuture<Optional<LabelId>> getLabelId(final LabelType type,
                                                         final String name) {
     checkArgument(!Strings.isNullOrEmpty(name), "Missing label name");
-    LabelClientTypeContext labelClientTypeContext = idContextForType(type);
+    LabelClientTypeContext labelClientTypeContext = contextForType(type);
     return labelClientTypeContext.getId(name);
   }
 
