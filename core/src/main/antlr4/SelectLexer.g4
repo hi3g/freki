@@ -6,7 +6,7 @@ package se.tre.freki.query;
 }
 
 SELECT_KEYWORD      : 'SELECT';
-BETWEEN_KEYWORD	    : 'BETWEEN' -> pushMode(TimeMode);
+BETWEEN_KEYWORD     : 'BETWEEN' -> pushMode(TimeMode);
 
 LABEL_NAME          : [0-9a-zA-Z-./_]+ ;
 
@@ -27,7 +27,7 @@ WS  : [ \t\r\n]+ -> skip;
 
 mode TimeMode;
 
-TIMESTAMP	: [0-9]+ ;
+TIMESTAMP       : [0-9]+ ;
 AND             : 'AND' ;
 
 EOS : ';' WS2* EOF
