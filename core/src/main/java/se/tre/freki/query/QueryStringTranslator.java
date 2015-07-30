@@ -20,6 +20,11 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
 
   private ListenableFuture<LabelId> metric;
 
+  /**
+   * Create a new instance that will resolv label names against the provided {@link LabelClient}.
+   *
+   * @param labelClient The label client to use for resolving label names
+   */
   public QueryStringTranslator(final LabelClient labelClient) {
     this.labelClient = labelClient;
     queryBuilder = TimeSeriesQuery.builder();

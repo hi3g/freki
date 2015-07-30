@@ -210,7 +210,14 @@ public class DataPointsClient {
     return addPointComplete;
   }
 
-  public ListenableFuture<Map<TimeSeriesId, Iterator<? extends DataPoint>>> query(final String query) {
+  /**
+   * Parse the query that is in string form and execute it against the store.
+   *
+   * @param query The query to perform
+   * @return A future that on completion will contain the query result
+   */
+  public ListenableFuture<Map<TimeSeriesId, Iterator<? extends DataPoint>>> query(
+      final String query) {
     final ANTLRInputStream input = new ANTLRInputStream(query);
     final SelectLexer lexer = new SelectLexer(input);
     final CommonTokenStream tokens = new CommonTokenStream(lexer);
