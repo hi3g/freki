@@ -14,6 +14,7 @@ import se.tre.freki.labels.StaticTimeSeriesId;
 import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.search.IdChangeIndexerListener;
 import se.tre.freki.search.SearchPlugin;
+import se.tre.freki.stats.Measurable;
 import se.tre.freki.storage.Store;
 
 import com.codahale.metrics.MetricRegistry;
@@ -34,7 +35,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class LabelClient {
+public class LabelClient implements Measurable {
   /** Label type context for the metric names. */
   final LabelClientTypeContext metrics;
   /** Label type context for the tag names. */
@@ -52,7 +53,6 @@ public class LabelClient {
   @Inject
   public LabelClient(final Store store,
                      final Config config,
-                     final MetricRegistry metricsRegistry,
                      final EventBus idEventBus,
                      final SearchPlugin searchPlugin) {
     checkNotNull(config);
@@ -65,11 +65,11 @@ public class LabelClient {
     metricLookupStrategy = lookupStrategy(
         config.getBoolean("freki.core.auto_create_metrics"));
 
-    metrics = new LabelClientTypeContext(store, LabelType.METRIC, metricsRegistry, idEventBus,
+    metrics = new LabelClientTypeContext(store, LabelType.METRIC, idEventBus,
         config.getLong("freki.core.metrics.cache.max_size"));
-    tagKeys = new LabelClientTypeContext(store, LabelType.TAGK, metricsRegistry, idEventBus,
+    tagKeys = new LabelClientTypeContext(store, LabelType.TAGK, idEventBus,
         config.getLong("freki.core.tag_keys.cache.max_size"));
-    tagValues = new LabelClientTypeContext(store, LabelType.TAGV, metricsRegistry, idEventBus,
+    tagValues = new LabelClientTypeContext(store, LabelType.TAGV, idEventBus,
         config.getLong("freki.core.tag_values.cache.max_size"));
 
     // Notify the search plugin about new and deleted labels
@@ -272,5 +272,12 @@ public class LabelClient {
     // Start resolving all tags
     return transform(getTagIds(tags, tagKeyLookupStrategy, tagValueLookupStrategy),
         new TransformToTimeSeriesId());
+  }
+
+  @Override
+  public void registerMetricsWith(final MetricRegistry registry) {
+    metrics.registerMetricsWith(registry);
+    tagKeys.registerMetricsWith(registry);
+    tagValues.registerMetricsWith(registry);
   }
 }

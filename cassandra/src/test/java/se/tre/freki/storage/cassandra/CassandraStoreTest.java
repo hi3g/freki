@@ -10,7 +10,6 @@ import se.tre.freki.labels.LabelType;
 import se.tre.freki.storage.StoreTest;
 import se.tre.freki.storage.cassandra.IndexStrategy.NoOpIndexingStrategy;
 
-import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.typesafe.config.Config;
@@ -40,7 +39,7 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
     // at least fail hard if it ever is any other store.
     storeDescriptor = (CassandraStoreDescriptor) cassandraTestComponent.storeDescriptor();
 
-    return storeDescriptor.createStore(config, new MetricRegistry());
+    return storeDescriptor.createStore(config);
   }
 
   @After

@@ -4,7 +4,6 @@ import se.tre.freki.labels.LabelId;
 import se.tre.freki.storage.StoreDescriptor;
 import se.tre.freki.utils.InvalidConfigException;
 
-import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.Session;
@@ -68,12 +67,10 @@ public class CassandraStoreDescriptor extends StoreDescriptor {
   }
 
   @Override
-  public CassandraStore createStore(final Config config,
-                                    final MetricRegistry metrics) {
+  public CassandraStore createStore(final Config config) {
     final Cluster cluster = createCluster(config);
     final String keyspace = config.getString("freki.storage.cassandra.keyspace");
     final Session session = connectTo(cluster, keyspace);
-    registerMetrics(cluster, metrics);
 
     final IndexStrategy addPointIndexStrategy = indexStrategyFor(session,
         config.getBoolean("freki.storage.cassandra.index_on_add_point"));
@@ -101,13 +98,5 @@ public class CassandraStoreDescriptor extends StoreDescriptor {
     }
 
     return new IndexStrategy.NoOpIndexingStrategy();
-  }
-
-  /**
-   * Register the metrics that are exposed on the provided {@link com.datastax.driver.core.Cluster}
-   * with the provided {@link com.codahale.metrics.MetricRegistry} instance.
-   */
-  private void registerMetrics(final Cluster cluster, final MetricRegistry metrics) {
-    metrics.registerAll(cluster.getMetrics().getRegistry());
   }
 }

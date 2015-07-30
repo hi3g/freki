@@ -12,7 +12,6 @@ import se.tre.freki.labels.StaticTimeSeriesId;
 import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.DataPoint.LongDataPoint;
 
-import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.ResultSet;
 import com.google.common.collect.ImmutableList;
 import com.typesafe.config.Config;
@@ -46,7 +45,7 @@ public class CassandraStoreDataPointTests {
     final CassandraStoreDescriptor storeDescriptor = (CassandraStoreDescriptor)
         cassandraTestComponent.storeDescriptor();
 
-    store = storeDescriptor.createStore(config, new MetricRegistry());
+    store = storeDescriptor.createStore(config);
 
     metric1 = fromLong(1L);
     metric1 = fromLong(2L);

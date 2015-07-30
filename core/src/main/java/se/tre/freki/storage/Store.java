@@ -7,6 +7,7 @@ import se.tre.freki.meta.Annotation;
 import se.tre.freki.meta.LabelMeta;
 import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.TimeSeriesQuery;
+import se.tre.freki.stats.Measurable;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -21,7 +22,7 @@ import javax.annotation.Nonnull;
  * An abstract class defining the functions any database used with Freki must implement. Another
  * requirement is that the database connection has to be asynchronous.
  */
-public abstract class Store implements Closeable {
+public abstract class Store implements Closeable, Measurable {
   //
   // Identifier management
   //

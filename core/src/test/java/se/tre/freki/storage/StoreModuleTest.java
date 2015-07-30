@@ -7,7 +7,6 @@ import se.tre.freki.DaggerTestComponent;
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.utils.InvalidConfigException;
 
-import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -70,7 +69,7 @@ public class StoreModuleTest {
 
   private static class TestStoreDescriptor extends StoreDescriptor {
     @Override
-    public Store createStore(final Config config, final MetricRegistry metrics) {
+    public Store createStore(final Config config) {
       return mock(Store.class);
     }
 
