@@ -2,6 +2,7 @@ package se.tre.freki.web.resources;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
 import se.tre.freki.core.DataPointsClient;
@@ -12,6 +13,7 @@ import se.tre.freki.query.QueryException;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -47,8 +49,20 @@ public final class QueryResource extends Resource {
     try {
       final QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
       final Map<String, List<String>> parameters = decoder.parameters();
+      final List<String> queries = parameters.get("q");
 
-      final String query = parameters.get("q").get(0);
+      if (queries == null || queries.isEmpty()) {
+        LOG.info("Received query request with missing query parameter");
+        return response(BAD_REQUEST);
+      }
+
+      final String query = queries.get(0);
+
+      if (Strings.isNullOrEmpty(query)) {
+        LOG.info("Received query request with empty query parameter");
+        return response(BAD_REQUEST);
+      }
+
       final Map<TimeSeriesId, Iterator<? extends DataPoint>> dataPoints =
           datapointsClient.query(query).get();
 
@@ -62,10 +76,10 @@ public final class QueryResource extends Resource {
       for (final Map.Entry<TimeSeriesId, Iterator<? extends DataPoint>> timeSeries : dataPoints.entrySet()) {
         jsonGenerator.writeArrayFieldStart(timeSeries.getKey().toString());
 
-        final Iterator<? extends DataPoint> dps = timeSeries.getValue();
+        final Iterator<? extends DataPoint> timeSerieDataPoints = timeSeries.getValue();
 
-        while (dps.hasNext()) {
-          final DataPoint next = dps.next();
+        while (timeSerieDataPoints.hasNext()) {
+          final DataPoint next = timeSerieDataPoints.next();
           jsonGenerator.writeStartArray(2);
 
           if (next instanceof DataPoint.LongDataPoint) {
@@ -73,8 +87,6 @@ public final class QueryResource extends Resource {
           }
 
           jsonGenerator.writeNumber(next.timestamp());
-
-
           jsonGenerator.writeEndArray();
         }
 
@@ -86,16 +98,17 @@ public final class QueryResource extends Resource {
 
       return response(OK, Unpooled.wrappedBuffer(out.toByteArray()));
     } catch (QueryException e) {
+      LOG.warn("Encountered an exception while executing query", e);
       return response(BAD_REQUEST);
     } catch (InterruptedException e) {
-      e.printStackTrace();
-      return response(BAD_REQUEST);
+      LOG.warn("Interrupted while executing query", e);
+      return response(INTERNAL_SERVER_ERROR);
     } catch (ExecutionException e) {
-      e.printStackTrace();
-      return response(BAD_REQUEST);
+      LOG.warn("Encountered an exception while executing query", e);
+      return response(INTERNAL_SERVER_ERROR);
     } catch (IOException e) {
-      e.printStackTrace();
-      return response(BAD_REQUEST);
+      LOG.warn("Encountered an exception while writing response", e);
+      return response(INTERNAL_SERVER_ERROR);
     }
   }
 }
