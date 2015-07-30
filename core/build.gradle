@@ -1,6 +1,7 @@
 
 plugins {
     id "me.champeau.gradle.jmh" version "0.2.0"
+    id "me.champeau.gradle.antlr4" version "0.1"
 }
 
 project.ext.distFiles = files("src/main/dist")
@@ -32,3 +33,14 @@ jmh {
     fork = 1
     jvmArgs = "-server -XX:+UseG1GC -XX:+AggressiveOpts -XX:+UseFastAccessorMethods"
 }
+
+antlr4 {
+    output = file("${project.buildDir}/generated-sources/main/java/")
+    mustRunAfter clean
+}
+
+configurations {
+    compile.extendsFrom antlr4
+}
+
+compileJava.dependsOn antlr4

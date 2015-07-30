@@ -8,6 +8,10 @@ import se.tre.freki.labels.Labels;
 import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.plugins.PluginError;
 import se.tre.freki.plugins.RealTimePublisher;
+import se.tre.freki.query.DataPoint;
+import se.tre.freki.query.QueryStringTranslator;
+import se.tre.freki.query.SelectLexer;
+import se.tre.freki.query.SelectParser;
 import se.tre.freki.stats.Metrics;
 import se.tre.freki.stats.StopTimerCallback;
 import se.tre.freki.storage.Store;
@@ -22,7 +26,11 @@ import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.typesafe.config.Config;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import java.util.Iterator;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -200,5 +208,26 @@ public class DataPointsClient {
     StopTimerCallback.stopOn(time, addPointComplete);
 
     return addPointComplete;
+  }
+
+  /**
+   * Parse the query that is in string form and execute it against the store.
+   *
+   * @param query The query to perform
+   * @return A future that on completion will contain the query result
+   */
+  public ListenableFuture<Map<TimeSeriesId, Iterator<? extends DataPoint>>> query(
+      final String query) {
+    final ANTLRInputStream input = new ANTLRInputStream(query);
+    final SelectLexer lexer = new SelectLexer(input);
+    final CommonTokenStream tokens = new CommonTokenStream(lexer);
+    final SelectParser parser = new SelectParser(tokens);
+
+    final SelectParser.QueryContext tree = parser.query();
+    final ParseTreeWalker treeWalker = new ParseTreeWalker();
+    final QueryStringTranslator translator = new QueryStringTranslator(labelClient);
+    treeWalker.walk(translator, tree);
+
+    return store.query(translator.query());
   }
 }
