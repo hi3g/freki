@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
 
@@ -78,11 +79,17 @@ public class Metrics {
    */
   static Map<String, String> tagsIn(final String name) {
     checkArgument(!name.isEmpty());
-    final String tags = name.split(":", 2)[1];
-    checkState(!tags.isEmpty(), "The provided name (%s) did not contain any tags", name);
+    final String[] parts = name.split(":", 2);
 
-    return Splitter.on(',')
-        .withKeyValueSeparator('=')
-        .split(tags);
+    if (parts.length == 2) {
+      final String tags = name.split(":", 2)[1];
+      checkState(!tags.isEmpty(), "The provided name (%s) did not contain any tags", name);
+
+      return Splitter.on(',')
+          .withKeyValueSeparator('=')
+          .split(tags);
+    }
+
+    return ImmutableMap.of();
   }
 }

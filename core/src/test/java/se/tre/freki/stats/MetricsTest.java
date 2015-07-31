@@ -1,6 +1,7 @@
 package se.tre.freki.stats;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
@@ -11,6 +12,11 @@ public class MetricsTest {
   @Test(expected = IllegalArgumentException.class)
   public void testMetricInEmptyString() throws Exception {
     Metrics.metricIn("");
+  }
+
+  @Test
+  public void testMetricInNoColon() throws Exception {
+    assertEquals("test", Metrics.metricIn("test"));
   }
 
   @Test(expected = IllegalStateException.class)
@@ -31,6 +37,11 @@ public class MetricsTest {
   @Test(expected = IllegalArgumentException.class)
   public void testTagsInEmptyString() throws Exception {
     Metrics.tagsIn("");
+  }
+
+  @Test
+  public void testTagsInNoColon() throws Exception {
+    assertTrue(Metrics.tagsIn("test").isEmpty());
   }
 
   @Test(expected = IllegalStateException.class)
