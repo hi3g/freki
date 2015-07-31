@@ -54,8 +54,8 @@ public class FrekiMetricRegistrator implements MetricRegistryListener {
       }
 
       @Override
-      public void onFailure(final Throwable t) {
-        LOG.error("Unable to lookup ID with name {} and type {}", name, type, t);
+      public void onFailure(final Throwable throwable) {
+        LOG.error("Unable to lookup ID with name {} and type {}", name, type, throwable);
       }
     });
   }
