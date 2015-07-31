@@ -2,6 +2,7 @@ package se.tre.freki.storage.cassandra.query;
 
 import se.tre.freki.query.QueryException;
 import se.tre.freki.storage.cassandra.ExhaustedResultSet;
+import se.tre.freki.utils.AsyncIterator;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
@@ -25,7 +26,7 @@ import java.util.concurrent.ExecutionException;
  *
  * @param <K> The type of the partition key
  */
-public class SpeculativePartitionIterator<K> implements Iterator<Row> {
+public class SpeculativePartitionIterator<K> implements Iterator<Row>, AsyncIterator {
   private static final Logger LOG = LoggerFactory.getLogger(SpeculativePartitionIterator.class);
 
   private final Function<K, ResultSetFuture> fetchFunction;
@@ -49,6 +50,16 @@ public class SpeculativePartitionIterator<K> implements Iterator<Row> {
 
     currentResultSet = new ExhaustedResultSet();
     nextResultSet = fetchNextPartition();
+  }
+
+  @Override
+  public boolean hasMoreWithoutFetching() {
+    return false;
+  }
+
+  @Override
+  public ListenableFuture<Void> fetchMore() {
+    return null;
   }
 
   @Override
