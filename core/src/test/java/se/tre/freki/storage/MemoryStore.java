@@ -8,6 +8,7 @@ import se.tre.freki.meta.LabelMeta;
 import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.TimeSeriesQuery;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Optional;
 import com.google.common.collect.HashBasedTable;
@@ -112,6 +113,11 @@ public class MemoryStore extends Store {
     final String qualifier = type.toString().toLowerCase() + "_meta";
     final LabelMeta meta = labelMetas.get(uid, qualifier);
     return Futures.immediateFuture(Optional.fromNullable(meta));
+  }
+
+  @Override
+  public void registerMetricsWith(final MetricRegistry registry) {
+    // These are not the metrics you are looking for.
   }
 
   @Nonnull

@@ -12,7 +12,7 @@ import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.QueryStringTranslator;
 import se.tre.freki.query.SelectLexer;
 import se.tre.freki.query.SelectParser;
-import se.tre.freki.stats.Metrics;
+import se.tre.freki.stats.Measurable;
 import se.tre.freki.stats.StopTimerCallback;
 import se.tre.freki.storage.Store;
 import se.tre.freki.time.Timestamps;
@@ -36,7 +36,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class DataPointsClient {
+public class DataPointsClient implements Measurable {
   private final Store store;
   private final LabelClient labelClient;
   private final RealTimePublisher publisher;
@@ -51,13 +51,12 @@ public class DataPointsClient {
   public DataPointsClient(final Store store,
                           final LabelClient labelClient,
                           final RealTimePublisher realTimePublisher,
-                          final MetricRegistry metricRegistry,
                           final Config config) {
     this.store = checkNotNull(store);
     this.labelClient = checkNotNull(labelClient);
     this.publisher = checkNotNull(realTimePublisher);
 
-    this.addDataPointTimer = metricRegistry.timer(Metrics.name("add_data_point"));
+    this.addDataPointTimer = new Timer();
 
     // The config library unfortunately doesn't have any API to get any smaller primitive type than
     // ints so we have to do a little dance to make sure the value is not too extreme since it can
@@ -229,5 +228,10 @@ public class DataPointsClient {
     treeWalker.walk(translator, tree);
 
     return store.query(translator.query());
+  }
+
+  @Override
+  public void registerMetricsWith(final MetricRegistry registry) {
+    registry.register("add_data_point", addDataPointTimer);
   }
 }

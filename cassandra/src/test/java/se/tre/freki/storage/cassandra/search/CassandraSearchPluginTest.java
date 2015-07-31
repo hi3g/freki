@@ -12,7 +12,6 @@ import se.tre.freki.storage.cassandra.CassandraTestComponent;
 import se.tre.freki.storage.cassandra.CassandraTestHelpers;
 import se.tre.freki.storage.cassandra.DaggerCassandraTestComponent;
 
-import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Row;
@@ -39,7 +38,7 @@ public class CassandraSearchPluginTest {
     // at least fail hard if it ever is any other store.
     storeDescriptor = (CassandraStoreDescriptor) cassandraTestComponent.storeDescriptor();
 
-    store = storeDescriptor.createStore(config, new MetricRegistry());
+    store = storeDescriptor.createStore(config);
     searchPlugin = new CassandraSearchPlugin(store);
   }
 

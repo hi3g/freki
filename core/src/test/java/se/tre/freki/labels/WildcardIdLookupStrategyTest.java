@@ -9,7 +9,6 @@ import se.tre.freki.DaggerTestComponent;
 import se.tre.freki.storage.Store;
 import se.tre.freki.utils.TestUtil;
 
-import com.codahale.metrics.MetricRegistry;
 import com.google.common.eventbus.EventBus;
 import org.junit.Before;
 import org.junit.Rule;
@@ -22,7 +21,6 @@ import javax.inject.Inject;
 
 public class WildcardIdLookupStrategyTest {
   @Inject Store client;
-  @Inject MetricRegistry metricRegistry;
   @Inject EventBus eventBus;
 
   private LabelClientTypeContext uid;
@@ -36,8 +34,7 @@ public class WildcardIdLookupStrategyTest {
     DaggerTestComponent.create().inject(this);
 
     final long maxCacheSize = 2000;
-    uid = new LabelClientTypeContext(client, LabelType.METRIC, metricRegistry, eventBus,
-        maxCacheSize);
+    uid = new LabelClientTypeContext(client, LabelType.METRIC, eventBus, maxCacheSize);
 
     lookupStrategy = new IdLookupStrategy.WildcardIdLookupStrategy();
   }

@@ -33,6 +33,7 @@ import se.tre.freki.storage.cassandra.statements.AddPointStatements.AddPointStat
 import se.tre.freki.storage.cassandra.statements.FetchPointsStatements;
 import se.tre.freki.storage.cassandra.statements.FetchPointsStatements.SelectPointStatementMarkers;
 
+import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ConsistencyLevel;
@@ -302,6 +303,11 @@ public class CassandraStore extends Store {
         return createId(id, name, type);
       }
     });
+  }
+
+  @Override
+  public void registerMetricsWith(final MetricRegistry registry) {
+    registry.registerAll(cluster.getMetrics().getRegistry());
   }
 
   @Nonnull

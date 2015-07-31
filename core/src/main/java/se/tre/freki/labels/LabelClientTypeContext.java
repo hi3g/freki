@@ -8,6 +8,7 @@ import static se.tre.freki.stats.Metrics.tag;
 
 import se.tre.freki.stats.CacheEvictionCountGauge;
 import se.tre.freki.stats.CacheHitRateGauge;
+import se.tre.freki.stats.Measurable;
 import se.tre.freki.stats.Metrics;
 import se.tre.freki.storage.Store;
 
@@ -37,7 +38,7 @@ import javax.annotation.Nonnull;
  * you should prefer the methods in this class instead of the equivalent methods in {@link
  * se.tre.freki.core.LabelClient}.
  */
-public class LabelClientTypeContext {
+public class LabelClientTypeContext implements Measurable {
   private static final Logger LOG = LoggerFactory.getLogger(LabelClientTypeContext.class);
 
   /** The store to use. */
@@ -65,12 +66,10 @@ public class LabelClientTypeContext {
    *
    * @param store The Store to use.
    * @param type The type of UIDs this instance represents
-   * @param metrics The metric registry to register metrics on
    * @param idEventBus The event bus where to publish ID events
    */
   public LabelClientTypeContext(final Store store,
                                 final LabelType type,
-                                final MetricRegistry metrics,
                                 final EventBus idEventBus,
                                 final long maxCacheSize) {
     this.store = checkNotNull(store);
@@ -86,20 +85,6 @@ public class LabelClientTypeContext {
         .maximumSize(maxCacheSize)
         .recordStats()
         .build();
-
-    registerMetrics(metrics);
-  }
-
-  private void registerMetrics(final MetricRegistry registry) {
-    Metrics.Tag typeTag = tag("type", type.toValue());
-
-    registry.register(name("labels.names.hitRate", typeTag), new CacheHitRateGauge(nameCache));
-    registry.register(name("labels.names.evictionCount", typeTag),
-        new CacheEvictionCountGauge(nameCache));
-
-    registry.register(name("labels.ids.hitRate", typeTag), new CacheHitRateGauge(idCache));
-    registry.register(name("labels.ids.evictionCount", typeTag),
-        new CacheEvictionCountGauge(idCache));
   }
 
   /**
@@ -235,6 +220,19 @@ public class LabelClientTypeContext {
         return uid;
       }
     });
+  }
+
+  @Override
+  public void registerMetricsWith(final MetricRegistry registry) {
+    Metrics.Tag typeTag = tag("type", type.toValue());
+
+    registry.register(name("labels.names.hitRate", typeTag), new CacheHitRateGauge(nameCache));
+    registry.register(name("labels.names.evictionCount", typeTag),
+        new CacheEvictionCountGauge(nameCache));
+
+    registry.register(name("labels.ids.hitRate", typeTag), new CacheHitRateGauge(idCache));
+    registry.register(name("labels.ids.evictionCount", typeTag),
+        new CacheEvictionCountGauge(idCache));
   }
 
   /**

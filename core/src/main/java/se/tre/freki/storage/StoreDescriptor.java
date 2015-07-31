@@ -2,13 +2,12 @@ package se.tre.freki.storage;
 
 import se.tre.freki.labels.LabelId;
 
-import com.codahale.metrics.MetricRegistry;
 import com.typesafe.config.Config;
 
 import javax.annotation.Nonnull;
 
 public abstract class StoreDescriptor {
-  public abstract Store createStore(Config config, MetricRegistry metrics);
+  public abstract Store createStore(Config config);
 
   /**
    * Get an object that is capable of serializing the {@link LabelId} implementation used by this

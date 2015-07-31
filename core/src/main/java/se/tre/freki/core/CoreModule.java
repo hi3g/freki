@@ -1,5 +1,7 @@
 package se.tre.freki.core;
 
+import se.tre.freki.storage.Store;
+
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jvm.ClassLoadingGaugeSet;
 import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
@@ -22,13 +24,20 @@ public class CoreModule {
 
   @Provides
   @Singleton
-  MetricRegistry provideMetricRegistry() {
+  MetricRegistry provideMetricRegistry(final Store store,
+                                       final LabelClient labelClient,
+                                       final DataPointsClient dataPointsClient) {
     MetricRegistry registry = new MetricRegistry();
     registry.registerAll(new ClassLoadingGaugeSet());
     registry.registerAll(new GarbageCollectorMetricSet());
     registry.registerAll(new MemoryUsageGaugeSet());
     registry.registerAll(new ThreadStatesGaugeSet());
     registry.register("descriptor-usage", new FileDescriptorRatioGauge());
+
+    store.registerMetricsWith(registry);
+    labelClient.registerMetricsWith(registry);
+    dataPointsClient.registerMetricsWith(registry);
+
     return registry;
   }
 }

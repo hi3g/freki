@@ -17,7 +17,6 @@ import se.tre.freki.DaggerTestComponent;
 import se.tre.freki.storage.Store;
 import se.tre.freki.utils.TestUtil;
 
-import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -38,7 +37,6 @@ public final class LabelClientTypeContextTest {
   private static final long MAX_CACHE_SIZE = 2000;
 
   @Inject Store store;
-  @Inject MetricRegistry metrics;
 
   @Mock EventBus eventBus;
 
@@ -55,31 +53,25 @@ public final class LabelClientTypeContextTest {
 
   @Test(expected = NullPointerException.class)
   public void testConstructorNoStore() {
-    typeContext = new LabelClientTypeContext(null, LabelType.METRIC, metrics, eventBus,
+    typeContext = new LabelClientTypeContext(null, LabelType.METRIC, eventBus,
         MAX_CACHE_SIZE);
   }
 
   @Test(expected = NullPointerException.class)
   public void testConstructorNoType() {
-    typeContext = new LabelClientTypeContext(store, null, metrics, eventBus, MAX_CACHE_SIZE);
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void testConstructorNoMetrics() {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, null, eventBus,
-        MAX_CACHE_SIZE);
+    typeContext = new LabelClientTypeContext(store, null, eventBus, MAX_CACHE_SIZE);
   }
 
   @Test(expected = NullPointerException.class)
   public void testConstructorNoEventbus() {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, null,
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, null,
         MAX_CACHE_SIZE);
   }
 
 
   @Test(expected = IllegalArgumentException.class)
   public void testConstructorNegativeMaxSize() {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus, -5);
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, eventBus, -5);
   }
 
   @Test
@@ -87,7 +79,7 @@ public final class LabelClientTypeContextTest {
     store = mock(Store.class);
     final LabelId id = randomLabelId();
 
-    typeContext = new LabelClientTypeContext(store, TAGK, metrics, eventBus, MAX_CACHE_SIZE);
+    typeContext = new LabelClientTypeContext(store, TAGK, eventBus, MAX_CACHE_SIZE);
 
     when(store.getName(id, TAGK)).thenAnswer(
         new Answer<ListenableFuture<Optional<String>>>() {
@@ -110,7 +102,7 @@ public final class LabelClientTypeContextTest {
 
   @Test
   public void testGetNameAbsent() throws Exception {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, eventBus,
         MAX_CACHE_SIZE);
     assertFalse(typeContext.getName(mock(LabelId.class)).get().isPresent());
   }
@@ -120,7 +112,7 @@ public final class LabelClientTypeContextTest {
     store = mock(Store.class);
     final LabelId id = randomLabelId();
 
-    typeContext = new LabelClientTypeContext(store, TAGK, metrics, eventBus, MAX_CACHE_SIZE);
+    typeContext = new LabelClientTypeContext(store, TAGK, eventBus, MAX_CACHE_SIZE);
 
     when(store.getId("name", TAGK)).thenAnswer(
         new Answer<ListenableFuture<Optional<LabelId>>>() {
@@ -143,14 +135,14 @@ public final class LabelClientTypeContextTest {
 
   @Test
   public void testGetIdAbsent() throws Exception {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, eventBus,
         MAX_CACHE_SIZE);
     assertFalse(typeContext.getId("foo").get().isPresent());
   }
 
   @Test
   public void createIdPublishesEventOnSuccess() throws Exception {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, eventBus,
         MAX_CACHE_SIZE);
     typeContext.createId("foo").get();
     verify(eventBus).post(any(LabelCreatedEvent.class));
@@ -158,7 +150,7 @@ public final class LabelClientTypeContextTest {
 
   @Test
   public void testRenameNewNameExists() throws Exception {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, eventBus,
         MAX_CACHE_SIZE);
     typeContext.createId("newName").get();
     try {
@@ -171,7 +163,7 @@ public final class LabelClientTypeContextTest {
 
   @Test
   public void testRenameIdNotFoundOnOldName() throws Exception {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, eventBus,
         MAX_CACHE_SIZE);
     try {
       typeContext.rename("oldName", "newName").get();
@@ -184,7 +176,7 @@ public final class LabelClientTypeContextTest {
 
   @Test
   public void testRename() throws Exception {
-    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, metrics, eventBus,
+    typeContext = new LabelClientTypeContext(store, LabelType.METRIC, eventBus,
         MAX_CACHE_SIZE);
 
     final LabelId labelId = typeContext.createId("oldName").get();

@@ -2,7 +2,6 @@ package se.tre.freki.storage;
 
 import se.tre.freki.utils.InvalidConfigException;
 
-import com.codahale.metrics.MetricRegistry;
 import com.typesafe.config.Config;
 import dagger.Module;
 import dagger.Provides;
@@ -18,9 +17,8 @@ public class StoreModule {
   @Provides
   @Singleton
   Store provideStore(final StoreDescriptor storeDescriptor,
-                         final Config config,
-                         final MetricRegistry metrics) {
-    return storeDescriptor.createStore(config, metrics);
+                     final Config config) {
+    return storeDescriptor.createStore(config);
   }
 
   /**
