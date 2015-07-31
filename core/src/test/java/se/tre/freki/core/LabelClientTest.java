@@ -110,4 +110,22 @@ public class LabelClientTest {
   public void getLabelNameNullId() throws Exception {
     labelClient.getLabelName(TAGV, null);
   }
+
+  @Test
+  public void testLookupIdTypeMetric() throws Exception {
+    final LabelId id = store.createLabel("metric", METRIC).get();
+    assertEquals(id, labelClient.lookupId("metric", METRIC).get());
+  }
+
+  @Test
+  public void testLookupIdTypeTagKey() throws Exception {
+    final LabelId id = store.createLabel("tagk", TAGK).get();
+    assertEquals(id, labelClient.lookupId("tagk", TAGK).get());
+  }
+
+  @Test
+  public void testLookupIdTypeTagValue() throws Exception {
+    final LabelId id = store.createLabel("tagv", TAGV).get();
+    assertEquals(id, labelClient.lookupId("tagv", TAGV).get());
+  }
 }
