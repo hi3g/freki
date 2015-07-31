@@ -9,6 +9,7 @@ import se.tre.freki.labels.LabelClientTypeContextTest;
 import se.tre.freki.labels.WildcardIdLookupStrategyTest;
 import se.tre.freki.plugins.PluginsModule;
 import se.tre.freki.plugins.RealTimePublisher;
+import se.tre.freki.query.QueryStringTranslatorTest;
 import se.tre.freki.search.IdChangeIndexerListenerTest;
 import se.tre.freki.search.SearchPlugin;
 import se.tre.freki.storage.StoreModule;
@@ -49,6 +50,8 @@ public interface TestComponent {
   void inject(IdChangeIndexerListenerTest idChangeIndexerListenerTest);
 
   void inject(WildcardIdLookupStrategyTest wildcardIdLookupStrategyTest);
+
+  void inject(QueryStringTranslatorTest queryStringTranslatorTest);
 
   SearchPlugin searchPlugin();
 
