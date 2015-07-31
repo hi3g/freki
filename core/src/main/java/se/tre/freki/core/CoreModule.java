@@ -1,7 +1,9 @@
 package se.tre.freki.core;
 
 import se.tre.freki.labels.IdLookupStrategy;
+import se.tre.freki.stats.InternalMetricFilter;
 import se.tre.freki.stats.InternalMetricRegistrator;
+import se.tre.freki.stats.InternalReporter;
 import se.tre.freki.storage.Store;
 
 import com.codahale.metrics.MetricRegistry;
@@ -10,10 +12,14 @@ import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.EventBus;
 import dagger.Module;
 import dagger.Provides;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Singleton;
 
 @Module
@@ -33,6 +39,10 @@ public class CoreModule {
     final MetricRegistry registry = new MetricRegistry();
     registry.addListener(metricRegistrator);
 
+    final InternalReporter internalReporter = new InternalReporter(registry,
+        new InternalMetricFilter(), dataPointsClient, defaultTags());
+    internalReporter.start(30, TimeUnit.SECONDS);
+
     registry.registerAll(new ClassLoadingGaugeSet());
     registry.registerAll(new GarbageCollectorMetricSet());
     registry.registerAll(new MemoryUsageGaugeSet());
@@ -50,5 +60,22 @@ public class CoreModule {
   @Singleton
   IdLookupStrategy provideIdLookupStrategy() {
     return IdLookupStrategy.CreatingIdLookupStrategy.instance;
+  }
+
+  @Provides
+  @Singleton
+  InternalMetricRegistrator provideInternalMetricRegistrator(
+      final LabelClient labelClient,
+      final IdLookupStrategy idLookupStrategy) {
+    return new InternalMetricRegistrator(labelClient, idLookupStrategy, defaultTags());
+  }
+
+  private ImmutableMap<String, String> defaultTags() {
+    try {
+      final String hostName = InetAddress.getLocalHost().getHostName();
+      return ImmutableMap.of("host", hostName);
+    } catch (UnknownHostException e) {
+      throw new IllegalStateException();
+    }
   }
 }
