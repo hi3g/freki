@@ -70,4 +70,12 @@ public class MetricsTest {
     final Map<String, String> expected = ImmutableMap.of("tagk", "tagv");
     assertEquals(expected, Metrics.tagsIn(":tagk=tagv"));
   }
+
+  @Test
+  public void testTagsInMapIsNotImmutable() throws Exception {
+    final Map<String, String> parsedTags = Metrics.tagsIn(":tagk=tagv");
+    parsedTags.put("newKey", "value");
+
+    assertEquals("value", parsedTags.get("newKey"));
+  }
 }

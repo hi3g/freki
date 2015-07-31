@@ -6,8 +6,8 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableMap;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -96,11 +96,11 @@ public class Metrics {
       final String tags = name.split(":", 2)[1];
       checkState(!tags.isEmpty(), "The provided name (%s) did not contain any tags", name);
 
-      return Splitter.on(',')
+      return new LinkedHashMap<>(Splitter.on(',')
           .withKeyValueSeparator('=')
-          .split(tags);
+          .split(tags));
     }
 
-    return ImmutableMap.of();
+    return new LinkedHashMap<>();
   }
 }
