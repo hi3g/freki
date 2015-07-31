@@ -3,7 +3,7 @@ package se.tre.freki.stats;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import se.tre.freki.core.LabelClient;
-import se.tre.freki.labels.IdLookupStrategy.CreatingIdLookupStrategy;
+import se.tre.freki.labels.IdLookupStrategy;
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
 
@@ -13,24 +13,18 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistryListener;
 import com.codahale.metrics.Timer;
-import com.google.common.base.Optional;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 public class InternalMetricRegistrator implements MetricRegistryListener {
-  private static final Logger LOG = LoggerFactory.getLogger(InternalMetricRegistrator.class);
-
   private final LabelClient labelClient;
-  private final CreatingIdLookupStrategy lookupStrategy;
+  private final IdLookupStrategy lookupStrategy;
 
-  public InternalMetricRegistrator(final LabelClient labelClient) {
+  public InternalMetricRegistrator(final LabelClient labelClient,
+                                   final IdLookupStrategy lookupStrategy) {
     this.labelClient = checkNotNull(labelClient);
-    lookupStrategy = new CreatingIdLookupStrategy();
+    this.lookupStrategy = checkNotNull(lookupStrategy);
   }
 
   private boolean isFrekiName(final String name) {
@@ -38,23 +32,8 @@ public class InternalMetricRegistrator implements MetricRegistryListener {
   }
 
   private void ensureLabelExists(final String name, final LabelType type) {
-    final ListenableFuture<Optional<LabelId>> idFuture = labelClient.getLabelId(type, name);
-    new CreatingIdLookupStrategy();
-
-    Futures.addCallback(idFuture, new FutureCallback<Optional<LabelId>>() {
-      @Override
-      public void onSuccess(final Optional<LabelId> id) {
-        if (!id.isPresent()) {
-          LOG.info("Creating label for internal metric {} with type {}", name, type);
-          labelClient.createId(type, name);
-        }
-      }
-
-      @Override
-      public void onFailure(final Throwable t) {
-
-      }
-    });
+    final ListenableFuture<LabelId> idFuture = lookupStrategy.getId(
+        labelClient.contextForType(type), name);
   }
 
   private void registerName(final String name) {
@@ -73,7 +52,7 @@ public class InternalMetricRegistrator implements MetricRegistryListener {
 
   @Override
   public void onGaugeAdded(final String name, final Gauge<?> gauge) {
-     registerName(name);
+    registerName(name);
   }
 
   @Override
