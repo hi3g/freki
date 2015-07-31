@@ -1,5 +1,7 @@
 package se.tre.freki.core;
 
+import se.tre.freki.labels.IdLookupStrategy;
+import se.tre.freki.stats.InternalMetricRegistrator;
 import se.tre.freki.storage.Store;
 
 import com.codahale.metrics.MetricRegistry;
@@ -26,8 +28,11 @@ public class CoreModule {
   @Singleton
   MetricRegistry provideMetricRegistry(final Store store,
                                        final LabelClient labelClient,
-                                       final DataPointsClient dataPointsClient) {
-    MetricRegistry registry = new MetricRegistry();
+                                       final DataPointsClient dataPointsClient,
+                                       final InternalMetricRegistrator metricRegistrator) {
+    final MetricRegistry registry = new MetricRegistry();
+    registry.addListener(metricRegistrator);
+
     registry.registerAll(new ClassLoadingGaugeSet());
     registry.registerAll(new GarbageCollectorMetricSet());
     registry.registerAll(new MemoryUsageGaugeSet());
@@ -39,5 +44,11 @@ public class CoreModule {
     dataPointsClient.registerMetricsWith(registry);
 
     return registry;
+  }
+
+  @Provides
+  @Singleton
+  IdLookupStrategy provideIdLookupStrategy() {
+    return IdLookupStrategy.CreatingIdLookupStrategy.instance;
   }
 }

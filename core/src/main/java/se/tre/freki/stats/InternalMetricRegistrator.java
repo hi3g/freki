@@ -16,11 +16,13 @@ import com.codahale.metrics.Timer;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.Map;
+import javax.inject.Inject;
 
 public class InternalMetricRegistrator implements MetricRegistryListener {
   private final LabelClient labelClient;
   private final IdLookupStrategy lookupStrategy;
 
+  @Inject
   public InternalMetricRegistrator(final LabelClient labelClient,
                                    final IdLookupStrategy lookupStrategy) {
     this.labelClient = checkNotNull(labelClient);

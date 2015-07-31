@@ -232,6 +232,6 @@ public class DataPointsClient implements Measurable {
 
   @Override
   public void registerMetricsWith(final MetricRegistry registry) {
-    registry.register("add_data_point", addDataPointTimer);
+    registry.register("freki.core.add_data_point", addDataPointTimer);
   }
 }
