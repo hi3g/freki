@@ -1,8 +1,14 @@
 package se.tre.freki.stats;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Instead of juggling a registry around directly we use this class. It might be really useful in
@@ -10,6 +16,17 @@ import com.google.common.base.Joiner;
  */
 public class Metrics {
   private Metrics() {
+  }
+
+  /**
+   * Check if the provided name is an "internal" metric. All metrics starting with the string
+   * "freki" are considered to be "internal".
+   *
+   * @param name The name to check
+   * @return {@code true} if it is an internal metric, otherwise {@code false}.
+   */
+  static boolean isFrekiName(final String name) {
+    return name.startsWith("freki");
   }
 
   /**
@@ -52,5 +69,38 @@ public class Metrics {
     public String toString() {
       return key + '=' + value;
     }
+  }
+
+  /**
+   * Extract the Freki metric contained in the provided metrics core metric name.
+   *
+   * @see #name(String, Tag...)
+   */
+  static String metricIn(final String name) {
+    checkArgument(!name.isEmpty());
+    final String metric = name.split(":", 2)[0];
+    checkState(!metric.isEmpty(), "The provided name (%s) did not contain a metric", name);
+    return metric;
+  }
+
+  /**
+   * Extract the Freki tags contained in the provided metrics core metric name.
+   *
+   * @see #name(String, Tag...)
+   */
+  static Map<String, String> tagsIn(final String name) {
+    checkArgument(!name.isEmpty());
+    final String[] parts = name.split(":", 2);
+
+    if (parts.length == 2) {
+      final String tags = name.split(":", 2)[1];
+      checkState(!tags.isEmpty(), "The provided name (%s) did not contain any tags", name);
+
+      return new LinkedHashMap<>(Splitter.on(',')
+          .withKeyValueSeparator('=')
+          .split(tags));
+    }
+
+    return new LinkedHashMap<>();
   }
 }
