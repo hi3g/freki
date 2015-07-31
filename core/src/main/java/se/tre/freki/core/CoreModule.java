@@ -1,6 +1,5 @@
 package se.tre.freki.core;
 
-import se.tre.freki.labels.IdLookupStrategy;
 import se.tre.freki.stats.FrekiMetricRegistrator;
 import se.tre.freki.stats.FrekiMetricReporter;
 import se.tre.freki.storage.Store;
@@ -53,12 +52,6 @@ public class CoreModule {
     dataPointsClient.registerMetricsWith(registry);
 
     return registry;
-  }
-
-  @Provides
-  @Singleton
-  IdLookupStrategy provideIdLookupStrategy() {
-    return IdLookupStrategy.CreatingIdLookupStrategy.instance;
   }
 
   @Provides
