@@ -3,6 +3,7 @@ package se.tre.freki.stats;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import se.tre.freki.core.LabelClient;
+import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
 
 import com.codahale.metrics.Counter;
@@ -11,6 +12,9 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistryListener;
 import com.codahale.metrics.Timer;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +44,20 @@ public class FrekiMetricRegistrator implements MetricRegistryListener {
   }
 
   private void ensureLabelExists(final String name, final LabelType type) {
-    labelClient.lookupId(name, type);
+    final ListenableFuture<LabelId> idFuture = labelClient.lookupId(name, type);
+
+    Futures.addCallback(idFuture, new FutureCallback<LabelId>() {
+      @Override
+      public void onSuccess(final LabelId id) {
+        // We have no use of the ID here. We only care about the ID
+        // being found.
+      }
+
+      @Override
+      public void onFailure(final Throwable t) {
+        LOG.error("Unable to lookup ID with name {} and type {}", name, type, t);
+      }
+    });
   }
 
   @Override
