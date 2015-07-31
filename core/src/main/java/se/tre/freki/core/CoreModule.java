@@ -1,11 +1,11 @@
 package se.tre.freki.core;
 
 import se.tre.freki.labels.IdLookupStrategy;
-import se.tre.freki.stats.InternalMetricFilter;
 import se.tre.freki.stats.InternalMetricRegistrator;
 import se.tre.freki.stats.InternalReporter;
 import se.tre.freki.storage.Store;
 
+import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jvm.ClassLoadingGaugeSet;
 import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
@@ -40,7 +40,7 @@ public class CoreModule {
     registry.addListener(metricRegistrator);
 
     final InternalReporter internalReporter = new InternalReporter(registry,
-        new InternalMetricFilter(), dataPointsClient, defaultTags());
+        MetricFilter.ALL, dataPointsClient, defaultTags());
     internalReporter.start(30, TimeUnit.SECONDS);
 
     registry.registerAll(new ClassLoadingGaugeSet());
@@ -70,12 +70,17 @@ public class CoreModule {
     return new InternalMetricRegistrator(labelClient, idLookupStrategy, defaultTags());
   }
 
+  /**
+   * Default tags used on all metrics reported internally using the {@link InternalReporter}.
+   *
+   * @return A map that contains all the default tags
+   */
   private ImmutableMap<String, String> defaultTags() {
     try {
       final String hostName = InetAddress.getLocalHost().getHostName();
       return ImmutableMap.of("host", hostName);
     } catch (UnknownHostException e) {
-      throw new IllegalStateException();
+      throw new IllegalStateException("Unable to lookup hostname for localhost");
     }
   }
 }
