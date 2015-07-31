@@ -21,17 +21,29 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
 
-public class InternalReporter extends ScheduledReporter {
-  private static final Logger LOG = LoggerFactory.getLogger(InternalReporter.class);
+/**
+ * A Metrics core reporter that periodically will write all metrics that belong to the provided
+ * metric registry to the Freki database.
+ */
+public class FrekiMetricReporter extends ScheduledReporter {
+  private static final Logger LOG = LoggerFactory.getLogger(FrekiMetricReporter.class);
 
   private final DataPointsClient client;
   private final ImmutableMap<String, String> defaultTags;
 
-  public InternalReporter(final MetricRegistry registry,
-                          final MetricFilter filter,
-                          final DataPointsClient dataPointsClient,
-                          final Map<String, String> defaultTags) {
-    super(registry, "internal", filter, TimeUnit.SECONDS, TimeUnit.MICROSECONDS);
+  /**
+   * Create a new reporter that will write all metrics in the provided registry to the data points
+   * client periodically. The provided map of default tags will be added to every data point
+   * written.
+   *
+   * @param registry The registry to write metrics from
+   * @param dataPointsClient The data points client to write metrics to
+   * @param defaultTags The default tags to add to all data points
+   */
+  public FrekiMetricReporter(final MetricRegistry registry,
+                             final DataPointsClient dataPointsClient,
+                             final Map<String, String> defaultTags) {
+    super(registry, "freki", MetricFilter.ALL, TimeUnit.SECONDS, TimeUnit.MICROSECONDS);
     this.client = checkNotNull(dataPointsClient);
     this.defaultTags = ImmutableMap.copyOf(defaultTags);
   }

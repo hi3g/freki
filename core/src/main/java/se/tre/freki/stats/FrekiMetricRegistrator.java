@@ -19,15 +19,28 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-public class InternalMetricRegistrator implements MetricRegistryListener {
-  private static final Logger LOG = LoggerFactory.getLogger(InternalMetricRegistrator.class);
+/**
+ * A {@link MetricRegistryListener} that listens for metrics that are registrered on the the
+ * provided {@link com.codahale.metrics.MetricRegistry} and makes sure that the metric names have a
+ * label associated with them.
+ */
+public class FrekiMetricRegistrator implements MetricRegistryListener {
+  private static final Logger LOG = LoggerFactory.getLogger(FrekiMetricRegistrator.class);
 
   private final LabelClient labelClient;
   private final IdLookupStrategy lookupStrategy;
 
-  public InternalMetricRegistrator(final LabelClient labelClient,
-                                   final IdLookupStrategy lookupStrategy,
-                                   final Map<String, String> defaultTags) {
+  /**
+   * Create a new instance that will use the provided {@link LabelClient} to create new labels. The
+   * provided map of default tags will also be created when necessary.
+   *
+   * @param labelClient The label client to use for looking up label type contexts
+   * @param lookupStrategy The lookup strategy to use
+   * @param defaultTags A map of default tags to create if necessary
+   */
+  public FrekiMetricRegistrator(final LabelClient labelClient,
+                                final IdLookupStrategy lookupStrategy,
+                                final Map<String, String> defaultTags) {
     this.labelClient = checkNotNull(labelClient);
     this.lookupStrategy = checkNotNull(lookupStrategy);
     registerTags(defaultTags);

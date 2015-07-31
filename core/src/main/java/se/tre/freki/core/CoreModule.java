@@ -1,11 +1,10 @@
 package se.tre.freki.core;
 
 import se.tre.freki.labels.IdLookupStrategy;
-import se.tre.freki.stats.InternalMetricRegistrator;
-import se.tre.freki.stats.InternalReporter;
+import se.tre.freki.stats.FrekiMetricRegistrator;
+import se.tre.freki.stats.FrekiMetricReporter;
 import se.tre.freki.storage.Store;
 
-import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jvm.ClassLoadingGaugeSet;
 import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
@@ -35,13 +34,13 @@ public class CoreModule {
   MetricRegistry provideMetricRegistry(final Store store,
                                        final LabelClient labelClient,
                                        final DataPointsClient dataPointsClient,
-                                       final InternalMetricRegistrator metricRegistrator) {
+                                       final FrekiMetricRegistrator metricRegistrator) {
     final MetricRegistry registry = new MetricRegistry();
     registry.addListener(metricRegistrator);
 
-    final InternalReporter internalReporter = new InternalReporter(registry,
-        MetricFilter.ALL, dataPointsClient, defaultTags());
-    internalReporter.start(30, TimeUnit.SECONDS);
+    final FrekiMetricReporter frekiMetricReporter = new FrekiMetricReporter(registry,
+        dataPointsClient, defaultTags());
+    frekiMetricReporter.start(30, TimeUnit.SECONDS);
 
     registry.registerAll(new ClassLoadingGaugeSet());
     registry.registerAll(new GarbageCollectorMetricSet());
@@ -64,14 +63,14 @@ public class CoreModule {
 
   @Provides
   @Singleton
-  InternalMetricRegistrator provideInternalMetricRegistrator(
+  FrekiMetricRegistrator provideInternalMetricRegistrator(
       final LabelClient labelClient,
       final IdLookupStrategy idLookupStrategy) {
-    return new InternalMetricRegistrator(labelClient, idLookupStrategy, defaultTags());
+    return new FrekiMetricRegistrator(labelClient, idLookupStrategy, defaultTags());
   }
 
   /**
-   * Default tags used on all metrics reported internally using the {@link InternalReporter}.
+   * Default tags used on all metrics reported internally using the {@link FrekiMetricReporter}.
    *
    * @return A map that contains all the default tags
    */
