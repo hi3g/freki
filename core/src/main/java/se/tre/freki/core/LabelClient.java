@@ -105,9 +105,9 @@ public class LabelClient implements Measurable {
       case METRIC:
         return metricLookupStrategy.getId(metrics, name);
       case TAGK:
-        return tagKeyLookupStrategy.getId(metrics, name);
+        return tagKeyLookupStrategy.getId(tagKeys, name);
       case TAGV:
-        return tagValueLookupStrategy.getId(metrics, name);
+        return tagValueLookupStrategy.getId(tagValues, name);
       default:
         throw new IllegalArgumentException(type + " is unknown");
     }
