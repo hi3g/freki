@@ -43,6 +43,13 @@ public class FrekiMetricRegistrator implements MetricRegistryListener {
     registerTags(defaultTags);
   }
 
+  /**
+   * Make sure that the label with the provided name and type exists. Will use the {@link
+   * LabelClient}s label strategies for each type to resolve the names.
+   *
+   * @param name The name to lookup
+   * @param type The type of name to lookup
+   */
   private void ensureLabelExists(final String name, final LabelType type) {
     final ListenableFuture<LabelId> idFuture = labelClient.lookupId(name, type);
 
@@ -133,6 +140,17 @@ public class FrekiMetricRegistrator implements MetricRegistryListener {
   public void onTimerRemoved(final String name) {
   }
 
+  /**
+   * If the provided name is an "internal" Freki name then it is expected to be encoded in the
+   * format specified by {@link Metrics#name(String, Metrics.Tag...)} and the metric in it will be
+   * extracted and returned. The tags in an "internal" Freki name will also be extracted and
+   * "ensured" to be present.
+   *
+   * <p>If the name is not a Freki name then the name will be returned as is.
+   *
+   * @param name The name to parse
+   * @return The Freki metric extracted or the name unaltered
+   */
   private String getMetricAndRegisterTags(final String name) {
     if (Metrics.isFrekiName(name)) {
       final String metric = Metrics.metricIn(name);

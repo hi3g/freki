@@ -74,6 +74,9 @@ public class FrekiMetricReporter extends ScheduledReporter {
     }
   }
 
+  /**
+   * Write the current value of the gauge to the database.
+   */
   private void reportGauge(final String name, final Gauge gauge, final long time) {
     final Object value = gauge.getValue();
 
@@ -89,6 +92,9 @@ public class FrekiMetricReporter extends ScheduledReporter {
     }
   }
 
+  /**
+   * Write the current value of the counter to the database.
+   */
   private void reportCounter(final String name, final Counter counter, final long timestamp) {
     final String metric = Metrics.metricIn(name);
     final Map<String, String> tags = tags(name);
@@ -98,6 +104,9 @@ public class FrekiMetricReporter extends ScheduledReporter {
     client.addPoint(metric, timestamp, value, tags);
   }
 
+  /**
+   * Write the current value of the timer to the database.
+   */
   private void reportTimer(final String name, final Timer timer, final long time) {
     final Snapshot snapshot = timer.getSnapshot();
 
@@ -118,6 +127,12 @@ public class FrekiMetricReporter extends ScheduledReporter {
         tags);
   }
 
+  /**
+   * Extract the tags from the provided name and return which tags to write to the database for the
+   * name.
+   *
+   * @see Metrics#name(String, Metrics.Tag...)
+   */
   private Map<String, String> tags(final String name) {
     if (Metrics.isFrekiName(name)) {
       final Map<String, String> tags = Metrics.tagsIn(name);
