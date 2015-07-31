@@ -1,4 +1,8 @@
 
+plugins {
+    id "nebula.os-package" version "2.2.6"
+}
+
 apply plugin: 'application'
 
 mainClassName = "se.tre.freki.Main"
@@ -37,4 +41,32 @@ distributions {
             }
         }
     }
+}
+
+ospackage {
+    packageName = rootProject.name
+    os = LINUX
+
+    into "/opt/${rootProject.name}"
+
+    from(jar.outputs.files) {
+        into 'lib'
+    }
+
+    from(configurations.runtime) {
+        into 'lib'
+    }
+
+    from("${buildDir}/scripts") {
+        into 'bin'
+        fileMode 0750
+        exclude 'freki.bat'
+    }
+}
+
+buildRpm {
+    user = rootProject.name
+    permissionGroup = rootProject.name
+
+    requires('java-1.8.0-oracle', "1.8.0", GREATER | EQUAL)
 }
