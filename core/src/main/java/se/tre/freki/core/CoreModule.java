@@ -64,9 +64,8 @@ public class CoreModule {
   @Provides
   @Singleton
   FrekiMetricRegistrator provideInternalMetricRegistrator(
-      final LabelClient labelClient,
-      final IdLookupStrategy idLookupStrategy) {
-    return new FrekiMetricRegistrator(labelClient, idLookupStrategy, defaultTags());
+      final LabelClient labelClient) {
+    return new FrekiMetricRegistrator(labelClient, defaultTags());
   }
 
   /**

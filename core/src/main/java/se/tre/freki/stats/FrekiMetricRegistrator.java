@@ -3,8 +3,6 @@ package se.tre.freki.stats;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import se.tre.freki.core.LabelClient;
-import se.tre.freki.labels.IdLookupStrategy;
-import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
 
 import com.codahale.metrics.Counter;
@@ -13,7 +11,6 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistryListener;
 import com.codahale.metrics.Timer;
-import com.google.common.util.concurrent.ListenableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,27 +25,22 @@ public class FrekiMetricRegistrator implements MetricRegistryListener {
   private static final Logger LOG = LoggerFactory.getLogger(FrekiMetricRegistrator.class);
 
   private final LabelClient labelClient;
-  private final IdLookupStrategy lookupStrategy;
 
   /**
    * Create a new instance that will use the provided {@link LabelClient} to create new labels. The
    * provided map of default tags will also be created when necessary.
    *
-   * @param labelClient The label client to use for looking up label type contexts
-   * @param lookupStrategy The lookup strategy to use
+   * @param labelClient The label client to use for looking up labels
    * @param defaultTags A map of default tags to create if necessary
    */
   public FrekiMetricRegistrator(final LabelClient labelClient,
-                                final IdLookupStrategy lookupStrategy,
                                 final Map<String, String> defaultTags) {
     this.labelClient = checkNotNull(labelClient);
-    this.lookupStrategy = checkNotNull(lookupStrategy);
     registerTags(defaultTags);
   }
 
   private void ensureLabelExists(final String name, final LabelType type) {
-    final ListenableFuture<LabelId> idFuture = lookupStrategy.getId(
-        labelClient.contextForType(type), name);
+    labelClient.lookupId(name, type);
   }
 
   @Override
