@@ -17,6 +17,7 @@ import dagger.Provides;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Clock;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Singleton;
 
@@ -31,13 +32,14 @@ public class CoreModule {
   @Provides
   @Singleton
   MetricRegistry provideMetricRegistry(final Store store,
+                                       final Clock clock,
                                        final LabelClient labelClient,
                                        final DataPointsClient dataPointsClient,
                                        final FrekiMetricRegistrator metricRegistrator) {
     final MetricRegistry registry = new MetricRegistry();
     registry.addListener(metricRegistrator);
 
-    final FrekiMetricReporter frekiMetricReporter = new FrekiMetricReporter(registry,
+    final FrekiMetricReporter frekiMetricReporter = new FrekiMetricReporter(clock, registry,
         dataPointsClient, defaultTags());
     frekiMetricReporter.start(30, TimeUnit.SECONDS);
 
@@ -59,6 +61,11 @@ public class CoreModule {
   FrekiMetricRegistrator provideInternalMetricRegistrator(
       final LabelClient labelClient) {
     return new FrekiMetricRegistrator(labelClient, defaultTags());
+  }
+
+  @Provides
+  public Clock provideClock() {
+    return Clock.systemDefaultZone();
   }
 
   /**

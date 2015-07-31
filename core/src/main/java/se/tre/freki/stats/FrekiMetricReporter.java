@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 public class FrekiMetricReporter extends ScheduledReporter {
   private static final Logger LOG = LoggerFactory.getLogger(FrekiMetricReporter.class);
 
+  private final Clock clock;
   private final DataPointsClient client;
   private final ImmutableMap<String, String> defaultTags;
 
@@ -40,10 +42,12 @@ public class FrekiMetricReporter extends ScheduledReporter {
    * @param dataPointsClient The data points client to write metrics to
    * @param defaultTags The default tags to add to all data points
    */
-  public FrekiMetricReporter(final MetricRegistry registry,
+  public FrekiMetricReporter(final Clock clock,
+                             final MetricRegistry registry,
                              final DataPointsClient dataPointsClient,
                              final Map<String, String> defaultTags) {
     super(registry, "freki", MetricFilter.ALL, TimeUnit.SECONDS, TimeUnit.MICROSECONDS);
+    this.clock = checkNotNull(clock);
     this.client = checkNotNull(dataPointsClient);
     this.defaultTags = ImmutableMap.copyOf(defaultTags);
   }
@@ -54,7 +58,7 @@ public class FrekiMetricReporter extends ScheduledReporter {
                      final SortedMap<String, Histogram> histograms,
                      final SortedMap<String, Meter> meters,
                      final SortedMap<String, Timer> timers) {
-    final long timestamp = System.currentTimeMillis();
+    final long timestamp = clock.millis();
     LOG.debug("Writing internal metrics at {}", timestamp);
 
     for (final Map.Entry<String, Gauge> gauge : gauges.entrySet()) {
