@@ -29,17 +29,13 @@ public class InternalMetricRegistrator implements MetricRegistryListener {
     this.lookupStrategy = checkNotNull(lookupStrategy);
   }
 
-  private boolean isFrekiName(final String name) {
-    return name.startsWith("freki");
-  }
-
   private void ensureLabelExists(final String name, final LabelType type) {
     final ListenableFuture<LabelId> idFuture = lookupStrategy.getId(
         labelClient.contextForType(type), name);
   }
 
   private void registerName(final String name) {
-    if (isFrekiName(name)) {
+    if (Metrics.isFrekiName(name)) {
       final String metric = Metrics.metricIn(name);
       final Map<String, String> tags = Metrics.tagsIn(name);
 

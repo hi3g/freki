@@ -19,6 +19,17 @@ public class Metrics {
   }
 
   /**
+   * Check if the provided name is an "internal" metric. All metrics starting with the string
+   * "freki" are considered to be "internal".
+   *
+   * @param name The name to check
+   * @return {@code true} if it is an internal metric, otherwise {@code false}.
+   */
+  static boolean isFrekiName(final String name) {
+    return name.startsWith("freki");
+  }
+
+  /**
    * Create a new name for the metrics library with the given metric and tags.
    */
   public static String name(String metric, Tag... tags) {
