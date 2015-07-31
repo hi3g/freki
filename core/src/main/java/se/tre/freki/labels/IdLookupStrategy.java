@@ -6,6 +6,8 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 
@@ -48,6 +50,7 @@ public interface IdLookupStrategy {
    * exist.
    */
   class CreatingIdLookupStrategy implements IdLookupStrategy {
+    private static final Logger LOG = LoggerFactory.getLogger(CreatingIdLookupStrategy.class);
     public static final IdLookupStrategy instance = new CreatingIdLookupStrategy();
 
     @Nonnull
@@ -59,6 +62,8 @@ public interface IdLookupStrategy {
             @Override
             public ListenableFuture<LabelId> apply(final Optional<LabelId> input) throws Exception {
               if (!input.isPresent()) {
+                LOG.info("Creating missing label with name {} in context {}",
+                    name, labelClientTypeContext);
                 return labelClientTypeContext.createId(name);
               }
 
