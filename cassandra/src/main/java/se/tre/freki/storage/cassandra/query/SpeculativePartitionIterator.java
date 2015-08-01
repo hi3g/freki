@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
+import javax.annotation.Nullable;
 
 /**
  * An iterator implementation that speculatively loads the next partition when it detects that the
@@ -54,19 +55,32 @@ public class SpeculativePartitionIterator<K> implements Iterator<Row>, AsyncIter
 
   @Override
   public boolean hasMoreWithoutFetching() {
-    return false;
+    return currentResultSet.getAvailableWithoutFetching() > 0;
   }
 
   @Override
   public ListenableFuture<Void> fetchMore() {
-    return null;
+    if (currentResultSet.isExhausted()) {
+      return Futures.transform(nextPartitionResultSet(), new Function<ResultSet, Void>() {
+        @Nullable
+        @Override
+        public Void apply(@Nullable final ResultSet fetchedResultSet) {
+          currentResultSet = fetchedResultSet;
+          return null;
+        }
+      });
+    } else if (currentResultSet.getAvailableWithoutFetching() == 0) {
+      return currentResultSet.fetchMoreResults();
+    }
+
+    return Futures.immediateFuture(null);
   }
 
   @Override
   public boolean hasNext() {
     if (currentResultSet.isExhausted()) {
       try {
-        currentResultSet = nextPartitionResultSet();
+        currentResultSet = nextPartitionResultSet().get();
       } catch (ExecutionException e) {
         throw new QueryException("Fetch of next partition threw an exception", e);
       } catch (InterruptedException e) {
@@ -94,11 +108,8 @@ public class SpeculativePartitionIterator<K> implements Iterator<Row>, AsyncIter
    * Blocks and waits for {@link #nextResultSet} to be done and starts fetching the next partition.
    *
    * @return The result set of the partition being loaded by {@link #nextResultSet}
-   * @throws ExecutionException if an exception was thrown while fetching the next partition
-   * @throws InterruptedException if the thread was interrupted while waiting for the result to be
-   * fully fetched
    */
-  private ResultSet nextPartitionResultSet() throws ExecutionException, InterruptedException {
+  private ListenableFuture<ResultSet> nextPartitionResultSet() {
     final ListenableFuture<ResultSet> fetchedResultSet = nextResultSet;
     nextResultSet = fetchNextPartition();
 
@@ -108,7 +119,7 @@ public class SpeculativePartitionIterator<K> implements Iterator<Row>, AsyncIter
       LOG.trace("Load of next partition {} already finished", nextResultSet);
     }
 
-    return fetchedResultSet.get();
+    return fetchedResultSet;
   }
 
   /**
