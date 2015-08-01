@@ -10,9 +10,9 @@ import com.google.common.primitives.Longs;
 import javax.annotation.Nonnull;
 
 public class CassandraLabelId implements LabelId<CassandraLabelId> {
-  private static long METRIC_MASK = 0xFFFFFFFFFFFFFFFCL;
-  private static long TAGK_MASK   = 0xFFFFFFFFFFFFFFFEL;
-  private static long TAGV_MASK   = 0xFFFFFFFFFFFFFFFDL;
+  private static final long METRIC_MASK = 0xFFFFFFFFFFFFFFFCL;
+  private static final long TAGK_MASK   = 0xFFFFFFFFFFFFFFFEL;
+  private static final long TAGV_MASK   = 0xFFFFFFFFFFFFFFFDL;
 
   private final long id;
 
