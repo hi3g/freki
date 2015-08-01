@@ -18,13 +18,13 @@ import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.TimeSeriesQuery;
 import se.tre.freki.query.predicate.TimeSeriesQueryPredicate;
+import se.tre.freki.utils.AsyncIterator;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -134,11 +134,12 @@ public abstract class StoreTest<K extends Store> {
         .predicate(builder.build())
         .build();
 
-    final Map<TimeSeriesId, Iterator<? extends DataPoint>> dataPoints = store.query(query).get();
+    final Map<TimeSeriesId, AsyncIterator<? extends DataPoint>> dataPoints =
+        store.query(query).get();
 
     assertEquals(1, dataPoints.keySet().size());
 
-    final Iterator<? extends DataPoint> iterator =
+    final AsyncIterator<? extends DataPoint> iterator =
         dataPoints.entrySet().iterator().next().getValue();
 
     for (int dataPointIdx = 0; dataPointIdx < 10; dataPointIdx++) {

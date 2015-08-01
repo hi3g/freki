@@ -57,7 +57,6 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
@@ -760,21 +759,21 @@ public class CassandraStore extends Store {
 
   @Nonnull
   @Override
-  public ListenableFuture<Map<TimeSeriesId, Iterator<? extends DataPoint>>> query(
+  public ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
       final TimeSeriesQuery query) {
     final ListenableFuture<Iterable<CassandraTimeSeriesId>> timeSeries = resolve(query.predicate());
 
     return transform(timeSeries,
         new Function<Iterable<CassandraTimeSeriesId>,
-            Map<TimeSeriesId, Iterator<? extends DataPoint>>>() {
+            Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>>() {
           @Override
-          public Map<TimeSeriesId, Iterator<? extends DataPoint>> apply(
+          public Map<TimeSeriesId, AsyncIterator<? extends DataPoint>> apply(
               final Iterable<CassandraTimeSeriesId> timeSeries) {
-            final ImmutableMap.Builder<TimeSeriesId, Iterator<? extends DataPoint>> dataPoints =
-                ImmutableMap.builder();
+            final ImmutableMap.Builder<TimeSeriesId, AsyncIterator<? extends DataPoint>>
+                dataPoints = ImmutableMap.builder();
 
             for (final CassandraTimeSeriesId timeSerie : timeSeries) {
-              final Iterator<? extends DataPoint> timeSerieDataPoints = fetchTimeSeries(
+              final AsyncIterator<? extends DataPoint> timeSerieDataPoints = fetchTimeSeries(
                   timeSerie.timeSeriesId(), query.startTime(), query.endTime());
               dataPoints.put(timeSerie, timeSerieDataPoints);
             }
