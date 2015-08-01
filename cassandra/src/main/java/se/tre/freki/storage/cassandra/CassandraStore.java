@@ -32,6 +32,7 @@ import se.tre.freki.storage.cassandra.statements.AddPointStatements;
 import se.tre.freki.storage.cassandra.statements.AddPointStatements.AddPointStatementMarkers;
 import se.tre.freki.storage.cassandra.statements.FetchPointsStatements;
 import se.tre.freki.storage.cassandra.statements.FetchPointsStatements.SelectPointStatementMarkers;
+import se.tre.freki.utils.AsyncIterator;
 
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.BoundStatement;
@@ -529,11 +530,11 @@ public class CassandraStore extends Store {
    * @param endTime The upper bound to timestamp to fetch data points within
    * @return An iterator that will loop over all found data points.
    */
-  protected Iterator<? extends DataPoint> fetchTimeSeries(
+  protected AsyncIterator<? extends DataPoint> fetchTimeSeries(
       final ByteBuffer timeSeriesId,
       final long startTime,
       final long endTime) {
-    final Iterator<Row> rows = new SpeculativePartitionIterator<>(
+    final AsyncIterator<Row> rows = new SpeculativePartitionIterator<>(
         BaseTimes.baseTimesBetween(startTime, endTime),
         new Function<Long, ResultSetFuture>() {
           @Nullable
