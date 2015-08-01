@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
  *
  * @param <K> The type of the partition key
  */
-public class SpeculativePartitionIterator<K> implements Iterator<Row>, AsyncIterator {
+public class SpeculativePartitionIterator<K> implements AsyncIterator<Row> {
   private static final Logger LOG = LoggerFactory.getLogger(SpeculativePartitionIterator.class);
 
   private final Function<K, ResultSetFuture> fetchFunction;
