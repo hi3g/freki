@@ -5,6 +5,7 @@ import se.tre.freki.storage.StoreDescriptor;
 import se.tre.freki.utils.InvalidConfigException;
 
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ProtocolOptions;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.Session;
 import com.google.auto.service.AutoService;
@@ -52,7 +53,7 @@ public class CassandraStoreDescriptor extends StoreDescriptor {
 
     for (final String node : nodes) {
       final HostAndPort host = HostAndPort.fromString(node)
-          .withDefaultPort(CassandraConst.DEFAULT_CASSANDRA_PORT);
+          .withDefaultPort(ProtocolOptions.DEFAULT_PORT);
 
       builder.addContactPoint(host.getHostText())
           .withPort(host.getPort())
