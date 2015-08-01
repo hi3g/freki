@@ -7,6 +7,9 @@ import java.util.PrimitiveIterator;
  * Utility class for working with the base times as used in the Cassandra store.
  */
 final class BaseTimes {
+  /** Max time delta (in milliseconds) we store in a column qualifier. */
+  public static final int BASE_TIME_PERIOD = 3600000;
+
   private BaseTimes() {
   }
 
@@ -14,7 +17,7 @@ final class BaseTimes {
    * Calculate the base time based on a timestamp to be used in a partition key.
    */
   static long baseTimeFor(final long timestamp) {
-    return (timestamp - (timestamp % CassandraConst.BASE_TIME_PERIOD));
+    return (timestamp - (timestamp % BASE_TIME_PERIOD));
   }
 
   /**
@@ -42,7 +45,7 @@ final class BaseTimes {
 
     @Override
     public boolean hasNext() {
-      return current < end + CassandraConst.BASE_TIME_PERIOD - 1;
+      return current < end + BASE_TIME_PERIOD - 1;
     }
 
     @Override
@@ -52,7 +55,7 @@ final class BaseTimes {
       }
 
       final long baseTime = baseTimeFor(current);
-      current += CassandraConst.BASE_TIME_PERIOD;
+      current += BASE_TIME_PERIOD;
       return baseTime;
     }
   }

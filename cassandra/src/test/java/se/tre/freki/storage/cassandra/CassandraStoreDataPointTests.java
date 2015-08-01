@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static se.tre.freki.storage.cassandra.BaseTimes.baseTimeFor;
-import static se.tre.freki.storage.cassandra.CassandraConst.BASE_TIME_PERIOD;
+import static se.tre.freki.storage.cassandra.BaseTimes.BASE_TIME_PERIOD;
 import static se.tre.freki.storage.cassandra.CassandraLabelId.fromLong;
 
 import se.tre.freki.labels.LabelId;
