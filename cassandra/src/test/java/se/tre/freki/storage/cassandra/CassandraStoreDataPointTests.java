@@ -136,7 +136,7 @@ public class CassandraStoreDataPointTests {
     assertFalse(dataPoints.hasNext());
   }
 
-  @Ignore
+  @Ignore("See issue #98")
   @Test(expected = IllegalArgumentException.class)
   public void testFetchTimeSeriesMixedTypes() throws Exception {
     final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric1, tags1);
