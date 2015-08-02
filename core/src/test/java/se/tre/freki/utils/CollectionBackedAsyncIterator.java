@@ -5,6 +5,12 @@ import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+/**
+ * An implementation of the {@link AsyncIterator} that is backed by an immutable collection for use
+ * in tests.
+ *
+ * @param <E> The type of elements this iterator will iterate over
+ */
 public class CollectionBackedAsyncIterator<E> implements AsyncIterator<E> {
   private final UnmodifiableIterator<E> iterator;
 
