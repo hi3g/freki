@@ -8,13 +8,13 @@ import se.tre.freki.meta.LabelMeta;
 import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.TimeSeriesQuery;
 import se.tre.freki.stats.Measurable;
+import se.tre.freki.utils.AsyncIterator;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.Closeable;
-import java.util.Iterator;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
@@ -83,7 +83,7 @@ public abstract class Store implements Closeable, Measurable {
    * within the limits.
    */
   @Nonnull
-  public abstract ListenableFuture<Map<TimeSeriesId, Iterator<? extends DataPoint>>> query(
+  public abstract ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
       final TimeSeriesQuery query);
 
   //

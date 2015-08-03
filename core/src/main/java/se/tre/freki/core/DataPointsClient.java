@@ -16,6 +16,7 @@ import se.tre.freki.stats.Measurable;
 import se.tre.freki.stats.StopTimerCallback;
 import se.tre.freki.storage.Store;
 import se.tre.freki.time.Timestamps;
+import se.tre.freki.utils.AsyncIterator;
 import se.tre.freki.utils.InvalidConfigException;
 
 import com.codahale.metrics.MetricRegistry;
@@ -30,7 +31,6 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
-import java.util.Iterator;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -215,7 +215,7 @@ public class DataPointsClient implements Measurable {
    * @param query The query to perform
    * @return A future that on completion will contain the query result
    */
-  public ListenableFuture<Map<TimeSeriesId, Iterator<? extends DataPoint>>> query(
+  public ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
       final String query) {
     final ANTLRInputStream input = new ANTLRInputStream(query);
     final SelectLexer lexer = new SelectLexer(input);

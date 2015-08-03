@@ -7,6 +7,7 @@ import se.tre.freki.meta.Annotation;
 import se.tre.freki.meta.LabelMeta;
 import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.TimeSeriesQuery;
+import se.tre.freki.utils.AsyncIterator;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.auto.value.AutoValue;
@@ -20,7 +21,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
 import javax.annotation.Nonnull;
@@ -109,7 +109,7 @@ public class MemoryStore extends Store {
   @Nonnull
   @Override
   public ListenableFuture<Optional<LabelMeta>> getMeta(final LabelId uid,
-                                             final LabelType type) {
+                                                       final LabelType type) {
     final String qualifier = type.toString().toLowerCase() + "_meta";
     final LabelMeta meta = labelMetas.get(uid, qualifier);
     return Futures.immediateFuture(Optional.fromNullable(meta));
@@ -133,7 +133,7 @@ public class MemoryStore extends Store {
 
   @Nonnull
   @Override
-  public ListenableFuture<Map<TimeSeriesId, Iterator<? extends DataPoint>>> query(
+  public ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
       final TimeSeriesQuery query) {
     throw new UnsupportedOperationException("Not implemented yet!");
   }

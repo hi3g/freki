@@ -9,6 +9,7 @@ import se.tre.freki.core.DataPointsClient;
 import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.QueryException;
+import se.tre.freki.utils.AsyncIterator;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -62,7 +63,7 @@ public final class QueryResource extends Resource {
         return response(BAD_REQUEST);
       }
 
-      final Map<TimeSeriesId, Iterator<? extends DataPoint>> dataPoints =
+      final Map<TimeSeriesId, AsyncIterator<? extends DataPoint>> dataPoints =
           datapointsClient.query(query).get();
 
       final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -72,7 +73,7 @@ public final class QueryResource extends Resource {
 
       jsonGenerator.writeStartObject();
 
-      for (final Map.Entry<TimeSeriesId, Iterator<? extends DataPoint>> timeSeries :
+      for (final Map.Entry<TimeSeriesId, AsyncIterator<? extends DataPoint>> timeSeries :
           dataPoints.entrySet()) {
         jsonGenerator.writeArrayFieldStart(timeSeries.getKey().toString());
 

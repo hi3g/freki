@@ -1,10 +1,11 @@
 package se.tre.freki.storage.cassandra.query;
 
 import se.tre.freki.query.DataPoint;
+import se.tre.freki.utils.AsyncIterator;
 
 import com.datastax.driver.core.Row;
+import com.google.common.util.concurrent.ListenableFuture;
 
-import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
@@ -15,17 +16,17 @@ import java.util.NoSuchElementException;
  * <p>The type of the data point will be decided using the first row in the iterator given to the
  * constructor. The decision is based on which columns are present in the row.
  */
-public class DataPointIterator implements Iterator<DataPoint> {
-  private final Iterator<Row> rows;
+public class DataPointIterator implements AsyncIterator<DataPoint> {
+  private final AsyncIterator<Row> rows;
   private TypeStrategy typeStrategy;
 
   /**
    * Create a new data point iterator. Consumers of this interface should most likely use the {@link
-   * #iteratorFor(Iterator)} factory method.
+   * #iteratorFor(AsyncIterator)} factory method.
    *
    * @param rows The rows this iterator will expose as data points
    */
-  private DataPointIterator(final Iterator<Row> rows) {
+  private DataPointIterator(final AsyncIterator<Row> rows) {
     this.rows = rows;
   }
 
@@ -36,7 +37,7 @@ public class DataPointIterator implements Iterator<DataPoint> {
    * @param rows The rows to represent as data points
    * @return A newly instantiated data point iterator
    */
-  public static DataPointIterator iteratorFor(final Iterator<Row> rows) {
+  public static DataPointIterator iteratorFor(final AsyncIterator<Row> rows) {
     final DataPointIterator dataPointIterator = new DataPointIterator(rows);
     dataPointIterator.typeStrategy = new DetectingTypeStrategy(dataPointIterator);
     return dataPointIterator;
@@ -46,6 +47,16 @@ public class DataPointIterator implements Iterator<DataPoint> {
     if (!hasNext()) {
       throw new NoSuchElementException(message);
     }
+  }
+
+  @Override
+  public boolean hasMoreWithoutFetching() {
+    return rows.hasMoreWithoutFetching();
+  }
+
+  @Override
+  public ListenableFuture<Void> fetchMore() {
+    return rows.fetchMore();
   }
 
   @Override

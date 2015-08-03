@@ -32,6 +32,7 @@ import se.tre.freki.storage.cassandra.statements.AddPointStatements;
 import se.tre.freki.storage.cassandra.statements.AddPointStatements.AddPointStatementMarkers;
 import se.tre.freki.storage.cassandra.statements.FetchPointsStatements;
 import se.tre.freki.storage.cassandra.statements.FetchPointsStatements.SelectPointStatementMarkers;
+import se.tre.freki.utils.AsyncIterator;
 
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.BoundStatement;
@@ -56,7 +57,6 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
@@ -529,11 +529,11 @@ public class CassandraStore extends Store {
    * @param endTime The upper bound to timestamp to fetch data points within
    * @return An iterator that will loop over all found data points.
    */
-  protected Iterator<? extends DataPoint> fetchTimeSeries(
+  protected AsyncIterator<? extends DataPoint> fetchTimeSeries(
       final ByteBuffer timeSeriesId,
       final long startTime,
       final long endTime) {
-    final Iterator<Row> rows = new SpeculativePartitionIterator<>(
+    final AsyncIterator<Row> rows = new SpeculativePartitionIterator<>(
         BaseTimes.baseTimesBetween(startTime, endTime),
         new Function<Long, ResultSetFuture>() {
           @Nullable
@@ -759,21 +759,21 @@ public class CassandraStore extends Store {
 
   @Nonnull
   @Override
-  public ListenableFuture<Map<TimeSeriesId, Iterator<? extends DataPoint>>> query(
+  public ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
       final TimeSeriesQuery query) {
     final ListenableFuture<Iterable<CassandraTimeSeriesId>> timeSeries = resolve(query.predicate());
 
     return transform(timeSeries,
         new Function<Iterable<CassandraTimeSeriesId>,
-            Map<TimeSeriesId, Iterator<? extends DataPoint>>>() {
+            Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>>() {
           @Override
-          public Map<TimeSeriesId, Iterator<? extends DataPoint>> apply(
+          public Map<TimeSeriesId, AsyncIterator<? extends DataPoint>> apply(
               final Iterable<CassandraTimeSeriesId> timeSeries) {
-            final ImmutableMap.Builder<TimeSeriesId, Iterator<? extends DataPoint>> dataPoints =
-                ImmutableMap.builder();
+            final ImmutableMap.Builder<TimeSeriesId, AsyncIterator<? extends DataPoint>>
+                dataPoints = ImmutableMap.builder();
 
             for (final CassandraTimeSeriesId timeSerie : timeSeries) {
-              final Iterator<? extends DataPoint> timeSerieDataPoints = fetchTimeSeries(
+              final AsyncIterator<? extends DataPoint> timeSerieDataPoints = fetchTimeSeries(
                   timeSerie.timeSeriesId(), query.startTime(), query.endTime());
               dataPoints.put(timeSerie, timeSerieDataPoints);
             }
