@@ -24,8 +24,8 @@ public abstract class TimeSeriesQuery {
      */
     public TimeSeriesQuery build() {
       final TimeSeriesQuery query = autoBuild();
-      checkState(query.startTime() > 0);
-      checkState(query.endTime() > 0);
+      checkState(query.startTime() >= 0);
+      checkState(query.endTime() >= 0);
       checkState(query.endTime() >= query.startTime());
       return query;
     }
