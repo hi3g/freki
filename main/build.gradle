@@ -81,5 +81,5 @@ buildRpm {
     user = rootProject.name
     permissionGroup = rootProject.name
 
-    requires('java-1.8.0-oracle', "1.8.0", GREATER | EQUAL)
+    requires('jre1.8.0_51')
 }
