@@ -84,4 +84,8 @@ buildRpm {
     requires('jre1.8.0_51')
 
     preInstall file('src/main/rpm/preInstall.sh')
+
+    from(files('src/main/dist/init')) {
+        into '/etc/init/'
+    }
 }
