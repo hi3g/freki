@@ -182,9 +182,9 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
       futurePredicateList.add(Futures.transform(futureId,
           new AsyncFunction<LabelId, TimeSeriesIdPredicate>() {
             @Override
-            public ListenableFuture<TimeSeriesIdPredicate> apply(final LabelId input)
+            public ListenableFuture<TimeSeriesIdPredicate> apply(final LabelId labelId)
                 throws Exception {
-              return immediateFuture(SimpleTimeSeriesIdPredicate.id(input));
+              return immediateFuture(SimpleTimeSeriesIdPredicate.id(labelId));
             }
           }));
     }
