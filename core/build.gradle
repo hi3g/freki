@@ -4,8 +4,6 @@ plugins {
     id "me.champeau.gradle.antlr4" version "0.1"
 }
 
-project.ext.distFiles = files("src/main/dist")
-
 dependencies {
     compile libraries.config,
             libraries.logback,
