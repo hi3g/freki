@@ -82,4 +82,6 @@ buildRpm {
     permissionGroup = rootProject.name
 
     requires('jre1.8.0_51')
+
+    preInstall file('src/main/rpm/preInstall.sh')
 }
