@@ -60,7 +60,20 @@ ospackage {
     from("${buildDir}/scripts") {
         into 'bin'
         fileMode 0750
+
+        // These are linux packages so we do not care about the windows
+        // start scripts
         exclude 'freki.bat'
+    }
+
+    from(files('src/main/dist')) {
+        into ''
+        fileType CONFIG | NOREPLACE
+    }
+
+    from(project(':freki-cassandra').distFiles) {
+        into ''
+        fileType CONFIG | NOREPLACE
     }
 }
 
