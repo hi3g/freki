@@ -5,15 +5,16 @@ import static se.tre.freki.labels.LabelType.TAGK;
 import static se.tre.freki.labels.LabelType.TAGV;
 
 import se.tre.freki.DaggerTestComponent;
-import se.tre.freki.core.DataPointsClient;
 import se.tre.freki.core.LabelClient;
-import se.tre.freki.labels.LabelException;
 import se.tre.freki.labels.LabelId;
+import se.tre.freki.query.predicate.SimpleTimeSeriesIdPredicate;
+import se.tre.freki.query.predicate.TimeSeriesTagPredicate;
 import se.tre.freki.storage.Store;
 import se.tre.freki.utils.TestUtil;
 
+import com.google.common.collect.UnmodifiableIterator;
+
 import junit.framework.TestCase;
-import junit.framework.TestResult;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
@@ -64,9 +65,9 @@ public class QueryStringTranslatorTest extends TestCase {
     Assert.assertNotNull(translator.query());
   }
 
-  @Test (expected = ExecutionException.class)
-  public void testMetricNotFound() {
-    String queryString = "SELECT sys.cpu.1{host=web01} BETWEEN 1 AND 5000";
+  @Test
+  public void testCompletedParts() {
+    String queryString = "SELECT sys.cpu.0{host=web01} BETWEEN 1 AND 5000";
 
     final ANTLRInputStream input = new ANTLRInputStream(queryString);
     final se.tre.freki.query.SelectLexer lexer = new se.tre.freki.query.SelectLexer(input);
@@ -77,5 +78,27 @@ public class QueryStringTranslatorTest extends TestCase {
     final ParseTreeWalker treeWalker = new ParseTreeWalker();
     final QueryStringTranslator translator = new QueryStringTranslator(labelClient);
     treeWalker.walk(translator, tree);
+
+    Assert.assertEquals(translator.query().endTime(), 5000L);
+    Assert.assertEquals(translator.query().startTime(), 1L);
+
+    UnmodifiableIterator<TimeSeriesTagPredicate> list = translator.query().predicate().tagPredicates().iterator();
+
+    while (list.hasNext()) {
+      TimeSeriesTagPredicate iterator = list.next();
+      SimpleTimeSeriesIdPredicate key = (SimpleTimeSeriesIdPredicate) iterator.key();
+      SimpleTimeSeriesIdPredicate value = (SimpleTimeSeriesIdPredicate) iterator.value();
+
+      try {
+        Assert.assertEquals(translator.query().predicate().metric(),
+            labelClient.lookupId("sys.cpu.0", METRIC).get());
+        Assert.assertEquals(key.id(), labelClient.lookupId("host", TAGK).get());
+        Assert.assertEquals(value.id(), labelClient.lookupId("web01", TAGV).get());
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      } catch (ExecutionException e) {
+        e.printStackTrace();
+      }
+    }
   }
 }
