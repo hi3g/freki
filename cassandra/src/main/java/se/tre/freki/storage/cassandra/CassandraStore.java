@@ -45,6 +45,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -412,6 +413,10 @@ public class CassandraStore extends Store {
         }
 
         final Row row = result.get();
+
+        if (Strings.isNullOrEmpty(row.getString("meta_description"))) {
+          return Optional.absent();
+        }
 
         return Optional.of(
             LabelMeta.create(CassandraLabelId.fromLong(row.getLong("label_id")),
