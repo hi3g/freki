@@ -99,6 +99,7 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
     }
 
     final TimeSeriesQueryPredicate predicate = predicateBuilder.build();
+
     query = queryBuilder.predicate(predicate).build();
   }
 

@@ -9,6 +9,7 @@ import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.plugins.PluginError;
 import se.tre.freki.plugins.RealTimePublisher;
 import se.tre.freki.query.DataPoint;
+import se.tre.freki.query.QueryException;
 import se.tre.freki.query.QueryStringTranslator;
 import se.tre.freki.query.SelectLexer;
 import se.tre.freki.query.SelectParser;
@@ -17,6 +18,7 @@ import se.tre.freki.stats.StopTimerCallback;
 import se.tre.freki.storage.Store;
 import se.tre.freki.time.Timestamps;
 import se.tre.freki.utils.AsyncIterator;
+import se.tre.freki.utils.DescriptiveErrorListener;
 import se.tre.freki.utils.InvalidConfigException;
 
 import com.codahale.metrics.MetricRegistry;
@@ -216,11 +218,16 @@ public class DataPointsClient implements Measurable {
    * @return A future that on completion will contain the query result
    */
   public ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
-      final String query) {
+      final String query) throws QueryException {
     final ANTLRInputStream input = new ANTLRInputStream(query);
     final SelectLexer lexer = new SelectLexer(input);
     final CommonTokenStream tokens = new CommonTokenStream(lexer);
     final SelectParser parser = new SelectParser(tokens);
+
+    lexer.removeErrorListeners();
+    lexer.addErrorListener(DescriptiveErrorListener.INSTANCE);
+    parser.removeErrorListeners();
+    parser.addErrorListener(DescriptiveErrorListener.INSTANCE);
 
     final SelectParser.QueryContext tree = parser.query();
     final ParseTreeWalker treeWalker = new ParseTreeWalker();

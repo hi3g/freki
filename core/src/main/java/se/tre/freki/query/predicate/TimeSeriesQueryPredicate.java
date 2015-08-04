@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import se.tre.freki.labels.LabelId;
+import se.tre.freki.query.QueryException;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -21,8 +22,7 @@ public class TimeSeriesQueryPredicate {
   protected TimeSeriesQueryPredicate(final LabelId metric,
                                      final ImmutableSet<TimeSeriesTagPredicate> tagPredicates) {
     this.metric = checkNotNull(metric);
-
-    this.tagPredicates = tagPredicates;
+    this.tagPredicates = checkNotNull(tagPredicates);
   }
 
   public LabelId metric() {
@@ -46,7 +46,7 @@ public class TimeSeriesQueryPredicate {
     }
 
     public void addTagPredicate(final TimeSeriesTagPredicate tagPredicate) {
-      tagPredicates.add(tagPredicate);
+      tagPredicates.add(checkNotNull(tagPredicate));
     }
 
     /**
@@ -55,6 +55,12 @@ public class TimeSeriesQueryPredicate {
      */
     public TimeSeriesQueryPredicate build() {
       checkState(metric != null);
+
+      try {
+        checkState(tagPredicates.size() > 0);
+      } catch (IllegalStateException e) {
+        throw new QueryException("No valid tag predicates");
+      }
 
       return new TimeSeriesQueryPredicate(metric,
           ImmutableSet.copyOf(tagPredicates));
