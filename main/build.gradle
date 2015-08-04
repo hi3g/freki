@@ -1,4 +1,8 @@
 
+plugins {
+    id "nebula.os-package" version "2.2.6"
+}
+
 apply plugin: 'application'
 
 mainClassName = "se.tre.freki.Main"
@@ -36,5 +40,52 @@ distributions {
                 from { project(':freki-cassandra').distFiles }
             }
         }
+    }
+}
+
+ospackage {
+    packageName = rootProject.name
+    os = LINUX
+
+    into "/opt/${rootProject.name}"
+
+    from(jar.outputs.files) {
+        into 'lib'
+    }
+
+    from(configurations.runtime) {
+        into 'lib'
+    }
+
+    from("${buildDir}/scripts") {
+        into 'bin'
+        fileMode 0750
+
+        // These are linux packages so we do not care about the windows
+        // start scripts
+        exclude 'freki.bat'
+    }
+
+    from(files('src/main/dist')) {
+        into ''
+        fileType CONFIG | NOREPLACE
+    }
+
+    from(project(':freki-cassandra').distFiles) {
+        into ''
+        fileType CONFIG | NOREPLACE
+    }
+}
+
+buildRpm {
+    user = rootProject.name
+    permissionGroup = rootProject.name
+
+    requires('jre1.8.0_51')
+
+    preInstall file('src/main/rpm/preInstall.sh')
+
+    from(files('src/main/dist/init')) {
+        into '/etc/init/'
     }
 }
