@@ -21,7 +21,6 @@ CREATE TABLE freki.id_to_name (
   type varchar,
   creation_time timestamp,
   name varchar,
-  meta_description varchar,
   PRIMARY KEY ((label_id, type), creation_time)
 ) WITH CLUSTERING ORDER BY (creation_time ASC);
 
