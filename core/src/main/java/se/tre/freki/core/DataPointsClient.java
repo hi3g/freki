@@ -12,6 +12,7 @@ import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.QueryStringTranslator;
 import se.tre.freki.query.SelectLexer;
 import se.tre.freki.query.SelectParser;
+import se.tre.freki.query.TimeSeriesQuery;
 import se.tre.freki.stats.Measurable;
 import se.tre.freki.stats.StopTimerCallback;
 import se.tre.freki.storage.Store;
@@ -212,7 +213,7 @@ public class DataPointsClient implements Measurable {
   /**
    * Parse the query that is in string form and execute it against the store.
    *
-   * @param query The query to perform
+   * @param query The query to parse and perform
    * @return A future that on completion will contain the query result
    */
   public ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
@@ -227,7 +228,18 @@ public class DataPointsClient implements Measurable {
     final QueryStringTranslator translator = new QueryStringTranslator(labelClient);
     treeWalker.walk(translator, tree);
 
-    return store.query(translator.query());
+    return query(translator.query());
+  }
+
+  /**
+   * Execute the query against the configured store.
+   *
+   * @param query The query to perform
+   * @return A future that on completion will contain the query result
+   */
+  public ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
+      final TimeSeriesQuery query) {
+    return store.query(query);
   }
 
   @Override
