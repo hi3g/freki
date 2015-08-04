@@ -76,3 +76,12 @@ CREATE TABLE freki.label_search_index (
   label_id bigint,
   PRIMARY KEY (ngram, type, label_id)
 );
+
+// The meta table, here we store the meta to the labels.
+CREATE TABLE freki.meta (
+  label_id bigint,
+  type varchar,
+  creation_time timestamp,
+  description varchar,
+  PRIMARY KEY (label_id, type)
+);
