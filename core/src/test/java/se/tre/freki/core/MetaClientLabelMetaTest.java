@@ -40,9 +40,11 @@ public class MetaClientLabelMetaTest {
   @Mock private SearchPlugin searchPlugin;
 
   private LabelId sysCpu0;
+  private LabelId sysCpu1;
   private LabelId miss;
 
-  private String name = "sys.cpu.0";
+  private String labelOneName = "sys.cpu.0";
+  private String labelTwoName = "sys.cpu.1";
 
   @Rule
   public final Timeout timeout = Timeout.millis(TestUtil.TIMEOUT);
@@ -52,9 +54,10 @@ public class MetaClientLabelMetaTest {
     DaggerTestComponent.create().inject(this);
     MockitoAnnotations.initMocks(this);
 
-    sysCpu0 = store.createLabel(name, LabelType.METRIC).get();
+    sysCpu0 = store.createLabel(labelOneName, LabelType.METRIC).get();
+    sysCpu1 = store.createLabel(labelTwoName, LabelType.METRIC).get();
 
-    LabelMeta labelMeta = LabelMeta.create(sysCpu0, LabelType.METRIC, name, "Description",
+    LabelMeta labelMeta = LabelMeta.create(sysCpu0, LabelType.METRIC, labelOneName, "Description",
         1328140801);
     miss = MemoryLabelId.randomLabelId();
 
@@ -62,11 +65,17 @@ public class MetaClientLabelMetaTest {
   }
 
   @Test
-  public void getLabelMeta() throws Exception {
+  public void getLabelMetaPresent() throws Exception {
     final LabelMeta meta = metaClient.getLabelMeta(LabelType.METRIC, sysCpu0).get().get();
     Assert.assertEquals(LabelType.METRIC, meta.type());
-    assertEquals(name, meta.name());
+    assertEquals(labelOneName, meta.name());
     Assert.assertEquals(sysCpu0, meta.identifier());
+  }
+
+  @Test
+  public void getLabelMetaMetaNotSet() throws Exception {
+    final Optional<LabelMeta> optional = metaClient.getLabelMeta(LabelType.METRIC, sysCpu1).get();
+    assertFalse(optional.isPresent());
   }
 
   @Test
