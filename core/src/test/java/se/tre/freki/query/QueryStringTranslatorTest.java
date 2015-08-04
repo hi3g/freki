@@ -6,7 +6,6 @@ import static se.tre.freki.labels.LabelType.TAGV;
 
 import se.tre.freki.DaggerTestComponent;
 import se.tre.freki.core.LabelClient;
-import se.tre.freki.labels.LabelId;
 import se.tre.freki.query.predicate.SimpleTimeSeriesIdPredicate;
 import se.tre.freki.query.predicate.TimeSeriesTagPredicate;
 import se.tre.freki.storage.Store;
@@ -33,17 +32,13 @@ public class QueryStringTranslatorTest {
   @Inject Store store;
   @Inject LabelClient labelClient;
 
-  private LabelId sysCpu0;
-  private LabelId web01;
-  private LabelId host;
-
   @Before
   public void setUp() throws Exception {
     DaggerTestComponent.create().inject(this);
 
-    sysCpu0 = store.createLabel("sys.cpu.0", METRIC).get();
-    host = store.createLabel("host", TAGK).get();
-    web01 = store.createLabel("web01", TAGV).get();
+    store.createLabel("sys.cpu.0", METRIC).get();
+    store.createLabel("host", TAGK).get();
+    store.createLabel("web01", TAGV).get();
 
   }
 

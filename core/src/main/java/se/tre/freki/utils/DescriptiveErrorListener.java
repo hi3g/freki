@@ -12,7 +12,7 @@ import java.util.List;
 
 public class DescriptiveErrorListener extends BaseErrorListener {
 
-  public static DescriptiveErrorListener INSTANCE = new DescriptiveErrorListener();
+  public static final DescriptiveErrorListener INSTANCE = new DescriptiveErrorListener();
 
   @Override
   public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
