@@ -18,7 +18,7 @@ public class DescriptiveErrorListener extends BaseErrorListener {
                           int line, int charPositionInLine,
                           String msg, RecognitionException exception ) {
 
-    final ImmutableList tokensAsList = ImmutableList.copyOf(recognizer.getTokenNames());
+    final ImmutableList<String> tokensAsList = ImmutableList.copyOf(recognizer.getTokenNames());
 
     final Iterator<Integer> tokenids = exception.getExpectedTokens().toList().iterator();
 

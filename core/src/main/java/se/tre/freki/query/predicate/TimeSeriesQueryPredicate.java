@@ -56,9 +56,9 @@ public class TimeSeriesQueryPredicate {
     public TimeSeriesQueryPredicate build() {
       checkState(metric != null);
 
-      if (!(tagPredicates.size() > 0))
+      if (!(tagPredicates.size() > 0)) {
         throw new QueryException("No valid tag predicates");
-
+      }
 
       return new TimeSeriesQueryPredicate(metric,
           ImmutableSet.copyOf(tagPredicates));
