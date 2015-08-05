@@ -414,14 +414,14 @@ public class CassandraStore extends Store {
 
         final Row row = metaRow.get();
 
-        if (Strings.isNullOrEmpty(row.getString("meta_description"))) {
+        if (Strings.isNullOrEmpty(row.getString("description"))) {
           return Optional.absent();
         }
 
         return Optional.of(
             LabelMeta.create(CassandraLabelId.fromLong(row.getLong("label_id")),
-                LabelType.fromValue(row.getString("type")), row.getString("name"),
-                row.getString("meta_description"),
+                LabelType.fromValue(row.getString("type")), "REMOVE THIS",
+                row.getString("description"),
                 row.getDate("creation_time").getTime()));
       }
     });
@@ -453,8 +453,9 @@ public class CassandraStore extends Store {
   @Override
   public ListenableFuture<Boolean> updateMeta(LabelMeta meta) {
     final ResultSetFuture updateMetaFuture = session.executeAsync(
-        updateMetaStatement.bind(meta.description(), toLong(meta.identifier()),
-            meta.type().toValue(), new Date(meta.created())));
+
+        updateMetaStatement.bind(meta.description(), new Date(meta.created()),
+            toLong(meta.identifier()), meta.type().toValue()));
 
     return transform(updateMetaFuture, new Function<ResultSet, Boolean>() {
       @Nullable

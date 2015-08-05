@@ -14,7 +14,6 @@ import se.tre.freki.storage.StoreTest;
 import se.tre.freki.storage.cassandra.IndexStrategy.NoOpIndexingStrategy;
 
 import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Optional;
 import com.typesafe.config.Config;
@@ -160,16 +159,15 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
   public void getLabelMetaPresent() throws Exception {
     final String name = "meta_test";
     final LabelId nameId = store.createLabel(name, METRIC).get();
+    final Clock clock = Clock.systemDefaultZone();
+    final long now = clock.instant().getEpochSecond();
 
-    final Row row = store.getOptionalMeta(nameId, METRIC).get().get();
-
-    final LabelMeta labelMeta = LabelMeta.create(nameId, METRIC, name, "Description",
-        row.getDate("creation_time").getTime());
+    final LabelMeta labelMeta = LabelMeta.create(nameId, METRIC, name, "Description", now);
     store.updateMeta(labelMeta).get();
 
     final LabelMeta meta = store.getMeta(nameId, METRIC).get().get();
     Assert.assertEquals(METRIC, meta.type());
-    assertEquals(name, meta.name());
+    assertEquals("Description", meta.description());
     Assert.assertEquals(nameId, meta.identifier());
   }
 
