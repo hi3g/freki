@@ -2,6 +2,7 @@ package se.tre.freki.utils;
 
 import se.tre.freki.query.QueryException;
 
+import com.google.common.collect.ImmutableList;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
@@ -19,8 +20,7 @@ public class DescriptiveErrorListener extends BaseErrorListener {
                           int line, int charPositionInLine,
                           String msg, RecognitionException exception ) {
 
-    String[] tokens = recognizer.getTokenNames();
-    final List<String> tokensAsList = Arrays.asList(tokens);
+    final ImmutableList tokensAsList = ImmutableList.copyOf(Arrays.asList(recognizer.getTokenNames()));
 
     final Iterator<Integer> tokenids = exception.getExpectedTokens().toList().iterator();
 
