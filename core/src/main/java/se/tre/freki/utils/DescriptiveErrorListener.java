@@ -9,7 +9,6 @@ import org.antlr.v4.runtime.Recognizer;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 
 public class DescriptiveErrorListener extends BaseErrorListener {
 
@@ -20,7 +19,8 @@ public class DescriptiveErrorListener extends BaseErrorListener {
                           int line, int charPositionInLine,
                           String msg, RecognitionException exception ) {
 
-    final ImmutableList tokensAsList = ImmutableList.copyOf(Arrays.asList(recognizer.getTokenNames()));
+    final ImmutableList tokensAsList = ImmutableList.copyOf(
+        Arrays.asList(recognizer.getTokenNames()));
 
     final Iterator<Integer> tokenids = exception.getExpectedTokens().toList().iterator();
 
