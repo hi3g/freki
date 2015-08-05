@@ -26,6 +26,6 @@ public class CassandraTestHelpers {
     session.execute(QueryBuilder.truncate(Tables.ID_TO_NAME));
     session.execute(QueryBuilder.truncate(Tables.NAME_TO_ID));
     session.execute(QueryBuilder.truncate(Tables.LABEL_SEARCH_INDEX));
-    session.execute(QueryBuilder.truncate(Tables.META));
+    session.execute(QueryBuilder.truncate(Tables.LABEL_META));
   }
 }
