@@ -15,6 +15,7 @@ import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
 import se.tre.freki.labels.StaticTimeSeriesId;
 import se.tre.freki.labels.TimeSeriesId;
+import se.tre.freki.meta.LabelMeta;
 import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.TimeSeriesQuery;
 import se.tre.freki.query.predicate.TimeSeriesQueryPredicate;
@@ -145,5 +146,12 @@ public abstract class StoreTest<K extends Store> {
     for (int dataPointIdx = 0; dataPointIdx < 10; dataPointIdx++) {
       assertEquals(value, ((DataPoint.LongDataPoint) iterator.next()).value());
     }
+  }
+  
+  @Test
+  public void testGetLabelMetaMissingId() throws Exception {
+    final LabelId miss = missingLabelId();
+    Optional<LabelMeta> meta = store.getMeta(miss, METRIC).get();
+    assertFalse(meta.isPresent());
   }
 }
