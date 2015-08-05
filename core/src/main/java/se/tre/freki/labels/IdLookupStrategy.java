@@ -60,14 +60,14 @@ public interface IdLookupStrategy {
       return transform(labelClientTypeContext.getId(name),
           new AsyncFunction<Optional<LabelId>, LabelId>() {
             @Override
-            public ListenableFuture<LabelId> apply(final Optional<LabelId> input) throws Exception {
-              if (!input.isPresent()) {
+            public ListenableFuture<LabelId> apply(final Optional<LabelId> id) throws Exception {
+              if (!id.isPresent()) {
                 LOG.info("Creating missing label with name {} in context {}",
                     name, labelClientTypeContext);
                 return labelClientTypeContext.createId(name);
               }
 
-              return Futures.immediateFuture(input.get());
+              return Futures.immediateFuture(id.get());
             }
           });
     }

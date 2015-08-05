@@ -124,10 +124,10 @@ public class CassandraSearchPlugin extends SearchPlugin {
             return transform(fetchLabelMetas(resultSets),
                 new Function<Iterable<Optional<LabelMeta>>, Iterable<LabelMeta>>() {
                   @Override
-                  public Iterable<LabelMeta> apply(final Iterable<Optional<LabelMeta>> metas) {
+                  public Iterable<LabelMeta> apply(final Iterable<Optional<LabelMeta>> labelMetas) {
                     final ImmutableList.Builder<LabelMeta> builder = ImmutableList.builder();
 
-                    for (final Optional<LabelMeta> meta : metas) {
+                    for (final Optional<LabelMeta> meta : labelMetas) {
                       if (meta.isPresent()) {
                         builder.add(meta.get());
                       }

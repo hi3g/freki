@@ -408,12 +408,12 @@ public class CassandraStore extends Store {
     return transform(metas, new Function<Optional<Row>, Optional<LabelMeta>>() {
       @Nullable
       @Override
-      public Optional<LabelMeta> apply(final Optional<Row> result) {
-        if (!result.isPresent()) {
+      public Optional<LabelMeta> apply(final Optional<Row> metaRow) {
+        if (!metaRow.isPresent()) {
           return Optional.absent();
         }
 
-        final Row row = result.get();
+        final Row row = metaRow.get();
 
         if (Strings.isNullOrEmpty(row.getString("meta_description"))) {
           return Optional.absent();
@@ -590,9 +590,9 @@ public class CassandraStore extends Store {
 
     return transform(namesFuture, new Function<ResultSet, List<Row>>() {
       @Override
-      public List<Row> apply(final ResultSet namesResultset) {
+      public List<Row> apply(final ResultSet nameMappingResultset) {
 
-        final ImmutableList<Row> rows = ImmutableList.copyOf(namesResultset.all());
+        final ImmutableList<Row> rows = ImmutableList.copyOf(nameMappingResultset.all());
 
         if (rows.size() > 1) {
           LOG.error("Found duplicate ID to name mapping for ID {} with type {}", id, type);

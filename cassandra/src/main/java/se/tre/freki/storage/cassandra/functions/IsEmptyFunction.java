@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 public class IsEmptyFunction implements Function<Collection, Boolean> {
   @Nonnull
   @Override
-  public Boolean apply(final Collection input) {
-    return input.isEmpty();
+  public Boolean apply(final Collection collection) {
+    return collection.isEmpty();
   }
 }
