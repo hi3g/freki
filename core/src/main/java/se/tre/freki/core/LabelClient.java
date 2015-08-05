@@ -13,6 +13,7 @@ import se.tre.freki.labels.LabelType;
 import se.tre.freki.labels.Labels;
 import se.tre.freki.labels.StaticTimeSeriesId;
 import se.tre.freki.labels.TimeSeriesId;
+import se.tre.freki.query.DecoratedTimeSeriesId;
 import se.tre.freki.search.IdChangeIndexerListener;
 import se.tre.freki.search.SearchPlugin;
 import se.tre.freki.stats.Measurable;
@@ -29,6 +30,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.typesafe.config.Config;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
@@ -301,5 +304,41 @@ public class LabelClient implements Measurable {
     metrics.registerMetricsWith(registry);
     tagKeys.registerMetricsWith(registry);
     tagValues.registerMetricsWith(registry);
+  }
+
+  /**
+   * Resolve all the names for the label IDs in the provided time series ID.
+   *
+   * @param id The time series ID to resolve all the names for
+   * @return A decorated time series ID that contains all the names behind the provided time series
+   * ID
+   */
+  public ListenableFuture<DecoratedTimeSeriesId> resolve(final TimeSeriesId id) {
+    final ListenableFuture<String> metricFuture = getCompulsoryName(id.metric(), LabelType.METRIC);
+    final ListenableFuture<List<String>> tagsFuture = resolveTags(id.tags());
+
+    return transform(tagsFuture, new AsyncFunction<List<String>, DecoratedTimeSeriesId>() {
+      @Override
+      public ListenableFuture<DecoratedTimeSeriesId> apply(final List<String> tagNames) {
+        return transform(metricFuture, new Function<String, DecoratedTimeSeriesId>() {
+          @Override
+          public DecoratedTimeSeriesId apply(final String metricName) {
+            return DecoratedTimeSeriesId.create(metricName, tagNames);
+          }
+        });
+      }
+    });
+  }
+
+  private ListenableFuture<List<String>> resolveTags(final List<LabelId> tags) {
+    final List<ListenableFuture<String>> resolvedTags = new ArrayList<>(tags.size());
+
+    final Iterator<LabelId> tagIterator = tags.iterator();
+    while (tagIterator.hasNext()) {
+      resolvedTags.add(getCompulsoryName(tagIterator.next(), LabelType.TAGK));
+      resolvedTags.add(getCompulsoryName(tagIterator.next(), LabelType.TAGV));
+    }
+
+    return allAsList(resolvedTags);
   }
 }
