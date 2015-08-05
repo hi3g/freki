@@ -61,8 +61,8 @@ public class StoreModuleTest {
     Iterable<StoreDescriptor> storeDescriptors = supplier.provideStoreDescriptors();
     Iterables.find(storeDescriptors, new Predicate<StoreDescriptor>() {
       @Override
-      public boolean apply(@Nullable final StoreDescriptor input) {
-        return input instanceof MemoryStoreDescriptor;
+      public boolean apply(@Nullable final StoreDescriptor storeDescriptor) {
+        return storeDescriptor instanceof MemoryStoreDescriptor;
       }
     });
   }

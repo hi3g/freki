@@ -263,7 +263,7 @@ public class CassandraStore extends Store {
 
     return transform(save, new AsyncFunction<ResultSet, LabelId>() {
       @Override
-      public ListenableFuture<LabelId> apply(final ResultSet result) {
+      public ListenableFuture<LabelId> apply(final ResultSet resultSet) {
         // The Cassandra driver will have thrown an exception if the insertion
         // failed in which case we would not be here so just return the id we
         // sent to Cassandra.
@@ -408,12 +408,12 @@ public class CassandraStore extends Store {
     return transform(metas, new Function<Optional<Row>, Optional<LabelMeta>>() {
       @Nullable
       @Override
-      public Optional<LabelMeta> apply(final Optional<Row> result) {
-        if (!result.isPresent()) {
+      public Optional<LabelMeta> apply(final Optional<Row> metaRow) {
+        if (!metaRow.isPresent()) {
           return Optional.absent();
         }
 
-        final Row row = result.get();
+        final Row row = metaRow.get();
 
         if (Strings.isNullOrEmpty(row.getString("meta_description"))) {
           return Optional.absent();
@@ -460,8 +460,8 @@ public class CassandraStore extends Store {
     return transform(updateMetaFuture, new Function<ResultSet, Boolean>() {
       @Nullable
       @Override
-      public Boolean apply(final ResultSet input) {
-        return input.wasApplied();
+      public Boolean apply(final ResultSet update) {
+        return update.wasApplied();
       }
     });
   }
@@ -590,9 +590,9 @@ public class CassandraStore extends Store {
 
     return transform(namesFuture, new Function<ResultSet, List<Row>>() {
       @Override
-      public List<Row> apply(final ResultSet result) {
+      public List<Row> apply(final ResultSet nameMappingResultset) {
 
-        final ImmutableList<Row> rows = ImmutableList.copyOf(result.all());
+        final ImmutableList<Row> rows = ImmutableList.copyOf(nameMappingResultset.all());
 
         if (rows.size() > 1) {
           LOG.error("Found duplicate ID to name mapping for ID {} with type {}", id, type);
@@ -751,11 +751,11 @@ public class CassandraStore extends Store {
 
     return transform(timeSeries, new Function<ResultSet, Iterable<CassandraTimeSeriesId>>() {
       @Override
-      public Iterable<CassandraTimeSeriesId> apply(final ResultSet rows) {
-        return Iterables.transform(rows, new Function<Row, CassandraTimeSeriesId>() {
+      public Iterable<CassandraTimeSeriesId> apply(final ResultSet timeSeriesRows) {
+        return Iterables.transform(timeSeriesRows, new Function<Row, CassandraTimeSeriesId>() {
           @Override
-          public CassandraTimeSeriesId apply(final Row row) {
-            return new CassandraTimeSeriesId(row);
+          public CassandraTimeSeriesId apply(final Row timeSeriesRow) {
+            return new CassandraTimeSeriesId(timeSeriesRow);
           }
         });
       }

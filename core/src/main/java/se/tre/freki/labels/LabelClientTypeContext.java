@@ -284,8 +284,8 @@ public class LabelClientTypeContext implements Measurable {
     return transform(getId(name), new Function<Optional<LabelId>, Boolean>() {
       @Nonnull
       @Override
-      public Boolean apply(final Optional<LabelId> input) {
-        return input.isPresent();
+      public Boolean apply(final Optional<LabelId> id) {
+        return id.isPresent();
       }
     });
   }

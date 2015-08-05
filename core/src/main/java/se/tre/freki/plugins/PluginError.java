@@ -20,7 +20,7 @@ public final class PluginError implements FutureCallback<Object> {
   }
 
   @Override
-  public void onSuccess(@Nullable final Object result) {
+  public void onSuccess(@Nullable final Object ignored) {
     // We only care about errors so ignore successful ones.
   }
 

@@ -10,11 +10,11 @@ import javax.annotation.Nonnull;
 public class FirstOrAbsentFunction<V> implements Function<List<V>, Optional<V>> {
   @Nonnull
   @Override
-  public Optional<V> apply(final List<V> input) {
-    if (input.isEmpty()) {
+  public Optional<V> apply(final List<V> list) {
+    if (list.isEmpty()) {
       return Optional.absent();
     } else {
-      return Optional.of(input.get(0));
+      return Optional.of(list.get(0));
     }
   }
 }
