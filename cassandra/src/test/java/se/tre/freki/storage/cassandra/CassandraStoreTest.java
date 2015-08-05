@@ -165,7 +165,7 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
 
     final LabelMeta labelMeta = LabelMeta.create(nameId, METRIC, name, "Description",
         row.getDate("creation_time").getTime());
-    store.updateMeta(labelMeta);
+    store.updateMeta(labelMeta).get();
 
     final LabelMeta meta = store.getMeta(nameId, METRIC).get().get();
     Assert.assertEquals(METRIC, meta.type());
