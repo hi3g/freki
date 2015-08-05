@@ -35,13 +35,10 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
 
   private ListenableFuture<LabelId> metric;
 
-  private final List<ListenableFuture<TimeSeriesIdPredicate>> futurePredicateList;
+  private List<ListenableFuture<TimeSeriesIdPredicate>> futurePredicateList;
   private boolean isKey;
 
   private List<Boolean> operatorList;
-
-  private TimeSeriesIdPredicate key;
-  private TimeSeriesIdPredicate value;
 
   /**
    * Create a new instance that will resolve label names against the provided {@link LabelClient}.
@@ -52,8 +49,6 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
     this.labelClient = labelClient;
     queryBuilder = TimeSeriesQuery.builder();
     predicateBuilder = TimeSeriesQueryPredicate.builder();
-    futurePredicateList = new ArrayList<>();
-    operatorList = new ArrayList<>();
   }
 
   @Override
@@ -87,9 +82,10 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
     } catch (ExecutionException e) {
       throw new QueryException("Error while fetching tags", e);
     }
+
     for (int i = 0; i < predicateList.size() / 2; i++) {
-      key = predicateList.get(i * 2);
-      value = predicateList.get(i * 2 + 1);
+      final TimeSeriesIdPredicate key = predicateList.get(i * 2);
+      final TimeSeriesIdPredicate value = predicateList.get(i * 2 + 1);
 
       if (operatorList.get(i)) {
         predicateBuilder.addTagPredicate(TimeSeriesTagPredicate.eq(key, value));
@@ -106,6 +102,8 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
   @Override
   public void enterQualifier(@NotNull final se.tre.freki.query.SelectParser.QualifierContext ctx) {
     super.enterQualifier(ctx);
+    operatorList = new ArrayList<>(ctx.tags.size());
+    futurePredicateList = new ArrayList<>(ctx.tags.size());
 
     metric = labelClient.lookupId(
         ctx.metric.getText(), LabelType.METRIC);
@@ -114,14 +112,10 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
   @Override
   public void enterWildcardTag(
       @NotNull final se.tre.freki.query.SelectParser.WildcardTagContext ctx) {
+
     super.enterWildcardTag(ctx);
-    if (isKey) {
-      isKey = false;
-      futurePredicateList.add(immediateFuture(WildcardTimeSeriesIdPredicate.wildcard()));
-    } else {
-      isKey = true;
-      futurePredicateList.add(immediateFuture(WildcardTimeSeriesIdPredicate.wildcard()));
-    }
+    isKey = !isKey;
+    futurePredicateList.add(immediateFuture(WildcardTimeSeriesIdPredicate.wildcard()));
   }
 
   @Override
@@ -129,66 +123,48 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
       @NotNull final se.tre.freki.query.SelectParser.AlternatingTagContext ctx) {
     super.enterAlternatingTag(ctx);
 
-    if (isKey) {
-      isKey = false;
-      final List<ListenableFuture<LabelId>> futureIds = new ArrayList<>();
-      for (final TerminalNode terminalNode : ctx.LABEL_NAME()) {
-        futureIds.add(labelClient.lookupId(terminalNode.getText(), TAGK));
-      }
-      futurePredicateList.add(Futures.transform(allAsList(futureIds),
-          new AsyncFunction<List<LabelId>, TimeSeriesIdPredicate>() {
-            @Override
-            public ListenableFuture<TimeSeriesIdPredicate> apply(final List<LabelId> labelIds)
-                throws Exception {
-              return immediateFuture(AlternationTimeSeriesIdPredicate.ids(labelIds));
-            }
-          }));
-    } else {
-      isKey = true;
-      final List<ListenableFuture<LabelId>> futureIds = new ArrayList<>();
-      for (final TerminalNode terminalNode : ctx.LABEL_NAME()) {
-        futureIds.add(labelClient.lookupId(terminalNode.getText(), TAGV));
-      }
-      futurePredicateList.add(Futures.transform(allAsList(futureIds),
-          new AsyncFunction<List<LabelId>, TimeSeriesIdPredicate>() {
-            @Override
-            public ListenableFuture<TimeSeriesIdPredicate> apply(final List<LabelId> labelIds)
-                throws Exception {
-              return immediateFuture(AlternationTimeSeriesIdPredicate.ids(labelIds));
-            }
-          }));
+    final LabelType labelType = alternate();
+
+    final List<ListenableFuture<LabelId>> futureIds = new ArrayList<>();
+    for (final TerminalNode terminalNode : ctx.LABEL_NAME()) {
+      futureIds.add(labelClient.lookupId(terminalNode.getText(), labelType));
     }
+    futurePredicateList.add(Futures.transform(allAsList(futureIds),
+        new AsyncFunction<List<LabelId>, TimeSeriesIdPredicate>() {
+          @Override
+          public ListenableFuture<TimeSeriesIdPredicate> apply(final List<LabelId> labelIds)
+              throws Exception {
+            return immediateFuture(AlternationTimeSeriesIdPredicate.ids(labelIds));
+          }
+        }));
   }
 
   @Override
   public void enterSimpleTag(@NotNull final se.tre.freki.query.SelectParser.SimpleTagContext ctx) {
     super.enterSimpleTag(ctx);
 
-    if (isKey) {
-      isKey = false;
-      final ListenableFuture<LabelId> futureId = labelClient.lookupId(ctx.LABEL_NAME().getText(),
-          TAGK);
-      futurePredicateList.add(Futures.transform(futureId,
-          new AsyncFunction<LabelId, TimeSeriesIdPredicate>() {
-            @Override
-            public ListenableFuture<TimeSeriesIdPredicate> apply(final LabelId labelId)
-                throws Exception {
-              return immediateFuture(SimpleTimeSeriesIdPredicate.id(labelId));
-            }
-          }));
-    } else {
-      isKey = true;
-      final ListenableFuture<LabelId> futureId = labelClient.lookupId(ctx.LABEL_NAME().getText(),
-          TAGV);
-      futurePredicateList.add(Futures.transform(futureId,
-          new AsyncFunction<LabelId, TimeSeriesIdPredicate>() {
-            @Override
-            public ListenableFuture<TimeSeriesIdPredicate> apply(final LabelId labelId)
-                throws Exception {
-              return immediateFuture(SimpleTimeSeriesIdPredicate.id(labelId));
-            }
-          }));
-    }
+    final LabelType type = alternate();
+
+    final ListenableFuture<LabelId> id = labelClient.lookupId(ctx.LABEL_NAME().getText(), type);
+    futurePredicateList.add(
+        Futures.transform(id, new AsyncFunction<LabelId, TimeSeriesIdPredicate>() {
+          @Override
+          public ListenableFuture<TimeSeriesIdPredicate> apply(final LabelId labelId)
+              throws Exception {
+            return immediateFuture(SimpleTimeSeriesIdPredicate.id(labelId));
+          }
+        }));
+  }
+
+  /**
+   * Checks if the current typ is key, and inverts the boolean.
+   *
+   * @return Will return the type we should use. TAGK if isKey TAGV otherwise.
+   */
+  private LabelType alternate() {
+    final LabelType labelType = isKey ? TAGK : TAGV;
+    isKey = !isKey;
+    return labelType;
   }
 
   @Override
