@@ -22,6 +22,7 @@ import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -83,11 +84,15 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
       throw new QueryException("Error while fetching tags", e);
     }
 
-    for (int i = 0; i < predicateList.size() / 2; i++) {
-      final TimeSeriesIdPredicate key = predicateList.get(i * 2);
-      final TimeSeriesIdPredicate value = predicateList.get(i * 2 + 1);
+    final Iterator<TimeSeriesIdPredicate> predicateIterator = predicateList.iterator();
+    final Iterator<Boolean> operatorIterator = operatorList.iterator();
 
-      if (operatorList.get(i)) {
+    while (predicateIterator.hasNext()) {
+      final TimeSeriesIdPredicate key = predicateIterator.next();
+      final TimeSeriesIdPredicate value = predicateIterator.next();
+
+      final boolean operator = operatorIterator.next();
+      if (operator) {
         predicateBuilder.addTagPredicate(TimeSeriesTagPredicate.eq(key, value));
       } else {
         predicateBuilder.addTagPredicate(TimeSeriesTagPredicate.neq(key, value));
