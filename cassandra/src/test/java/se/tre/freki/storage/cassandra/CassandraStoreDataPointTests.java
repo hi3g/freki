@@ -136,6 +136,28 @@ public class CassandraStoreDataPointTests {
     assertFalse(dataPoints.hasNext());
   }
 
+  @Test
+  public void testFetchTimeSeriesSeparatedPartitions() throws Exception {
+    final StaticTimeSeriesId staticTimeSeriesId = new StaticTimeSeriesId(metric1, tags1);
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric1, tags1);
+
+    final long pointTime = 123123123;
+    final long firstValue = 123123;
+    final long secondValue = 123124;
+
+    store.addPoint(staticTimeSeriesId, pointTime, firstValue).get();
+
+    // Add a second data point a with one empty partition in between
+    store.addPoint(staticTimeSeriesId, pointTime + BASE_TIME_PERIOD * 3, secondValue).get();
+
+    final Iterator<? extends DataPoint> dataPoints = store.fetchTimeSeries(timeSeriesId, pointTime,
+        pointTime + BASE_TIME_PERIOD * 3);
+
+    assertEquals(firstValue, ((LongDataPoint) dataPoints.next()).value());
+    assertEquals(secondValue, ((LongDataPoint) dataPoints.next()).value());
+    assertFalse(dataPoints.hasNext());
+  }
+
   @Ignore("See issue #98")
   @Test(expected = IllegalArgumentException.class)
   public void testFetchTimeSeriesMixedTypes() throws Exception {
