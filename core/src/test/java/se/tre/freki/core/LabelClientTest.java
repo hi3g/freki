@@ -13,9 +13,12 @@ import static se.tre.freki.labels.LabelType.TAGV;
 import se.tre.freki.DaggerTestComponent;
 import se.tre.freki.labels.LabelException;
 import se.tre.freki.labels.LabelId;
+import se.tre.freki.labels.StaticTimeSeriesId;
+import se.tre.freki.query.DecoratedTimeSeriesId;
 import se.tre.freki.storage.Store;
 import se.tre.freki.utils.TestUtil;
 
+import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -138,5 +141,40 @@ public class LabelClientTest {
   public void testLookupIdTypeTagValue() throws Exception {
     final LabelId id = store.createLabel("tagv", TAGV).get();
     assertEquals(id, labelClient.lookupId("tagv", TAGV).get());
+  }
+
+  @Test
+  public void testResolveAllExists() throws Exception {
+    final LabelId metricId = store.createLabel("metric", METRIC).get();
+    final LabelId tagKeyId = store.createLabel("tagKey", TAGK).get();
+    final LabelId tagValueId = store.createLabel("tagValue", TAGV).get();
+    final StaticTimeSeriesId timeSeriesId = new StaticTimeSeriesId(metricId,
+        ImmutableList.of(tagKeyId, tagValueId));
+
+    final DecoratedTimeSeriesId decoratedTimeSeriesId = labelClient.resolve(timeSeriesId).get();
+    assertEquals("metric", decoratedTimeSeriesId.metric());
+    assertEquals("tagKey", decoratedTimeSeriesId.tags().get(0));
+    assertEquals("tagValue", decoratedTimeSeriesId.tags().get(1));
+    assertEquals(2, decoratedTimeSeriesId.tags().size());
+  }
+
+  @Test
+  public void testResolveOneDoesNotExist() throws Exception {
+    final LabelId metricId = store.createLabel("metric", METRIC).get();
+    final LabelId tagKeyId = store.createLabel("tagKey", TAGK).get();
+
+    // We create an ID with the wrong type so that the resolve can't find it when it tries to look
+    // for a tag value.
+    final LabelId tagValueId = store.createLabel("tagValue", TAGK).get();
+
+    final StaticTimeSeriesId timeSeriesId = new StaticTimeSeriesId(metricId,
+        ImmutableList.of(tagKeyId, tagValueId));
+
+    try {
+      labelClient.resolve(timeSeriesId).get();
+      fail();
+    } catch (ExecutionException e) {
+      assertTrue(e.getCause() instanceof LabelException);
+    }
   }
 }
