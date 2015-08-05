@@ -7,6 +7,7 @@ import static com.google.common.util.concurrent.Futures.transform;
 
 import se.tre.freki.labels.IdLookupStrategy;
 import se.tre.freki.labels.LabelClientTypeContext;
+import se.tre.freki.labels.LabelException;
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
 import se.tre.freki.labels.Labels;
@@ -92,12 +93,11 @@ public class LabelClient implements Measurable {
   }
 
   /**
-   * Takes a {@link String} name and a {@link LabelType} and executes a lookup
-   * for the corresponding {@link LabelId} and returns it as {@link ListenableFuture}.
+   * Takes a {@link String} name and a {@link LabelType} and executes a lookup for the corresponding
+   * {@link LabelId} and returns it as {@link ListenableFuture}.
    *
    * @param name The name of the label.
    * @param type The type of the label.
-   *
    * @return A {@link ListenableFuture} with a {@link LabelId}.
    */
   public ListenableFuture<LabelId> lookupId(final String name, final LabelType type) {
@@ -212,15 +212,37 @@ public class LabelClient implements Measurable {
    * Lookup the name behind the provided label ID and label type.
    *
    * @param type The type of label
-   * @param uid The ID to search for
+   * @param id The ID to search for
    * @return A future that on completion will contain the name behind the ID
    */
   @Nonnull
   public ListenableFuture<Optional<String>> getLabelName(final LabelType type,
-                                                         final LabelId uid) {
-    checkNotNull(uid, "Missing UID");
+                                                         final LabelId id) {
+    checkNotNull(id, "Missing ID");
     LabelClientTypeContext labelClientTypeContext = contextForType(type);
-    return labelClientTypeContext.getName(uid);
+    return labelClientTypeContext.getName(id);
+  }
+
+  /**
+   * Lookup the name behind the provided label ID and label type. If the name does not exist then
+   * the returned future will contain an exception.
+   *
+   * @param type The type of label
+   * @param id The ID to search for
+   * @return A future that on completion will contain the name behind the ID
+   */
+  @Nonnull
+  public ListenableFuture<String> getCompulsoryName(final LabelId id, final LabelType type) {
+    return transform(getLabelName(type, id), new AsyncFunction<Optional<String>, String>() {
+      @Override
+      public ListenableFuture<String> apply(final Optional<String> name) {
+        if (!name.isPresent()) {
+          return Futures.immediateFailedFuture(new LabelException(id, type, "There is no such ID"));
+        }
+
+        return Futures.immediateFuture(name.get());
+      }
+    });
   }
 
   /**

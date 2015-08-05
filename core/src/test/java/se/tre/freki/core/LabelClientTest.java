@@ -11,6 +11,7 @@ import static se.tre.freki.labels.LabelType.TAGK;
 import static se.tre.freki.labels.LabelType.TAGV;
 
 import se.tre.freki.DaggerTestComponent;
+import se.tre.freki.labels.LabelException;
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.storage.Store;
 import se.tre.freki.utils.TestUtil;
@@ -109,6 +110,16 @@ public class LabelClientTest {
   @Test(expected = NullPointerException.class)
   public void getLabelNameNullId() throws Exception {
     labelClient.getLabelName(TAGV, null);
+  }
+
+  @Test
+  public void testGetCompulsoryName() throws InterruptedException {
+    try {
+      labelClient.getCompulsoryName(mock(LabelId.class), METRIC).get();
+      fail("#getCompulsoryName should have thrown an exception on a missing name");
+    } catch (ExecutionException e) {
+      assertTrue(e.getCause() instanceof LabelException);
+    }
   }
 
   @Test
