@@ -151,7 +151,6 @@ subprojects {
                     "Implementation-Vendor": "The Freki Authors",
                     "Implementation-Version": "$version+${getGitAbbreviatedHash()}",
                     "Build-User": System.getenv("USER"),
-                    "Build-Host": InetAddress.getLocalHost().getHostName(),
                     "Build-Date": new Date())
         }
     }
