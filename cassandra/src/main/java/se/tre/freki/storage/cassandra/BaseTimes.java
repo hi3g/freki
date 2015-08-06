@@ -39,13 +39,13 @@ final class BaseTimes {
     private long current;
 
     public BaseTimeGenerator(final long start, final long end) {
-      this.end = end;
+      this.end = baseTimeFor(end + BASE_TIME_PERIOD);
       this.current = start;
     }
 
     @Override
     public boolean hasNext() {
-      return current < end + BASE_TIME_PERIOD - 1;
+      return current < end;
     }
 
     @Override
