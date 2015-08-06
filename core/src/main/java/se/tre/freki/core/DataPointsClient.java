@@ -35,6 +35,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -219,7 +220,7 @@ public class DataPointsClient implements Measurable {
    * @return A future that on completion will contain the query result
    */
   public ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
-      final String query) throws QueryException {
+      final String query) throws QueryException, ExecutionException, InterruptedException {
     final ANTLRInputStream input = new ANTLRInputStream(query);
     final SelectLexer lexer = new SelectLexer(input);
     final CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -245,8 +246,15 @@ public class DataPointsClient implements Measurable {
    * @return A future that on completion will contain the query result
    */
   public ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
-      final TimeSeriesQuery query) {
-    return store.query(query);
+      final ListenableFuture<TimeSeriesQuery> query) {
+    try {
+      return store.query(query.get());
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } catch (ExecutionException e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 
   @Override

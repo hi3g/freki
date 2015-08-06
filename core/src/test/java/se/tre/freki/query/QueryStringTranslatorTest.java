@@ -59,7 +59,15 @@ public class QueryStringTranslatorTest {
     final ParseTreeWalker treeWalker = new ParseTreeWalker();
     final QueryStringTranslator translator = new QueryStringTranslator(labelClient);
     treeWalker.walk(translator, tree);
-    return translator.query();
+
+    try {
+      return translator.query().get();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } catch (ExecutionException e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 
   @Test
