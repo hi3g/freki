@@ -2,6 +2,7 @@ package se.tre.freki.storage.cassandra;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static se.tre.freki.storage.cassandra.BaseTimes.BASE_TIME_PERIOD;
 import static se.tre.freki.storage.cassandra.BaseTimes.baseTimesBetween;
 
 import org.junit.Test;
@@ -29,6 +30,16 @@ public class BaseTimesTest {
   public void testBaseTimesBetweenInstantBaseTime() throws Exception {
     final long baseTime = 1434542400000L;
     final PrimitiveIterator.OfLong baseTimes = baseTimesBetween(baseTime, baseTime);
+    assertEquals(baseTime, baseTimes.nextLong());
+    assertFalse(baseTimes.hasNext());
+  }
+
+  @Test
+  public void testBaseTimesBetweenEndIsBaseTime() throws Exception {
+    final long baseTime = 1434542400000L;
+    final PrimitiveIterator.OfLong baseTimes = baseTimesBetween(
+        baseTime - BASE_TIME_PERIOD + 1, baseTime + BASE_TIME_PERIOD - 1);
+    assertEquals(baseTime - BASE_TIME_PERIOD, baseTimes.nextLong());
     assertEquals(baseTime, baseTimes.nextLong());
     assertFalse(baseTimes.hasNext());
   }
