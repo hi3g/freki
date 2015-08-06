@@ -147,7 +147,7 @@ public class CassandraStoreDataPointTests {
 
     store.addPoint(staticTimeSeriesId, pointTime, firstValue).get();
 
-    // Add a second data point a with one empty partition in between
+    // Add a second data point a with two empty partitions in between
     store.addPoint(staticTimeSeriesId, pointTime + BASE_TIME_PERIOD * 3, secondValue).get();
 
     final Iterator<? extends DataPoint> dataPoints = store.fetchTimeSeries(timeSeriesId, pointTime,
@@ -155,6 +155,18 @@ public class CassandraStoreDataPointTests {
 
     assertEquals(firstValue, ((LongDataPoint) dataPoints.next()).value());
     assertEquals(secondValue, ((LongDataPoint) dataPoints.next()).value());
+    assertFalse(dataPoints.hasNext());
+  }
+
+  @Test
+  public void testFetchTimeSeriesEmptyPartition() throws Exception {
+    final ByteBuffer timeSeriesId = TimeSeriesIds.timeSeriesId(metric1, tags1);
+
+    final long emptyTime = 1434542400001L;
+
+    final Iterator<? extends DataPoint> dataPoints = store.fetchTimeSeries(timeSeriesId, emptyTime,
+        emptyTime + 5);
+
     assertFalse(dataPoints.hasNext());
   }
 

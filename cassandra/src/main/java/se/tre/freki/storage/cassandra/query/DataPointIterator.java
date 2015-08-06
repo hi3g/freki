@@ -55,7 +55,7 @@ public class DataPointIterator implements AsyncIterator<DataPoint> {
   }
 
   @Override
-  public ListenableFuture<Void> fetchMore() {
+  public ListenableFuture<Boolean> fetchMore() {
     return rows.fetchMore();
   }
 

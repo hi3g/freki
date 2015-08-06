@@ -24,10 +24,11 @@ public interface AsyncIterator<E> extends Iterator<E> {
   boolean hasMoreWithoutFetching();
 
   /**
-   * Fetch more elements to iterate over and return a future that completes once new elements are
-   * available.
+   * Try to fetch more elements to iterate over and return a future that completes once new elements
+   * are available. The future will contain {@code true} if any new elements were fetched and now
+   * are ready to be iterated over. In all other cases it will contain {@code false}.
    *
    * @return A future that is done once new elements are available
    */
-  ListenableFuture<Void> fetchMore();
+  ListenableFuture<Boolean> fetchMore();
 }
