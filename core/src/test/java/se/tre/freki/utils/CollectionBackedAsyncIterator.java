@@ -24,8 +24,8 @@ public class CollectionBackedAsyncIterator<E> implements AsyncIterator<E> {
   }
 
   @Override
-  public ListenableFuture<Void> fetchMore() {
-    return Futures.immediateFuture(null);
+  public ListenableFuture<Boolean> fetchMore() {
+    return Futures.immediateFuture(hasNext());
   }
 
   @Override
