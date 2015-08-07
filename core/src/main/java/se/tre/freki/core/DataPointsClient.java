@@ -39,7 +39,6 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -242,6 +241,7 @@ public class DataPointsClient implements Measurable {
     treeWalker.walk(translator, tree);
 
     return transform(translator.query(),
+
         new AsyncFunction<TimeSeriesQuery, Map<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>>() {
           @Override
           public ListenableFuture<Map<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>> apply(
@@ -256,7 +256,7 @@ public class DataPointsClient implements Measurable {
    *
    * @param query The query to perform
    * @return A future that on completion will contain the query result
-   */
+  */
   public ListenableFuture<Map<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
       final TimeSeriesQuery query) {
     return transform(store.query(query), DataPointsClient.this::applyAggregation);
