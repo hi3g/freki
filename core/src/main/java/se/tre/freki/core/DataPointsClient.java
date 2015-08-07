@@ -14,6 +14,7 @@ import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.DecoratedTimeSeriesId;
 import se.tre.freki.query.QueryException;
 import se.tre.freki.query.QueryStringTranslator;
+import se.tre.freki.query.ResultEntry;
 import se.tre.freki.query.SelectLexer;
 import se.tre.freki.query.SelectParser;
 import se.tre.freki.query.TimeSeriesQuery;
@@ -27,7 +28,6 @@ import se.tre.freki.utils.InvalidConfigException;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.primitives.SignedBytes;
 import com.google.common.util.concurrent.AsyncFunction;
@@ -250,49 +250,23 @@ public class DataPointsClient implements Measurable {
    */
   public ListenableFuture<Map<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
       final TimeSeriesQuery query) {
-    return transform(store.query(query),
-        new AsyncFunction<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>, Map<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>>() {
-          @Override
-          public ListenableFuture<Map<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>> apply(
-              final Map<TimeSeriesId, AsyncIterator<? extends DataPoint>> input) {
-            return applyAggregation(input);
-          }
-        });
+    return transform(store.query(query), DataPointsClient.this::applyAggregation);
   }
 
-  private ListenableFuture<Map<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>> applyAggregation(
+  private ListenableFuture<Map<DecoratedTimeSeriesId,
+      AsyncIterator<? extends DataPoint>>> applyAggregation(
       final Map<TimeSeriesId, AsyncIterator<? extends DataPoint>> result) {
     return transformKeys(result,
-        new AsyncFunction<Map.Entry<TimeSeriesId, AsyncIterator<? extends DataPoint>>, Map.Entry<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>>() {
-          @Override
-          public ListenableFuture<Map.Entry<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>> apply(
-              final Map.Entry<TimeSeriesId, AsyncIterator<? extends DataPoint>> resultEntry)
-              throws Exception {
-            return transform(labelClient.resolve(resultEntry.getKey()),
-                new Function<DecoratedTimeSeriesId, Map.Entry<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>>() {
-                  @Override
-                  public Map.Entry<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>> apply(
-                      final DecoratedTimeSeriesId decoratedTimeSeries) {
-                    return new Map.Entry<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>() {
-                      @Override
-                      public DecoratedTimeSeriesId getKey() {
-                        return decoratedTimeSeries;
-                      }
+        (AsyncFunction<Map.Entry<TimeSeriesId, AsyncIterator<? extends DataPoint>>, ResultEntry>)
+            DataPointsClient.this::applyTimeSeriesName);
+  }
 
-                      @Override
-                      public AsyncIterator<? extends DataPoint> getValue() {
-                        return resultEntry.getValue();
-                      }
-
-                      @Override
-                      public AsyncIterator<? extends DataPoint> setValue(final AsyncIterator<? extends DataPoint> value) {
-                        throw new UnsupportedOperationException();
-                      }
-                    };
-                  }
-                });
-          }
-        });
+  private ListenableFuture<ResultEntry> applyTimeSeriesName(
+      final Map.Entry<TimeSeriesId, AsyncIterator<? extends DataPoint>> resultEntry) {
+    return transform(labelClient.resolve(resultEntry.getKey()),
+      (DecoratedTimeSeriesId decoratedTimeSeries) -> {
+        return new ResultEntry(decoratedTimeSeries, resultEntry.getValue());
+      });
   }
 
   @Override

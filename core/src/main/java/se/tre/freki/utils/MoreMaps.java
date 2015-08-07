@@ -17,9 +17,10 @@ import java.util.Set;
 public class MoreMaps {
   public static <K1, K2, V> ListenableFuture<Map<K2, V>> transformKeys(
       final Map<K1, V> inputMap,
-      final AsyncFunction<Map.Entry<K1, V>, Map.Entry<K2, V>> transformation) {
+      final AsyncFunction<Map.Entry<K1, V>, ? extends Map.Entry<K2, V>> transformation) {
+
     final Set<Map.Entry<K1, V>> inputEntries = inputMap.entrySet();
-    final List<ListenableFuture<Map.Entry<K2, V>>> transformedEntryFutures =
+    final List<ListenableFuture<? extends Map.Entry<K2, V>>> transformedEntryFutures =
         new ArrayList<>(inputEntries.size());
 
     try {
