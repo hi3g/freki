@@ -3,14 +3,18 @@ package se.tre.freki.core;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.addCallback;
+import static com.google.common.util.concurrent.Futures.transform;
+import static se.tre.freki.utils.MoreMaps.transformKeys;
 
 import se.tre.freki.labels.Labels;
 import se.tre.freki.labels.TimeSeriesId;
 import se.tre.freki.plugins.PluginError;
 import se.tre.freki.plugins.RealTimePublisher;
 import se.tre.freki.query.DataPoint;
+import se.tre.freki.query.DecoratedTimeSeriesId;
 import se.tre.freki.query.QueryException;
 import se.tre.freki.query.QueryStringTranslator;
+import se.tre.freki.query.ResultEntry;
 import se.tre.freki.query.SelectLexer;
 import se.tre.freki.query.SelectParser;
 import se.tre.freki.query.TimeSeriesQuery;
@@ -218,7 +222,7 @@ public class DataPointsClient implements Measurable {
    * @param query The query to parse and perform
    * @return A future that on completion will contain the query result
    */
-  public ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
+  public ListenableFuture<Map<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
       final String query) throws QueryException {
     final ANTLRInputStream input = new ANTLRInputStream(query);
     final SelectLexer lexer = new SelectLexer(input);
@@ -244,9 +248,25 @@ public class DataPointsClient implements Measurable {
    * @param query The query to perform
    * @return A future that on completion will contain the query result
    */
-  public ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
+  public ListenableFuture<Map<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
       final TimeSeriesQuery query) {
-    return store.query(query);
+    return transform(store.query(query), DataPointsClient.this::applyAggregation);
+  }
+
+  private ListenableFuture<Map<DecoratedTimeSeriesId,
+      AsyncIterator<? extends DataPoint>>> applyAggregation(
+      final Map<TimeSeriesId, AsyncIterator<? extends DataPoint>> result) {
+    return transformKeys(result,
+        (AsyncFunction<Map.Entry<TimeSeriesId, AsyncIterator<? extends DataPoint>>, ResultEntry>)
+            DataPointsClient.this::applyTimeSeriesName);
+  }
+
+  private ListenableFuture<ResultEntry> applyTimeSeriesName(
+      final Map.Entry<TimeSeriesId, AsyncIterator<? extends DataPoint>> resultEntry) {
+    return transform(labelClient.resolve(resultEntry.getKey()),
+      (DecoratedTimeSeriesId decoratedTimeSeries) -> {
+        return new ResultEntry(decoratedTimeSeries, resultEntry.getValue());
+      });
   }
 
   @Override
