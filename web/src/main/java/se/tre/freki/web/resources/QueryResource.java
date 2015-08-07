@@ -85,6 +85,13 @@ public final class QueryResource extends Resource {
 
           if (next instanceof DataPoint.LongDataPoint) {
             jsonGenerator.writeNumber(((DataPoint.LongDataPoint) next).value());
+          } else if (next instanceof DataPoint.FloatDataPoint) {
+            jsonGenerator.writeNumber(((DataPoint.FloatDataPoint) next).value());
+          } else if (next instanceof DataPoint.DoubleDataPoint) {
+            jsonGenerator.writeNumber(((DataPoint.DoubleDataPoint) next).value());
+          } else {
+            throw new AssertionError("Almost wrote a data point with an impossible data type:"
+                                     + next);
           }
 
           jsonGenerator.writeNumber(next.timestamp());
