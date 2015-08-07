@@ -2,6 +2,7 @@ package se.tre.freki.query;
 
 import static com.google.common.util.concurrent.Futures.allAsList;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
+import static com.google.common.util.concurrent.Futures.transform;
 import static se.tre.freki.labels.LabelType.TAGK;
 import static se.tre.freki.labels.LabelType.TAGV;
 
@@ -24,7 +25,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseListener {
   private final LabelClient labelClient;
@@ -32,7 +32,7 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
   private final TimeSeriesQuery.Builder queryBuilder;
   private final TimeSeriesQueryPredicate.Builder predicateBuilder;
 
-  private TimeSeriesQuery query;
+  private ListenableFuture<TimeSeriesQuery> query;
 
   private ListenableFuture<LabelId> metric;
 
@@ -68,40 +68,44 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
   public void exitQuery(@NotNull final se.tre.freki.query.SelectParser.QueryContext ctx) {
     super.exitQuery(ctx);
 
-    try {
-      predicateBuilder.metric(metric.get());
-    } catch (ExecutionException e) {
-      throw new QueryException("Error while fetching metric", e);
-    } catch (InterruptedException e) {
-      throw new QueryException("Interrupted while waiting for metric", e);
-    }
-    List<TimeSeriesIdPredicate> predicateList;
-    try {
-      predicateList = allAsList(futurePredicateList).get();
-    } catch (InterruptedException e) {
-      throw new QueryException("Interrupted while waiting for tags", e);
-    } catch (ExecutionException e) {
-      throw new QueryException("Error while fetching tags", e);
-    }
-
-    final Iterator<TimeSeriesIdPredicate> predicateIterator = predicateList.iterator();
-    final Iterator<Boolean> operatorIterator = operatorList.iterator();
-
-    while (predicateIterator.hasNext()) {
-      final TimeSeriesIdPredicate key = predicateIterator.next();
-      final TimeSeriesIdPredicate value = predicateIterator.next();
-
-      final boolean operator = operatorIterator.next();
-      if (operator) {
-        predicateBuilder.addTagPredicate(TimeSeriesTagPredicate.eq(key, value));
-      } else {
-        predicateBuilder.addTagPredicate(TimeSeriesTagPredicate.neq(key, value));
+    query = transform(metric, new AsyncFunction<LabelId, TimeSeriesQuery>() {
+      @Override
+      public ListenableFuture<TimeSeriesQuery> apply(final LabelId metric)
+          throws Exception {
+        predicateBuilder.metric(metric);
+        return transform(allAsList(futurePredicateList),
+            resolveTimeSeriesPredicateList());
       }
-    }
+    });
+  }
 
-    final TimeSeriesQueryPredicate predicate = predicateBuilder.build();
+  private AsyncFunction<List<TimeSeriesIdPredicate>,
+      TimeSeriesQuery> resolveTimeSeriesPredicateList() {
+    return new AsyncFunction<List<TimeSeriesIdPredicate>, TimeSeriesQuery>() {
+      @Override
+      public ListenableFuture<TimeSeriesQuery> apply(
+          final List<TimeSeriesIdPredicate> predicateList)
+          throws Exception {
 
-    query = queryBuilder.predicate(predicate).build();
+        final Iterator<TimeSeriesIdPredicate> predicateIterator = predicateList.iterator();
+        final Iterator<Boolean> operatorIterator = operatorList.iterator();
+
+        while (predicateIterator.hasNext()) {
+          final TimeSeriesIdPredicate key = predicateIterator.next();
+          final TimeSeriesIdPredicate value = predicateIterator.next();
+
+          final boolean operator = operatorIterator.next();
+          if (operator) {
+            predicateBuilder.addTagPredicate(TimeSeriesTagPredicate.eq(key, value));
+          } else {
+            predicateBuilder.addTagPredicate(TimeSeriesTagPredicate.neq(key, value));
+          }
+        }
+        final TimeSeriesQueryPredicate predicate = predicateBuilder.build();
+        final TimeSeriesQuery query = queryBuilder.predicate(predicate).build();
+        return immediateFuture(query);
+      }
+    };
   }
 
   @Override
@@ -183,7 +187,7 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
     }
   }
 
-  public TimeSeriesQuery query() {
+  public ListenableFuture<TimeSeriesQuery> query() {
     return query;
   }
 }
