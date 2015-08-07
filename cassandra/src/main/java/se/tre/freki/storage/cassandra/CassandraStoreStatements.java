@@ -15,7 +15,6 @@ import com.datastax.driver.core.Session;
 
 public class CassandraStoreStatements {
 
-  private Session session;
   private final PreparedStatement createIdStatement;
   private final PreparedStatement updateNameUidStatement;
   private final PreparedStatement getNameStatement;
@@ -109,7 +108,7 @@ public class CassandraStoreStatements {
   }
 
   public PreparedStatement updateNameUidStatement() {
-    return updateMetaStatement;
+    return updateNameUidStatement;
   }
 
   public PreparedStatement getNameStatement() {

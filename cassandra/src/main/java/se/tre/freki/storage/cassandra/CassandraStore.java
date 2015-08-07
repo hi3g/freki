@@ -90,16 +90,16 @@ public class CassandraStore extends Store {
   /**
    * The statement used by the {@link #createLabel} method.
    */
-  private PreparedStatement createIdStatement;
+  private final PreparedStatement createIdStatement;
   /**
    * Used for {@link #renameLabel}, the one that does rename.
    */
-  private PreparedStatement updateNameUidStatement;
+  private final PreparedStatement updateNameUidStatement;
   /**
    * The statement used when trying to get name or id.
    */
-  private PreparedStatement getNameStatement;
-  private PreparedStatement getIdStatement;
+  private final PreparedStatement getNameStatement;
+  private final PreparedStatement getIdStatement;
 
   private final IndexStrategy addPointIndexingStrategy;
 
@@ -107,10 +107,10 @@ public class CassandraStore extends Store {
    * The statements used when trying to get {@link #getMeta(LabelId, LabelType)} or update meta
    * {@link #updateMeta(LabelMeta)}.
    */
-  private PreparedStatement getMetaStatement;
-  private PreparedStatement updateMetaStatement;
+  private final PreparedStatement getMetaStatement;
+  private final PreparedStatement updateMetaStatement;
 
-  private PreparedStatement resolveTimeSeriesStatement;
+  private final PreparedStatement resolveTimeSeriesStatement;
 
   /**
    * Create a new instance that will use the provided Cassandra cluster and session instances.
