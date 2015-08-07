@@ -238,7 +238,8 @@ public class DataPointsClient implements Measurable {
     treeWalker.walk(translator, tree);
 
     return transform(translator.query(),
-        new AsyncFunction<TimeSeriesQuery, Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>>() {
+        new AsyncFunction<TimeSeriesQuery,
+            Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>>() {
           @Override
           public ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> apply(
               final TimeSeriesQuery timeSeriesQuery) throws Exception {
