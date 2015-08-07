@@ -3,6 +3,7 @@ package se.tre.freki.core;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.addCallback;
+import static com.google.common.util.concurrent.Futures.transform;
 
 import se.tre.freki.labels.Labels;
 import se.tre.freki.labels.TimeSeriesId;
@@ -236,7 +237,14 @@ public class DataPointsClient implements Measurable {
     final QueryStringTranslator translator = new QueryStringTranslator(labelClient);
     treeWalker.walk(translator, tree);
 
-    return query(translator.query());
+    return transform(translator.query(),
+        new AsyncFunction<TimeSeriesQuery, Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>>() {
+          @Override
+          public ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> apply(
+              final TimeSeriesQuery timeSeriesQuery) throws Exception {
+            return query(timeSeriesQuery);
+          }
+        });
   }
 
   /**
@@ -246,15 +254,9 @@ public class DataPointsClient implements Measurable {
    * @return A future that on completion will contain the query result
    */
   public ListenableFuture<Map<TimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
-      final ListenableFuture<TimeSeriesQuery> query) {
-    try {
-      return store.query(query.get());
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (ExecutionException e) {
-      e.printStackTrace();
-    }
-    return null;
+      final TimeSeriesQuery query) {
+
+    return store.query(query);
   }
 
   @Override
