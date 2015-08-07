@@ -8,7 +8,6 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
@@ -31,8 +30,6 @@ public class CassandraStoreStatements {
    * @param session The session to prepare the statements with.
    */
   public CassandraStoreStatements(Session session) {
-    this.session = session;
-    checkNotNull(session);
 
     this.createIdStatement = session.prepare(
         batch(
