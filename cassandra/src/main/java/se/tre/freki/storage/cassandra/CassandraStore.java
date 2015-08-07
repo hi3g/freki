@@ -1,13 +1,5 @@
 package se.tre.freki.storage.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.batch;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.transform;
 import static se.tre.freki.storage.cassandra.CassandraLabelId.fromLong;
@@ -38,7 +30,6 @@ import se.tre.freki.utils.AsyncIterator;
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
@@ -99,16 +90,16 @@ public class CassandraStore extends Store {
   /**
    * The statement used by the {@link #createLabel} method.
    */
-  private PreparedStatement createIdStatement;
+  private final PreparedStatement createIdStatement;
   /**
    * Used for {@link #renameLabel}, the one that does rename.
    */
-  private PreparedStatement updateNameUidStatement;
+  private final PreparedStatement updateNameUidStatement;
   /**
    * The statement used when trying to get name or id.
    */
-  private PreparedStatement getNameStatement;
-  private PreparedStatement getIdStatement;
+  private final PreparedStatement getNameStatement;
+  private final PreparedStatement getIdStatement;
 
   private final IndexStrategy addPointIndexingStrategy;
 
@@ -116,10 +107,10 @@ public class CassandraStore extends Store {
    * The statements used when trying to get {@link #getMeta(LabelId, LabelType)} or update meta
    * {@link #updateMeta(LabelMeta)}.
    */
-  private PreparedStatement getMetaStatement;
-  private PreparedStatement updateMetaStatement;
+  private final PreparedStatement getMetaStatement;
+  private final PreparedStatement updateMetaStatement;
 
-  private PreparedStatement resolveTimeSeriesStatement;
+  private final PreparedStatement resolveTimeSeriesStatement;
 
   /**
    * Create a new instance that will use the provided Cassandra cluster and session instances.
@@ -146,7 +137,15 @@ public class CassandraStore extends Store {
     final FetchPointsStatements fetchPointsStatements = new FetchPointsStatements(session);
     this.fetchTimeSeriesStatement = fetchPointsStatements.selectDataPointsStatement();
 
-    prepareStatements();
+    final CassandraStoreStatements cassandraStoreStatements = new CassandraStoreStatements(session);
+
+    this.createIdStatement = cassandraStoreStatements.createIdStatement();
+    this.updateNameUidStatement = cassandraStoreStatements.updateNameUidStatement();
+    this.getNameStatement = cassandraStoreStatements.getNameStatement();
+    this.getIdStatement = cassandraStoreStatements.getIdStatement();
+    this.getMetaStatement = cassandraStoreStatements.getMetaStatement();
+    this.updateMetaStatement = cassandraStoreStatements.updateMetaStatement();
+    this.resolveTimeSeriesStatement = cassandraStoreStatements.resolveTimeSeriesStatement();
   }
 
   @Nonnull
@@ -632,84 +631,6 @@ public class CassandraStore extends Store {
   private ListenableFuture<Boolean> isNameAvailable(final String name,
                                                     final LabelType type) {
     return transform(getIds(name, type), new IsEmptyFunction());
-  }
-
-  /**
-   * In this method we prepare all the statements used for accessing Cassandra.
-   */
-  private void prepareStatements() {
-    checkNotNull(session);
-
-    createIdStatement = session.prepare(
-        batch(
-            insertInto(Tables.ID_TO_NAME)
-                .value("label_id", bindMarker())
-                .value("type", bindMarker())
-                .value("creation_time", bindMarker())
-                .value("name", bindMarker())
-                .value("meta_description", null),
-            insertInto(Tables.NAME_TO_ID)
-                .value("name", bindMarker())
-                .value("type", bindMarker())
-                .value("creation_time", bindMarker())
-                .value("label_id", bindMarker())))
-        .setConsistencyLevel(ConsistencyLevel.ALL);
-
-    updateNameUidStatement = session.prepare(
-        batch(
-            update(Tables.ID_TO_NAME)
-                .with(set("name", bindMarker()))
-                .where(eq("label_id", bindMarker()))
-                .and(eq("type", bindMarker()))
-                .and(eq("creation_time", bindMarker())),
-            delete()
-                .from(Tables.NAME_TO_ID)
-                .where(eq("name", bindMarker()))
-                .and(eq("type", bindMarker()))
-                .and(eq("creation_time", bindMarker())),
-            insertInto(Tables.NAME_TO_ID)
-                .value("name", bindMarker())
-                .value("type", bindMarker())
-                .value("creation_time", bindMarker())
-                .value("label_id", bindMarker())));
-
-    getNameStatement = session.prepare(
-        select()
-            .all()
-            .from(Tables.ID_TO_NAME)
-            .where(eq("label_id", bindMarker()))
-            .and(eq("type", bindMarker()))
-            .limit(2));
-
-    getIdStatement = session.prepare(
-        select()
-            .all()
-            .from(Tables.NAME_TO_ID)
-            .where(eq("name", bindMarker()))
-            .and(eq("type", bindMarker()))
-            .limit(2));
-
-    getMetaStatement = session.prepare(
-        select()
-            .all()
-            .from(Tables.ID_TO_NAME)
-            .where(eq("label_id", bindMarker()))
-            .and(eq("type", bindMarker()))
-            .limit(2));
-
-    updateMetaStatement = session.prepare(
-        update(Tables.ID_TO_NAME)
-            .with(set("meta_description", bindMarker()))
-            .where(eq("label_id", bindMarker()))
-            .and(eq("type", bindMarker()))
-            .and(eq("creation_time", bindMarker())));
-
-    resolveTimeSeriesStatement = session.prepare(
-        select()
-            .all()
-            .from(Tables.TS_INVERTED_INDEX)
-            .where(eq("label_id", bindMarker()))
-            .and(eq("type", bindMarker())));
   }
 
   @Nonnull
