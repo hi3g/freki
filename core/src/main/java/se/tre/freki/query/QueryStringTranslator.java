@@ -79,10 +79,12 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
     });
   }
 
-  private AsyncFunction<List<TimeSeriesIdPredicate>, TimeSeriesQuery> resolveTimeSeriesPredicateList() {
+  private AsyncFunction<List<TimeSeriesIdPredicate>,
+      TimeSeriesQuery> resolveTimeSeriesPredicateList() {
     return new AsyncFunction<List<TimeSeriesIdPredicate>, TimeSeriesQuery>() {
       @Override
-      public ListenableFuture<TimeSeriesQuery> apply(final List<TimeSeriesIdPredicate> predicateList)
+      public ListenableFuture<TimeSeriesQuery> apply(
+          final List<TimeSeriesIdPredicate> predicateList)
           throws Exception {
 
         final Iterator<TimeSeriesIdPredicate> predicateIterator = predicateList.iterator();
