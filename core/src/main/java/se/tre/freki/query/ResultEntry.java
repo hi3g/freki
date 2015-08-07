@@ -7,8 +7,11 @@ import com.google.common.base.MoreObjects;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
+/**
+ * An implementation of the standard Java {@link java.util.Map.Entry} for result entries in data
+ * point queries.
+ */
 public class ResultEntry implements
     Map.Entry<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>> {
   private final DecoratedTimeSeriesId key;
@@ -39,11 +42,7 @@ public class ResultEntry implements
   }
 
   @Override
-  public boolean equals(@Nullable Object object) {
-    if (this == object) {
-      return true;
-    }
-
+  public boolean equals(final Object object) {
     if (object instanceof ResultEntry) {
       ResultEntry that = (ResultEntry) object;
       return Objects.equals(this.getKey(), that.getKey())
