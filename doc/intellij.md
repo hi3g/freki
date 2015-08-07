@@ -23,7 +23,8 @@
 ## Tools
 
 The file `doc/intellij-freki-style.xml` contains a pre-configured IntelliJ code style
-configuration that you can copy to `.idea/codeStyleSettings.xml` for automatic formatting.
+configuration that you for IntelliJ 14 on Linux can copy to `~/.IntelliJIdea14/config/codestyles/`
+for automatic formatting.
 
 There is also a checkstyle configuration that can be used in IntelliJ if you
 install the plugin checkstyle-IDEA. The checkstyle configuration is located
