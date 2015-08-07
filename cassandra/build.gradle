@@ -2,8 +2,15 @@
 dependencies {
     compile project(':freki-core')
 
-    compile libraries.cassandra,
-            libraries.auto_service
+    compile libraries.auto_service
+
+    compile('com.datastax.cassandra:cassandra-driver-core:2.1.7') {
+        exclude module: 'netty-buffer'
+        exclude module: 'netty-codec'
+        exclude module: 'netty-common'
+        exclude module: 'netty-handler'
+        exclude module: 'netty-transport'
+    }
 
     testCompile project(':freki-core').sourceSets.test.output
 }
