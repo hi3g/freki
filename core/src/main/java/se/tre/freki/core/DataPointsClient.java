@@ -241,9 +241,11 @@ public class DataPointsClient implements Measurable {
     treeWalker.walk(translator, tree);
 
     return transform(translator.query(),
-        new AsyncFunction<TimeSeriesQuery, Map<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>>() {
+        new AsyncFunction<TimeSeriesQuery,
+            Map<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>>() {
           @Override
-          public ListenableFuture<Map<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>> apply(
+          public ListenableFuture<Map<DecoratedTimeSeriesId,
+              AsyncIterator<? extends DataPoint>>> apply(
               final TimeSeriesQuery timeSeriesQuery) throws Exception {
             return query(timeSeriesQuery);
           }
@@ -255,7 +257,7 @@ public class DataPointsClient implements Measurable {
    *
    * @param query The query to perform
    * @return A future that on completion will contain the query result
-  */
+   */
   public ListenableFuture<Map<DecoratedTimeSeriesId, AsyncIterator<? extends DataPoint>>> query(
       final TimeSeriesQuery query) {
     return transform(store.query(query), DataPointsClient.this::applyAggregation);
