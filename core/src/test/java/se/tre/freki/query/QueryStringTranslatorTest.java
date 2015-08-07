@@ -22,7 +22,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 
-import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 
 public class QueryStringTranslatorTest {
@@ -42,7 +41,7 @@ public class QueryStringTranslatorTest {
 
   }
 
-  private TimeSeriesQuery testHelper(String query) {
+  private TimeSeriesQuery testHelper(String query) throws Exception {
     String queryString = query;
 
     final ANTLRInputStream input = new ANTLRInputStream(queryString);
@@ -60,18 +59,11 @@ public class QueryStringTranslatorTest {
     final QueryStringTranslator translator = new QueryStringTranslator(labelClient);
     treeWalker.walk(translator, tree);
 
-    try {
-      return translator.query().get();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (ExecutionException e) {
-      e.printStackTrace();
-    }
-    return null;
+    return translator.query().get();
   }
 
   @Test
-  public void testCompletedQuery() {
+  public void testCompletedQuery() throws Exception {
     String queryString = "SELECT sys.cpu.0{host=web01} BETWEEN 1 AND 5000";
     TimeSeriesQuery timeSeriesQuery = testHelper(queryString);
 
@@ -79,7 +71,7 @@ public class QueryStringTranslatorTest {
   }
 
   @Test
-  public void testCompletedParts() {
+  public void testCompletedParts() throws Exception {
 
     String queryString = "SELECT sys.cpu.0{host=web01} BETWEEN 1 AND 5000";
     TimeSeriesQuery timeSeriesQuery = testHelper(queryString);
@@ -95,34 +87,28 @@ public class QueryStringTranslatorTest {
       SimpleTimeSeriesIdPredicate key = (SimpleTimeSeriesIdPredicate) iterator.key();
       SimpleTimeSeriesIdPredicate value = (SimpleTimeSeriesIdPredicate) iterator.value();
 
-      try {
-        Assert.assertEquals(timeSeriesQuery.predicate().metric(),
-            labelClient.lookupId("sys.cpu.0", METRIC).get());
-        Assert.assertEquals(key.id(), labelClient.lookupId("host", TAGK).get());
-        Assert.assertEquals(value.id(), labelClient.lookupId("web01", TAGV).get());
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      } catch (ExecutionException e) {
-        e.printStackTrace();
-      }
+      Assert.assertEquals(timeSeriesQuery.predicate().metric(),
+          labelClient.lookupId("sys.cpu.0", METRIC).get());
+      Assert.assertEquals(key.id(), labelClient.lookupId("host", TAGK).get());
+      Assert.assertEquals(value.id(), labelClient.lookupId("web01", TAGV).get());
     }
   }
 
-  @Test (expected = QueryException.class)
+  @Test(expected = QueryException.class)
   public void testMissingTagField() throws Exception {
 
     String queryString = "SELECT sys.cpu.0{host=5, } BETWEEN 1 AND 5000";
     testHelper(queryString);
   }
 
-  @Test (expected = QueryException.class)
+  @Test(expected = QueryException.class)
   public void testMissingTagk() throws Exception {
 
     String queryString = "SELECT sys.cpu.0{=5} BETWEEN 1 AND 5000";
     testHelper(queryString);
   }
 
-  @Test (expected = QueryException.class)
+  @Test(expected = QueryException.class)
   public void testMissingTagv() throws Exception {
 
     String queryString = "SELECT sys.cpu.0{host=} BETWEEN 1 AND 5000";
