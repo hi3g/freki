@@ -89,3 +89,5 @@ buildRpm {
         into '/etc/init/'
     }
 }
+
+buildRpm.dependsOn startScripts
