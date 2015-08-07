@@ -7,7 +7,7 @@ options { tokenVocab=SelectLexer; }
 package se.tre.freki.query;
 }
 
-query 		: SELECT_KEYWORD (function|qualifier) BETWEEN_KEYWORD startTime=TIMESTAMP AND endTime=TIMESTAMP EOS*;
+query 		: SELECT_KEYWORD (function|qualifier) BETWEEN_KEYWORD startTime=timestamp AND endTime=timestamp EOS*;
 
 function	: functionName=FUNCTION_NAME FUNCTION_START (function|qualifier) FUNCTION_STOP;
 
@@ -26,3 +26,13 @@ simpleTag       : LABEL_NAME ;
 alternatingTag  : LABEL_NAME (QUALIFIER_TAG_ALT LABEL_NAME)*;
 
 wildcardTag     : QUALIFIER_TAG_WILD;
+
+timestamp 		: since
+				  | absolute
+				  | now;
+
+since			: (week=DIGIT WEEK)? (day=DIGIT DAY)? (hour=DIGIT HOUR)? (minute=DIGIT MINUTE)? (second=DIGIT SECOND)?  AGO;
+
+now 			: NOW;
+
+absolute		: DIGIT;

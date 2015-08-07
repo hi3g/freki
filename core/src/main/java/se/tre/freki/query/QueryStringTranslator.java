@@ -22,11 +22,18 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseListener {
+  private static final long WEEK_IN_MILLISECONDS = 604800000L;
+  private static final long DAY_IN_MILLISECONDS = 86400000L;
+  private static final long HOUR_IN_MILLISECONDS = 3600000L;
+  private static final long MINUTE_IN_MILLISECONDS = 60000L;
+  private static final long SECOND_IN_MILLISECONDS = 1000L;
+
   private final LabelClient labelClient;
 
   private final TimeSeriesQuery.Builder queryBuilder;
@@ -38,6 +45,8 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
 
   private List<ListenableFuture<TimeSeriesIdPredicate>> futurePredicateList;
   private boolean isKey;
+  private boolean isStartTime;
+  private final long now;
 
   private List<Boolean> operatorList;
 
@@ -50,18 +59,73 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
     this.labelClient = labelClient;
     queryBuilder = TimeSeriesQuery.builder();
     predicateBuilder = TimeSeriesQueryPredicate.builder();
+    now = Clock.systemDefaultZone().millis();
   }
 
   @Override
   public void enterQuery(@NotNull final se.tre.freki.query.SelectParser.QueryContext ctx) {
     super.enterQuery(ctx);
 
-    final long startTime = Long.parseLong(ctx.startTime.getText());
-    final long endTime = Long.parseLong(ctx.endTime.getText());
+    //final long startTime = Long.parseLong(ctx.startTime.getText());
+    //final long endTime = Long.parseLong(ctx.endTime.getText());
     isKey = true;
+    isStartTime = true;
+  }
 
-    queryBuilder.startTime(startTime)
-        .endTime(endTime);
+  private void buildTime(boolean isStartTime, long time) {
+    if (isStartTime) {
+      queryBuilder.startTime(time);
+      isStartTime = false;
+    }
+    else {
+      queryBuilder.endTime(time);
+    }
+  }
+
+  @Override
+  public void enterAbsolute(@NotNull final se.tre.freki.query.SelectParser.AbsoluteContext ctx) {
+    super.enterAbsolute(ctx);
+
+    buildTime(isStartTime, Long.parseLong(ctx.getText()));
+  }
+
+  @Override
+  public void enterSince(@NotNull final se.tre.freki.query.SelectParser.SinceContext ctx) {
+    super.enterSince(ctx);
+
+    long week = 0;
+    long day = 0;
+    long hour = 0;
+    long minute = 0;
+    long second = 0;
+    long finalTime;
+
+    if (ctx.week != null) {
+      week = Long.parseLong(ctx.week.getText()) * WEEK_IN_MILLISECONDS;
+    }
+    if (ctx.day != null) {
+      day = Long.parseLong(ctx.day.getText()) * DAY_IN_MILLISECONDS;
+    }
+    if (ctx.hour != null) {
+      hour = Long.parseLong(ctx.hour.getText()) * HOUR_IN_MILLISECONDS;
+    }
+    if (ctx.minute != null) {
+      minute = Long.parseLong(ctx.minute.getText()) * MINUTE_IN_MILLISECONDS;
+    }
+    if (ctx.second != null) {
+      second = Long.parseLong(ctx.second.getText()) * SECOND_IN_MILLISECONDS;
+    }
+
+    finalTime = week + day + hour + minute + second;
+
+    buildTime(isStartTime, finalTime);
+
+  }
+
+  @Override
+  public void enterNow(@NotNull final se.tre.freki.query.SelectParser.NowContext ctx) {
+    super.enterNow(ctx);
+    buildTime(isStartTime, now);
   }
 
   @Override
