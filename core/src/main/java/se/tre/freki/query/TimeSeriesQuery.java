@@ -24,9 +24,10 @@ public abstract class TimeSeriesQuery {
      */
     public TimeSeriesQuery build() {
       final TimeSeriesQuery query = autoBuild();
-      checkState(query.startTime() >= 0);
-      checkState(query.endTime() >= 0);
-      checkState(query.endTime() >= query.startTime());
+      checkState(query.startTime() >= 0, "The query must have a positive or zero start time.");
+      checkState(query.endTime() >= 0, "The query must have a positive or zero end time.");
+      checkState(query.endTime() >= query.startTime(), "The end time must be larger or equal to "
+                                                       + "the start time.");
       return query;
     }
 
