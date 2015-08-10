@@ -66,18 +66,19 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
   public void enterQuery(@NotNull final se.tre.freki.query.SelectParser.QueryContext ctx) {
     super.enterQuery(ctx);
 
-    //final long startTime = Long.parseLong(ctx.startTime.getText());
-    //final long endTime = Long.parseLong(ctx.endTime.getText());
     isKey = true;
     isStartTime = true;
   }
 
-  private void buildTime(boolean isStartTime, long time) {
+  private void buildTime(long time) {
+
+    // If isStartTime is true it is the first time we enter buildTime and we should set
+    // the startTime of the query.
     if (isStartTime) {
       queryBuilder.startTime(time);
-      isStartTime = false;
-    }
-    else {
+      isStartTime = !isStartTime;
+    // else startTime has been set and we have the endTime.
+    } else {
       queryBuilder.endTime(time);
     }
   }
@@ -86,46 +87,38 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
   public void enterAbsolute(@NotNull final se.tre.freki.query.SelectParser.AbsoluteContext ctx) {
     super.enterAbsolute(ctx);
 
-    buildTime(isStartTime, Long.parseLong(ctx.getText()));
+    buildTime(Long.parseLong(ctx.getText()));
   }
 
   @Override
   public void enterSince(@NotNull final se.tre.freki.query.SelectParser.SinceContext ctx) {
     super.enterSince(ctx);
 
-    long week = 0;
-    long day = 0;
-    long hour = 0;
-    long minute = 0;
-    long second = 0;
-    long finalTime;
+    long finalTime = now;
 
     if (ctx.week != null) {
-      week = Long.parseLong(ctx.week.getText()) * WEEK_IN_MILLISECONDS;
+      finalTime = finalTime - Long.parseLong(ctx.week.getText()) * WEEK_IN_MILLISECONDS;
     }
     if (ctx.day != null) {
-      day = Long.parseLong(ctx.day.getText()) * DAY_IN_MILLISECONDS;
+      finalTime = finalTime - Long.parseLong(ctx.day.getText()) * DAY_IN_MILLISECONDS;
     }
     if (ctx.hour != null) {
-      hour = Long.parseLong(ctx.hour.getText()) * HOUR_IN_MILLISECONDS;
+      finalTime = finalTime - Long.parseLong(ctx.hour.getText()) * HOUR_IN_MILLISECONDS;
     }
     if (ctx.minute != null) {
-      minute = Long.parseLong(ctx.minute.getText()) * MINUTE_IN_MILLISECONDS;
+      finalTime = finalTime - Long.parseLong(ctx.minute.getText()) * MINUTE_IN_MILLISECONDS;
     }
     if (ctx.second != null) {
-      second = Long.parseLong(ctx.second.getText()) * SECOND_IN_MILLISECONDS;
+      finalTime = finalTime - Long.parseLong(ctx.second.getText()) * SECOND_IN_MILLISECONDS;
     }
 
-    finalTime = week + day + hour + minute + second;
-
-    buildTime(isStartTime, finalTime);
-
+    buildTime(finalTime);
   }
 
   @Override
   public void enterNow(@NotNull final se.tre.freki.query.SelectParser.NowContext ctx) {
     super.enterNow(ctx);
-    buildTime(isStartTime, now);
+    buildTime(now);
   }
 
   @Override

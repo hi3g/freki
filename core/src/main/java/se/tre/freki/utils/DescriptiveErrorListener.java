@@ -20,6 +20,7 @@ public class DescriptiveErrorListener extends BaseErrorListener {
 
     final ImmutableList<String> tokensAsList = ImmutableList.copyOf(recognizer.getTokenNames());
 
+    exception.getCtx().getText();
     final Iterator<Integer> tokenids = exception.getExpectedTokens().toList().iterator();
 
     final StringBuilder expectedTokens = new StringBuilder();
