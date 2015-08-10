@@ -21,7 +21,6 @@ CREATE TABLE freki.id_to_name (
   type varchar,
   creation_time timestamp,
   name varchar,
-  meta_description varchar,
   PRIMARY KEY ((label_id, type), creation_time)
 ) WITH CLUSTERING ORDER BY (creation_time ASC);
 
@@ -75,4 +74,13 @@ CREATE TABLE freki.label_search_index (
   type varchar,
   label_id bigint,
   PRIMARY KEY (ngram, type, label_id)
+);
+
+// The meta table, here we store the meta to the labels.
+CREATE TABLE freki.label_meta (
+  label_id bigint,
+  type varchar,
+  creation_time timestamp,
+  description varchar,
+  PRIMARY KEY (label_id, type)
 );

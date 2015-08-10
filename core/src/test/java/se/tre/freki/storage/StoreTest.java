@@ -23,9 +23,11 @@ import se.tre.freki.utils.AsyncIterator;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -153,5 +155,30 @@ public abstract class StoreTest<K extends Store> {
     final LabelId miss = missingLabelId();
     Optional<LabelMeta> meta = store.getMeta(miss, METRIC).get();
     assertFalse(meta.isPresent());
+  }
+
+  @Test
+  public void getLabelMetaPresent() throws Exception {
+    final String name = "meta_test";
+    final LabelId nameId = store.createLabel(name, METRIC).get();
+    final Clock clock = Clock.systemDefaultZone();
+    final long now = clock.millis();
+
+    final LabelMeta labelMeta = LabelMeta.create(nameId, METRIC, name, "Description", now);
+    store.updateMeta(labelMeta).get();
+
+    final LabelMeta meta = store.getMeta(nameId, METRIC).get().get();
+    Assert.assertEquals(METRIC, meta.type());
+    assertEquals("Description", meta.description());
+    Assert.assertEquals(nameId, meta.identifier());
+  }
+
+  @Test
+  public void getLabelMetaMetaNotPresent() throws Exception {
+    final String name = "meta_test";
+    final LabelId nameId = store.createLabel(name, METRIC).get();
+
+    final Optional<LabelMeta> optional = store.getMeta(nameId, METRIC).get();
+    assertFalse(optional.isPresent());
   }
 }

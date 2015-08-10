@@ -1,25 +1,19 @@
 package se.tre.freki.storage.cassandra;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static se.tre.freki.labels.LabelType.METRIC;
 
 import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
-import se.tre.freki.meta.LabelMeta;
 import se.tre.freki.storage.StoreTest;
 import se.tre.freki.storage.cassandra.IndexStrategy.NoOpIndexingStrategy;
 
 import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import com.google.common.base.Optional;
 import com.typesafe.config.Config;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -154,31 +148,5 @@ public class CassandraStoreTest extends StoreTest<CassandraStore> {
     } catch (Exception exception) {
       assertTrue(exception.getCause() instanceof IndexOutOfBoundsException);
     }
-  }
-
-  @Test
-  public void getLabelMetaPresent() throws Exception {
-    final String name = "meta_test";
-    final LabelId nameId = store.createLabel(name, METRIC).get();
-
-    final Row row = store.getOptionalMeta(nameId, METRIC).get().get();
-
-    final LabelMeta labelMeta = LabelMeta.create(nameId, METRIC, name, "Description",
-        row.getDate("creation_time").getTime());
-    store.updateMeta(labelMeta).get();
-
-    final LabelMeta meta = store.getMeta(nameId, METRIC).get().get();
-    Assert.assertEquals(METRIC, meta.type());
-    assertEquals(name, meta.name());
-    Assert.assertEquals(nameId, meta.identifier());
-  }
-
-  @Test
-  public void getLabelMetaMetaNotPresent() throws Exception {
-    final String name = "meta_test";
-    final LabelId nameId = store.createLabel(name, METRIC).get();
-
-    final Optional<LabelMeta> optional = store.getMeta(nameId, METRIC).get();
-    assertFalse(optional.isPresent());
   }
 }

@@ -9,6 +9,7 @@ public class Tables {
 
   static final String ID_TO_NAME = "id_to_name";
   static final String NAME_TO_ID = "name_to_id";
+  static final String LABEL_META = "label_meta";
 
   public static final String LABEL_SEARCH_INDEX = "label_search_index";
 
