@@ -3,6 +3,11 @@ package se.tre.freki.query;
 import static com.google.common.util.concurrent.Futures.allAsList;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static com.google.common.util.concurrent.Futures.transform;
+import static java.util.concurrent.TimeUnit.DAYS;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static se.tre.freki.labels.LabelType.TAGK;
 import static se.tre.freki.labels.LabelType.TAGV;
 
@@ -28,11 +33,11 @@ import java.util.Iterator;
 import java.util.List;
 
 public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseListener {
-  private static final long WEEK_IN_MILLISECONDS = 604800000L;
-  private static final long DAY_IN_MILLISECONDS = 86400000L;
-  private static final long HOUR_IN_MILLISECONDS = 3600000L;
-  private static final long MINUTE_IN_MILLISECONDS = 60000L;
-  private static final long SECOND_IN_MILLISECONDS = 1000L;
+  private static final long WEEK_IN_MILLISECONDS = MILLISECONDS.convert(7, DAYS);
+  private static final long DAY_IN_MILLISECONDS = MILLISECONDS.convert(1, DAYS);
+  private static final long HOUR_IN_MILLISECONDS = MILLISECONDS.convert(1, HOURS);
+  private static final long MINUTE_IN_MILLISECONDS = MILLISECONDS.convert(1, MINUTES);
+  private static final long SECOND_IN_MILLISECONDS = MILLISECONDS.convert(1, SECONDS);
 
   private final LabelClient labelClient;
 
