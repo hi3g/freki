@@ -27,8 +27,17 @@ WS  : [ \t\r\n]+ -> skip;
 
 mode TimeMode;
 
-TIMESTAMP       : [0-9]+ ;
-AND             : 'AND' ;
+AND             : 'AND';
+NOW             : 'NOW';
+AGO             : 'AGO';
+
+WEEK            :'w';
+DAY             :'d';
+HOUR            :'H';
+MINUTE          :'M';
+SECOND          :'s';
+
+DIGIT           : [0-9]+;
 
 EOS : ';' WS2* EOF
     | WS2* EOF

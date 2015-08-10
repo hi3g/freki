@@ -27,12 +27,7 @@
     <Or>
       <Class name="se.tre.freki.query.SelectParser" />
       <Class name="se.tre.freki.query.SelectLexer" />
-    </Or>
-    <Or>
-      <Bug pattern="SF_SWITCH_NO_DEFAULT" />
-      <Bug pattern="MS_PKGPROTECT" />
-      <Bug pattern="EI_EXPOSE_REP" />
-      <Bug pattern="MS_FINAL_PKGPROTECT" />
+      <Class name="se.tre.freki.query.SelectParser$QueryContext" />
     </Or>
   </Match>
 </FindBugsFilter>

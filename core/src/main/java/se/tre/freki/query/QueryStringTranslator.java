@@ -3,6 +3,11 @@ package se.tre.freki.query;
 import static com.google.common.util.concurrent.Futures.allAsList;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static com.google.common.util.concurrent.Futures.transform;
+import static java.util.concurrent.TimeUnit.DAYS;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static se.tre.freki.labels.LabelType.TAGK;
 import static se.tre.freki.labels.LabelType.TAGV;
 
@@ -22,11 +27,18 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseListener {
+  private static final long WEEK_IN_MILLISECONDS = MILLISECONDS.convert(7, DAYS);
+  private static final long DAY_IN_MILLISECONDS = MILLISECONDS.convert(1, DAYS);
+  private static final long HOUR_IN_MILLISECONDS = MILLISECONDS.convert(1, HOURS);
+  private static final long MINUTE_IN_MILLISECONDS = MILLISECONDS.convert(1, MINUTES);
+  private static final long SECOND_IN_MILLISECONDS = MILLISECONDS.convert(1, SECONDS);
+
   private final LabelClient labelClient;
 
   private final TimeSeriesQuery.Builder queryBuilder;
@@ -38,6 +50,8 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
 
   private List<ListenableFuture<TimeSeriesIdPredicate>> futurePredicateList;
   private boolean isKey;
+  private boolean isStartTime;
+  private final long now;
 
   private List<Boolean> operatorList;
 
@@ -50,18 +64,66 @@ public class QueryStringTranslator extends se.tre.freki.query.SelectParserBaseLi
     this.labelClient = labelClient;
     queryBuilder = TimeSeriesQuery.builder();
     predicateBuilder = TimeSeriesQueryPredicate.builder();
+    now = Clock.systemDefaultZone().millis();
   }
 
   @Override
   public void enterQuery(@NotNull final se.tre.freki.query.SelectParser.QueryContext ctx) {
     super.enterQuery(ctx);
 
-    final long startTime = Long.parseLong(ctx.startTime.getText());
-    final long endTime = Long.parseLong(ctx.endTime.getText());
     isKey = true;
+    isStartTime = true;
+  }
 
-    queryBuilder.startTime(startTime)
-        .endTime(endTime);
+  private void buildTime(long time) {
+
+    // If isStartTime is true it is the first time we enter buildTime and we should set
+    // the startTime of the query.
+    if (isStartTime) {
+      queryBuilder.startTime(time);
+      isStartTime = !isStartTime;
+    // else startTime has been set and we have the endTime.
+    } else {
+      queryBuilder.endTime(time);
+    }
+  }
+
+  @Override
+  public void enterAbsolute(@NotNull final se.tre.freki.query.SelectParser.AbsoluteContext ctx) {
+    super.enterAbsolute(ctx);
+
+    buildTime(Long.parseLong(ctx.getText()));
+  }
+
+  @Override
+  public void enterSince(@NotNull final se.tre.freki.query.SelectParser.SinceContext ctx) {
+    super.enterSince(ctx);
+
+    long finalTime = now;
+
+    if (ctx.week != null) {
+      finalTime = finalTime - Long.parseLong(ctx.week.getText()) * WEEK_IN_MILLISECONDS;
+    }
+    if (ctx.day != null) {
+      finalTime = finalTime - Long.parseLong(ctx.day.getText()) * DAY_IN_MILLISECONDS;
+    }
+    if (ctx.hour != null) {
+      finalTime = finalTime - Long.parseLong(ctx.hour.getText()) * HOUR_IN_MILLISECONDS;
+    }
+    if (ctx.minute != null) {
+      finalTime = finalTime - Long.parseLong(ctx.minute.getText()) * MINUTE_IN_MILLISECONDS;
+    }
+    if (ctx.second != null) {
+      finalTime = finalTime - Long.parseLong(ctx.second.getText()) * SECOND_IN_MILLISECONDS;
+    }
+
+    buildTime(finalTime);
+  }
+
+  @Override
+  public void enterNow(@NotNull final se.tre.freki.query.SelectParser.NowContext ctx) {
+    super.enterNow(ctx);
+    buildTime(now);
   }
 
   @Override
