@@ -36,8 +36,7 @@ public class CassandraStoreStatements {
                 .value("label_id", bindMarker())
                 .value("type", bindMarker())
                 .value("creation_time", bindMarker())
-                .value("name", bindMarker())
-                .value("meta_description", null),
+                .value("name", bindMarker()),
             insertInto(Tables.NAME_TO_ID)
                 .value("name", bindMarker())
                 .value("type", bindMarker())
@@ -79,20 +78,20 @@ public class CassandraStoreStatements {
             .and(eq("type", bindMarker()))
             .limit(2));
 
-    this.getMetaStatement = session.prepare(
+    getMetaStatement = session.prepare(
         select()
             .all()
-            .from(Tables.ID_TO_NAME)
+            .from(Tables.LABEL_META)
             .where(eq("label_id", bindMarker()))
             .and(eq("type", bindMarker()))
             .limit(2));
 
-    this.updateMetaStatement = session.prepare(
-        update(Tables.ID_TO_NAME)
-            .with(set("meta_description", bindMarker()))
+    updateMetaStatement = session.prepare(
+        update(Tables.LABEL_META)
+            .with(set("description", bindMarker()))
+            .and(set("creation_time", bindMarker()))
             .where(eq("label_id", bindMarker()))
-            .and(eq("type", bindMarker()))
-            .and(eq("creation_time", bindMarker())));
+            .and(eq("type", bindMarker())));
 
     this.resolveTimeSeriesStatement = session.prepare(
         select()
