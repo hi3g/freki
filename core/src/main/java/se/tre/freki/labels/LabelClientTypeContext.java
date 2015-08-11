@@ -226,12 +226,12 @@ public class LabelClientTypeContext implements Measurable {
   public void registerMetricsWith(final MetricRegistry registry) {
     Metrics.Tag typeTag = tag("type", type.toValue());
 
-    registry.register(name("labels.names.hitRate", typeTag), new CacheHitRateGauge(nameCache));
-    registry.register(name("labels.names.evictionCount", typeTag),
+    registry.register(name("freki.core.names.hitRate", typeTag), new CacheHitRateGauge(nameCache));
+    registry.register(name("freki.core.names.evictionCount", typeTag),
         new CacheEvictionCountGauge(nameCache));
 
-    registry.register(name("labels.ids.hitRate", typeTag), new CacheHitRateGauge(idCache));
-    registry.register(name("labels.ids.evictionCount", typeTag),
+    registry.register(name("freki.core.ids.hitRate", typeTag), new CacheHitRateGauge(idCache));
+    registry.register(name("freki.core.ids.evictionCount", typeTag),
         new CacheEvictionCountGauge(idCache));
   }
 
