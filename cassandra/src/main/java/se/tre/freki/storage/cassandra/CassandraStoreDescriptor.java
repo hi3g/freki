@@ -60,6 +60,8 @@ public class CassandraStoreDescriptor extends StoreDescriptor {
           .withProtocolVersion(ProtocolVersion.fromInt(protocolVersion));
     }
 
+    builder.withNettyOptions(new CassandraNettyOptions());
+
     return builder.build();
   }
 
