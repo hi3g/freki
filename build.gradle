@@ -16,7 +16,7 @@ subprojects {
     targetCompatibility = JavaVersion.VERSION_1_8
 
     group = 'se.tre.freki'
-    version = "0.3.4"
+    version = "0.3.5"
 
     repositories {
         mavenCentral()
