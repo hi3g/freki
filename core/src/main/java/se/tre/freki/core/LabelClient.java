@@ -203,7 +203,7 @@ public class LabelClient implements Measurable {
           public ListenableFuture<LabelId> apply(final Boolean exists) throws Exception {
             if (exists) {
               return Futures.immediateFailedFuture(
-                  new IllegalArgumentException("Name already exists"));
+                  new LabelException(name, type, "Name already exists"));
             }
 
             return instance.createId(name);
