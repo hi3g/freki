@@ -85,7 +85,7 @@ public final class CreateLabel {
         assignments.add(createLabel.createLabel(name, type));
       }
 
-      Futures.allAsList(assignments).get();
+      Futures.successfulAsList(assignments).get();
       store.close();
     } catch (IllegalArgumentException | OptionException e) {
       application.printError(e.getMessage());
