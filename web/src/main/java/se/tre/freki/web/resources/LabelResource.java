@@ -5,11 +5,14 @@ import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
 import static io.netty.handler.codec.http.HttpResponseStatus.UNPROCESSABLE_ENTITY;
 
 import se.tre.freki.core.LabelClient;
+import se.tre.freki.labels.LabelId;
 import se.tre.freki.labels.LabelType;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -37,8 +40,20 @@ public final class LabelResource extends Resource {
     try {
       final JsonNode rootNode = objectMapper.readTree(new ByteBufInputStream(req.content()));
 
-      labelClient.createId(LabelType.fromValue(rootNode.get("type").asText()),
-          rootNode.get("name").asText());
+      final String name = rootNode.get("name").asText();
+      final LabelType type = LabelType.fromValue(rootNode.get("type").asText());
+
+      Futures.addCallback(labelClient.createId(type, name), new FutureCallback<LabelId>() {
+        @Override
+        public void onSuccess(final LabelId id) {
+          LOG.info("Created label with name {} and type {} with ID {}", name, type, id);
+        }
+
+        @Override
+        public void onFailure(final Throwable throwable) {
+          LOG.error("Unable to create label with name {} and type {}", name, type, throwable);
+        }
+      });
 
       return response(ACCEPTED);
     } catch (JsonProcessingException e) {
