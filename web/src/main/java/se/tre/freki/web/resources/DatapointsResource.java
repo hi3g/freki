@@ -32,9 +32,7 @@ public final class DatapointsResource extends Resource {
   private final DataPointsClient datapointsClient;
   private final ObjectMapper objectMapper;
 
-  private final IntegralPredicate integralPredicate;
-  private final FloatPredicate floatPredicate;
-  private final DoublePredicate doublePredicate;
+  private final NumericPredicate predicate;
 
   /**
    * Create a new instance that adds datapoints using the provided {@link DataPointsClient} and uses
@@ -45,9 +43,7 @@ public final class DatapointsResource extends Resource {
     this.datapointsClient = checkNotNull(datapointsClient);
     this.objectMapper = checkNotNull(objectMapper);
 
-    this.integralPredicate = new IntegralPredicate();
-    this.floatPredicate = new FloatPredicate();
-    this.doublePredicate = new DoublePredicate();
+    this.predicate = new NumericPredicate();
   }
 
   @Override
@@ -87,11 +83,11 @@ public final class DatapointsResource extends Resource {
 
     // Look for one of the supported JSON fields for a value and use the first
     // one when adding the datapoint.
-    if ((value = checkField(datapointNode, "longValue", integralPredicate)) != null) {
+    if ((value = checkField(datapointNode, "longValue")) != null) {
       datapointsClient.addPoint(metric, timestamp, value.longValue(), tags);
-    } else if ((value = checkField(datapointNode, "floatValue", floatPredicate)) != null) {
+    } else if ((value = checkField(datapointNode, "floatValue")) != null) {
       datapointsClient.addPoint(metric, timestamp, value.floatValue(), tags);
-    } else if ((value = checkField(datapointNode, "doubleValue", doublePredicate)) != null) {
+    } else if ((value = checkField(datapointNode, "doubleValue")) != null) {
       datapointsClient.addPoint(metric, timestamp, value.doubleValue(), tags);
     } else {
       throw new JsonMappingException("JSON contains no recognized value fields");
@@ -103,15 +99,13 @@ public final class DatapointsResource extends Resource {
    *
    * @param json The json structure to look for the field in
    * @param field The name of the field to look for
-   * @param predicate The predicate to make sure the field passes
    * @return The {@link JsonNode} that represents the field if it exists and the value passes the
    * provided predicate, otherwise null.
    * @throws JsonMappingException if there is a field with the provided name but the field does not
    * pass the predicate.
    */
   private JsonNode checkField(final JsonNode json,
-                              final String field,
-                              final Predicate<JsonNode> predicate) throws JsonMappingException {
+                              final String field) throws JsonMappingException {
     final JsonNode value = json.get(field);
 
     if (value == null) {
@@ -146,32 +140,12 @@ public final class DatapointsResource extends Resource {
   }
 
   /**
-   * Predicate to check if a {@link JsonNode} contains an integral value.
+   * Predicate to check if a {@link JsonNode} contains a numeric value.
    */
-  private static class IntegralPredicate implements Predicate<JsonNode> {
+  private static class NumericPredicate implements Predicate<JsonNode> {
     @Override
     public boolean apply(final JsonNode value) {
-      return value.isIntegralNumber();
-    }
-  }
-
-  /**
-   * Predicate to check if a {@link JsonNode} contains a float value.
-   */
-  private static class FloatPredicate implements Predicate<JsonNode> {
-    @Override
-    public boolean apply(final JsonNode value) {
-      return value.isFloat();
-    }
-  }
-
-  /**
-   * Predicate to check if a {@link JsonNode} contains a double value.
-   */
-  private static class DoublePredicate implements Predicate<JsonNode> {
-    @Override
-    public boolean apply(final JsonNode value) {
-      return value.isDouble();
+      return value.isNumber();
     }
   }
 }
