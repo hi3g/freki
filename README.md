@@ -1,5 +1,4 @@
 
 # Freki
 
-[![Build Status](https://travis-ci.org/hi3g/freki.svg?branch=master)](https://travis-ci.org/hi3g/freki)
-
+[![Build Status](https://api.shippable.com/projects/55ad5524edd7f2c0527b0235/badge/master)](https://app.shippable.com/projects/55ad5524edd7f2c0527b0235)
