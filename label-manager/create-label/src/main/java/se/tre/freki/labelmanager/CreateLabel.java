@@ -22,8 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -76,29 +78,11 @@ public final class CreateLabel {
       final List<?> nonOptionArguments = options.nonOptionArguments();
 
       final LabelType type = type(nonOptionArguments);
-      final List<ListenableFuture<LabelId>> assignments = new ArrayList<>();
       final Store store = createLabelComponent.store();
       final CreateLabel createLabel = createLabelComponent.createLabel();
 
-      if (nonOptionArguments.size() == 1 || READ_STDIN_SYMBOL.equals(nonOptionArguments.get(1))) {
-        final LineNumberReader reader = new LineNumberReader(
-            new BufferedReader(new InputStreamReader(System.in)));
-
-        String name;
-
-        while ((name = reader.readLine()) != null) {
-          assignments.add(createLabel.createLabel(name, type));
-        }
-      } else if (nonOptionArguments.size() > 1) {
-        final ImmutableSet<String> names = ImmutableSet.copyOf(
-            Arrays.copyOfRange(args, 1, args.length));
-
-        for (final String name : names) {
-          assignments.add(createLabel.createLabel(name, type));
-        }
-      } else {
-        throw new IllegalArgumentException("No names to read from args or from STDIN");
-      }
+      final List<ListenableFuture<LabelId>> assignments = createLabel.createLabels(args,
+          nonOptionArguments, type);
 
       Futures.successfulAsList(assignments).get();
       store.close();
@@ -114,9 +98,53 @@ public final class CreateLabel {
     }
   }
 
+  private List<ListenableFuture<LabelId>> createLabels(final String[] args,
+                                                       final List<?> nonOptionArguments,
+                                                       final LabelType type)
+      throws IOException {
+    if (shouldReadFromStdin(nonOptionArguments)) {
+      return readNamesFrom(new InputStreamReader(System.in), type);
+    } else if (nonOptionArguments.size() > 1) {
+      return readNamesFrom(args, type);
+    } else {
+      throw new IllegalArgumentException("No names to read from args or from STDIN");
+    }
+  }
+
+  private boolean shouldReadFromStdin(final List<?> nonOptionArguments) {
+    return nonOptionArguments.size() == 1 || READ_STDIN_SYMBOL.equals(nonOptionArguments.get(1));
+  }
+
+  private List<ListenableFuture<LabelId>> readNamesFrom(final String[] args,
+                                                        final LabelType type) {
+    final ImmutableSet<String> names = ImmutableSet.copyOf(
+        Arrays.copyOfRange(args, 1, args.length));
+    final List<ListenableFuture<LabelId>> assignments = new ArrayList<>(names.size());
+
+    for (final String name : names) {
+      assignments.add(createLabel(name, type));
+    }
+
+    return assignments;
+  }
+
+  private List<ListenableFuture<LabelId>> readNamesFrom(final Reader nameSource,
+                                                        final LabelType type) throws IOException {
+    final LineNumberReader reader = new LineNumberReader(new BufferedReader(nameSource));
+    final List<ListenableFuture<LabelId>> assignments = new ArrayList<>();
+
+    String name;
+
+    while ((name = reader.readLine()) != null) {
+      assignments.add(createLabel(name, type));
+    }
+
+    return assignments;
+  }
+
   private static LabelType type(final List<?> nonOptionArguments) {
     try {
-      String stringType = nonOptionArguments.get(0).toString();
+      final String stringType = nonOptionArguments.get(0).toString();
       return LabelType.fromValue(stringType);
     } catch (IndexOutOfBoundsException e) {
       throw new IllegalArgumentException("Missing identifier type to create label", e);
