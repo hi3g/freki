@@ -6,6 +6,12 @@ jdk:
 services:
   - cassandra
 
+install:
+  - ./gradlew clean assemble
+before_script: cqlsh -f cassandra/src/main/dist/schema/tables.cql
+script:
+  - ./gradlew check
+
 branches:
   only:
     - shippable
