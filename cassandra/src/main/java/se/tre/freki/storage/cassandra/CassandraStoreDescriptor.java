@@ -5,12 +5,10 @@ import se.tre.freki.storage.StoreDescriptor;
 import se.tre.freki.utils.InvalidConfigException;
 
 import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.ProtocolOptions;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.Session;
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.net.HostAndPort;
 import com.typesafe.config.Config;
 
 import java.time.Clock;
@@ -31,36 +29,24 @@ public class CassandraStoreDescriptor extends StoreDescriptor {
   @VisibleForTesting
   Cluster createCluster(final Config config) {
     try {
-      return createCluster(config.getStringList("freki.storage.cassandra.nodes"),
-          config.getInt("freki.storage.cassandra.protocolVersion"));
+      final int port = config.getInt("freki.storage.cassandra.port");
+      final List<String> nodes = config.getStringList("freki.storage.cassandra.nodes");
+      final int protocolVersion = config.getInt("freki.storage.cassandra.protocolVersion");
+
+      final Cluster.Builder builder = Cluster.builder();
+
+      for (final String node : nodes) {
+        builder.addContactPoint(node);
+      }
+
+      builder.withPort(port)
+          .withProtocolVersion(ProtocolVersion.fromInt(protocolVersion));
+
+      return builder.build();
     } catch (IllegalArgumentException e) {
       throw new InvalidConfigException(config.getValue("freki.storage.cassandra.nodes"),
           "One or more of the addresses in the cassandra config could not be parsed", e);
     }
-  }
-
-  /**
-   * Create a new cluster that is configured to use the provided list of string addresses as seed
-   * nodes.
-   *
-   * @param nodes A list of addresses to use as seed nodes
-   * @return A new {@link com.datastax.driver.core.Cluster} instance
-   * @throws java.lang.IllegalArgumentException If any of the addresses could not be parsed
-   */
-  private Cluster createCluster(final List<String> nodes,
-                                final int protocolVersion) {
-    final Cluster.Builder builder = Cluster.builder();
-
-    for (final String node : nodes) {
-      final HostAndPort host = HostAndPort.fromString(node)
-          .withDefaultPort(ProtocolOptions.DEFAULT_PORT);
-
-      builder.addContactPoint(host.getHostText())
-          .withPort(host.getPort())
-          .withProtocolVersion(ProtocolVersion.fromInt(protocolVersion));
-    }
-
-    return builder.build();
   }
 
   Session connectTo(final Cluster cluster, String keyspace) {
