@@ -205,6 +205,15 @@ subprojects {
             scopes.COMPILE.plus += [ configurations.provided ]
         }
     }
+
+    test {
+        testLogging {
+            exceptionFormat = 'full'
+            showExceptions true
+            showCauses true
+            showStackTraces true
+        }
+    }
 }
 
 def getGitAbbreviatedHash() {
