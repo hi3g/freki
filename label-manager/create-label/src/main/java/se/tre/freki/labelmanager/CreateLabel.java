@@ -27,7 +27,6 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -81,7 +80,7 @@ public final class CreateLabel {
       final Store store = createLabelComponent.store();
       final CreateLabel createLabel = createLabelComponent.createLabel();
 
-      final List<ListenableFuture<LabelId>> assignments = createLabel.createLabels(args,
+      final List<ListenableFuture<LabelId>> assignments = createLabel.createLabels(
           nonOptionArguments, type);
 
       Futures.successfulAsList(assignments).get();
@@ -98,14 +97,12 @@ public final class CreateLabel {
     }
   }
 
-  private List<ListenableFuture<LabelId>> createLabels(final String[] args,
-                                                       final List<?> nonOptionArguments,
-                                                       final LabelType type)
-      throws IOException {
+  private List<ListenableFuture<LabelId>> createLabels(final List<?> nonOptionArguments,
+                                                       final LabelType type) throws IOException {
     if (shouldReadFromStdin(nonOptionArguments)) {
       return readNamesFrom(new InputStreamReader(System.in), type);
     } else if (nonOptionArguments.size() > 1) {
-      return readNamesFrom(args, type);
+      return readNamesFrom(nonOptionArguments, type);
     } else {
       throw new IllegalArgumentException("No names to read from args or from STDIN");
     }
@@ -115,14 +112,14 @@ public final class CreateLabel {
     return nonOptionArguments.size() == 1 || READ_STDIN_SYMBOL.equals(nonOptionArguments.get(1));
   }
 
-  private List<ListenableFuture<LabelId>> readNamesFrom(final String[] args,
+  private List<ListenableFuture<LabelId>> readNamesFrom(final List<?> nonOptionArguments,
                                                         final LabelType type) {
-    final ImmutableSet<String> names = ImmutableSet.copyOf(
-        Arrays.copyOfRange(args, 1, args.length));
+    final ImmutableSet<?> names = ImmutableSet.copyOf(
+        nonOptionArguments.subList(1, nonOptionArguments.size()));
     final List<ListenableFuture<LabelId>> assignments = new ArrayList<>(names.size());
 
-    for (final String name : names) {
-      assignments.add(createLabel(name, type));
+    for (final Object name : names) {
+      assignments.add(createLabel(name.toString(), type));
     }
 
     return assignments;
