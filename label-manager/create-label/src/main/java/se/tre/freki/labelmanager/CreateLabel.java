@@ -83,6 +83,7 @@ public final class CreateLabel {
       final List<ListenableFuture<LabelId>> assignments = createLabel.createLabels(
           nonOptionArguments, type);
 
+      LOG.debug("Waiting for {} assignments to complete", assignments.size());
       Futures.successfulAsList(assignments).get();
       store.close();
     } catch (IllegalArgumentException | OptionException e) {
@@ -130,10 +131,11 @@ public final class CreateLabel {
     final LineNumberReader reader = new LineNumberReader(new BufferedReader(nameSource));
     final List<ListenableFuture<LabelId>> assignments = new ArrayList<>();
 
-    String name;
+    String name = reader.readLine();
 
-    while ((name = reader.readLine()) != null) {
+    while (name != null) {
       assignments.add(createLabel(name, type));
+      name = reader.readLine();
     }
 
     return assignments;

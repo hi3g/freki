@@ -212,6 +212,7 @@ public class LabelClientTypeContext implements Measurable {
         LOG.info("Completed pending assignment for: {}", name);
         synchronized (pendingAssignments) {
           SettableFuture<LabelId> completed = pendingAssignments.remove(name);
+          LOG.debug("Waiting for {} pending assignments", pendingAssignments.size());
           completed.set(uid);
         }
 
