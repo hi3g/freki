@@ -27,7 +27,11 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
@@ -80,7 +84,7 @@ public final class CreateLabel {
       final Store store = createLabelComponent.store();
       final CreateLabel createLabel = createLabelComponent.createLabel();
 
-      final List<ListenableFuture<LabelId>> assignments = createLabel.createLabels(
+      final Collection<ListenableFuture<LabelId>> assignments = createLabel.createLabels(
           nonOptionArguments, type);
 
       LOG.debug("Waiting for {} assignments to complete", assignments.size());
@@ -98,8 +102,9 @@ public final class CreateLabel {
     }
   }
 
-  private List<ListenableFuture<LabelId>> createLabels(final List<?> nonOptionArguments,
-                                                       final LabelType type) throws IOException {
+  private Collection<ListenableFuture<LabelId>> createLabels(final List<?> nonOptionArguments,
+                                                             final LabelType type)
+      throws IOException {
     if (shouldReadFromStdin(nonOptionArguments)) {
       return readNamesFrom(new InputStreamReader(System.in), type);
     } else if (nonOptionArguments.size() > 1) {
@@ -126,16 +131,27 @@ public final class CreateLabel {
     return assignments;
   }
 
-  private List<ListenableFuture<LabelId>> readNamesFrom(final Reader nameSource,
-                                                        final LabelType type) throws IOException {
+  private Queue<ListenableFuture<LabelId>> readNamesFrom(final Reader nameSource,
+                                                         final LabelType type) throws IOException {
     final LineNumberReader reader = new LineNumberReader(new BufferedReader(nameSource));
-    final List<ListenableFuture<LabelId>> assignments = new ArrayList<>();
+    final ArrayBlockingQueue<ListenableFuture<LabelId>> assignments = new ArrayBlockingQueue<>(200);
 
     String name = reader.readLine();
 
     while (name != null) {
-      assignments.add(createLabel(name, type));
-      name = reader.readLine();
+      if (assignments.remainingCapacity() > 0) {
+        assignments.add(createLabel(name, type));
+        name = reader.readLine();
+      } else {
+        try {
+          assignments.poll().get();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+          // Any execution exception should already be logged in the callback so we can safely
+          // swallow it here.
+        }
+      }
     }
 
     return assignments;
