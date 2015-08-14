@@ -1,0 +1,14 @@
+
+language: java
+jdk:
+  - oraclejdk8
+
+services:
+  - cassandra
+
+branches:
+  only:
+    - shippable
+
+notifications:
+  email: false
