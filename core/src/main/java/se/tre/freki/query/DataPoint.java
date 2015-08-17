@@ -50,7 +50,7 @@ public interface DataPoint {
 
     @Override
     default DataPointType type() {
-      return DataPointType.LONG;
+      return DataPointType.FLOAT;
     }
   }
 
@@ -67,7 +67,7 @@ public interface DataPoint {
 
     @Override
     default DataPointType type() {
-      return DataPointType.LONG;
+      return DataPointType.DOUBLE;
     }
   }
 }
