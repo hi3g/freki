@@ -1,18 +1,13 @@
-package se.tre.freki.query;
+package se.tre.freki.query.functions;
 
 import static se.tre.freki.query.DataPoint.DataPointType.widest;
 
+import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.DataPoint.DataPointType;
 import se.tre.freki.query.DataPoint.DoubleDataPoint;
 import se.tre.freki.utils.AsyncIterator;
 
-import com.google.common.util.concurrent.ListenableFuture;
-
-import java.util.NoSuchElementException;
-
-public class RateFunction implements AsyncIterator<DoubleDataPoint> {
-  private final AsyncIterator<? extends DataPoint> iterator;
-
+public class RateFunction extends QueryFunction<DoubleDataPoint> {
   private long previousRawLong;
   private float previousRawFloat;
   private double previousRawDouble;
@@ -22,7 +17,8 @@ public class RateFunction implements AsyncIterator<DoubleDataPoint> {
   private final RateDataPoint rateDataPoint;
 
   RateFunction(final AsyncIterator<? extends DataPoint> iterator) {
-    this.iterator = iterator;
+    super(iterator);
+
     this.rateDataPoint = new RateDataPoint();
 
     if (iterator.hasNext()) {
@@ -50,31 +46,10 @@ public class RateFunction implements AsyncIterator<DoubleDataPoint> {
   }
 
   @Override
-  public boolean hasMoreWithoutFetching() {
-    return iterator.hasMoreWithoutFetching();
-  }
-
-  @Override
-  public ListenableFuture<Boolean> fetchMore() {
-    return iterator.fetchMore();
-  }
-
-  @Override
-  public boolean hasNext() {
-    return iterator.hasNext();
-  }
-
-  private void checkHasNext(final String message) {
-    if (!hasNext()) {
-      throw new NoSuchElementException(message);
-    }
-  }
-
-  @Override
   public DoubleDataPoint next() {
     checkHasNext("No more data points to iterate over");
 
-    final DataPoint nextDataPoint = iterator.next();
+    final DataPoint nextDataPoint = iterator().next();
     final long timeDelta = nextDataPoint.timestamp() - previousTimestamp;
 
     rateDataPoint.value = calculateValue(nextDataPoint) / timeDelta;

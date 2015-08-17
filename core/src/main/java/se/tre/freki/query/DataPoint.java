@@ -14,7 +14,7 @@ public interface DataPoint {
   enum DataPointType {
     LONG, FLOAT, DOUBLE;
 
-    static DataPointType widest(final DataPointType first,
+    public static DataPointType widest(final DataPointType first,
                                 final DataPointType second) {
       return first.ordinal() > second.ordinal() ? first : second;
     }

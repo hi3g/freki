@@ -1,4 +1,4 @@
-package se.tre.freki.query;
+package se.tre.freki.query.functions;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
