@@ -12,7 +12,6 @@ import se.tre.freki.storage.Store;
 import se.tre.freki.utils.InvalidConfigException;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -22,8 +21,18 @@ import joptsimple.OptionSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
@@ -32,6 +41,7 @@ import javax.inject.Inject;
  */
 public final class CreateLabel {
   private static final Logger LOG = LoggerFactory.getLogger(CreateLabel.class);
+  private static final String READ_STDIN_SYMBOL = "-";
 
   private final LabelClient labelClient;
 
@@ -41,8 +51,8 @@ public final class CreateLabel {
   }
 
   /**
-   * Entry-point for the createLabel application. The createLabel program is normally not
-   * executed directly but rather through the main project.
+   * Entry-point for the createLabel application. The createLabel program is normally not executed
+   * directly but rather through the main project.
    *
    * @param args The command-line arguments
    */
@@ -72,19 +82,13 @@ public final class CreateLabel {
       final List<?> nonOptionArguments = options.nonOptionArguments();
 
       final LabelType type = type(nonOptionArguments);
-      final ImmutableSet<String> names = ImmutableSet.copyOf(
-          Arrays.copyOfRange(args, 1, args.length));
-
       final Store store = createLabelComponent.store();
       final CreateLabel createLabel = createLabelComponent.createLabel();
 
-      final List<ListenableFuture<LabelId>> assignments =
-          Lists.newArrayListWithCapacity(names.size());
+      final Collection<ListenableFuture<LabelId>> assignments = createLabel.createLabels(
+          nonOptionArguments, type);
 
-      for (final String name : names) {
-        assignments.add(createLabel.createLabel(name, type));
-      }
-
+      LOG.debug("Waiting for {} assignments to complete", assignments.size());
       Futures.successfulAsList(assignments).get();
       store.close();
     } catch (IllegalArgumentException | OptionException e) {
@@ -99,9 +103,64 @@ public final class CreateLabel {
     }
   }
 
+  private Collection<ListenableFuture<LabelId>> createLabels(final List<?> nonOptionArguments,
+                                                             final LabelType type)
+      throws IOException {
+    if (shouldReadFromStdin(nonOptionArguments)) {
+      return readNamesFrom(new InputStreamReader(System.in, StandardCharsets.UTF_8), type);
+    } else if (nonOptionArguments.size() > 1) {
+      return readNamesFrom(nonOptionArguments, type);
+    } else {
+      throw new IllegalArgumentException("No names to read from args or from STDIN");
+    }
+  }
+
+  private boolean shouldReadFromStdin(final List<?> nonOptionArguments) {
+    return nonOptionArguments.size() == 1 || READ_STDIN_SYMBOL.equals(nonOptionArguments.get(1));
+  }
+
+  private List<ListenableFuture<LabelId>> readNamesFrom(final List<?> nonOptionArguments,
+                                                        final LabelType type) {
+    final ImmutableSet<?> names = ImmutableSet.copyOf(
+        nonOptionArguments.subList(1, nonOptionArguments.size()));
+    final List<ListenableFuture<LabelId>> assignments = new ArrayList<>(names.size());
+
+    for (final Object name : names) {
+      assignments.add(createLabel(name.toString(), type));
+    }
+
+    return assignments;
+  }
+
+  private Queue<ListenableFuture<LabelId>> readNamesFrom(final Reader nameSource,
+                                                         final LabelType type) throws IOException {
+    final LineNumberReader reader = new LineNumberReader(new BufferedReader(nameSource));
+    final ArrayBlockingQueue<ListenableFuture<LabelId>> assignments = new ArrayBlockingQueue<>(200);
+
+    String name = reader.readLine();
+
+    while (name != null) {
+      if (assignments.remainingCapacity() > 0) {
+        assignments.add(createLabel(name, type));
+        name = reader.readLine();
+      } else {
+        try {
+          assignments.poll().get();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+          // Any execution exception should already be logged in the callback so we can safely
+          // swallow it here.
+        }
+      }
+    }
+
+    return assignments;
+  }
+
   private static LabelType type(final List<?> nonOptionArguments) {
     try {
-      String stringType = nonOptionArguments.get(0).toString();
+      final String stringType = nonOptionArguments.get(0).toString();
       return LabelType.fromValue(stringType);
     } catch (IndexOutOfBoundsException e) {
       throw new IllegalArgumentException("Missing identifier type to create label", e);
