@@ -5,7 +5,7 @@ import se.tre.freki.query.DataPoint;
 import com.datastax.driver.core.Row;
 
 abstract class RowDataPoint implements DataPoint {
-  private Row row;
+  Row row;
 
   public void setRow(final Row row) {
     this.row = row;
@@ -22,21 +22,21 @@ abstract class RowDataPoint implements DataPoint {
 
   static class RowLongDataPoint extends RowDataPoint implements LongDataPoint {
     @Override
-    public long value() {
+    public long longValue() {
       return row().getLong("long_value");
     }
   }
 
   static class RowFloatDataPoint extends RowDataPoint implements FloatDataPoint {
     @Override
-    public float value() {
+    public float floatValue() {
       return row().getFloat("float_value");
     }
   }
 
   static class RowDoubleDataPoint extends RowDataPoint implements DoubleDataPoint {
     @Override
-    public double value() {
+    public double doubleValue() {
       return row().getDouble("double_value");
     }
   }

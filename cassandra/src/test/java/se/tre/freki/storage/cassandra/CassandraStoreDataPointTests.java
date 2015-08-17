@@ -131,8 +131,8 @@ public class CassandraStoreDataPointTests {
     final Iterator<? extends DataPoint> dataPoints = store.fetchTimeSeries(timeSeriesId, pointTime,
         pointTime + BASE_TIME_PERIOD);
 
-    assertEquals(firstValue, ((LongDataPoint) dataPoints.next()).value());
-    assertEquals(secondValue, ((LongDataPoint) dataPoints.next()).value());
+    assertEquals(firstValue, dataPoints.next().longValue());
+    assertEquals(secondValue, dataPoints.next().longValue());
     assertFalse(dataPoints.hasNext());
   }
 
@@ -153,8 +153,8 @@ public class CassandraStoreDataPointTests {
     final Iterator<? extends DataPoint> dataPoints = store.fetchTimeSeries(timeSeriesId, pointTime,
         pointTime + BASE_TIME_PERIOD * 3);
 
-    assertEquals(firstValue, ((LongDataPoint) dataPoints.next()).value());
-    assertEquals(secondValue, ((LongDataPoint) dataPoints.next()).value());
+    assertEquals(firstValue, dataPoints.next().longValue());
+    assertEquals(secondValue, dataPoints.next().longValue());
     assertFalse(dataPoints.hasNext());
   }
 
@@ -190,6 +190,6 @@ public class CassandraStoreDataPointTests {
     assertTrue(firstDataPoint instanceof LongDataPoint);
 
     final LongDataPoint secondDataPoint = (LongDataPoint) dataPoints.next();
-    secondDataPoint.value();
+    secondDataPoint.longValue();
   }
 }

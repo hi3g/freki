@@ -34,7 +34,7 @@ public class RowDataPointTest {
     when(row.getLong(eq("long_value"))).thenReturn(LONG_VALUE);
     final RowLongDataPoint dataPoint = new RowLongDataPoint();
     dataPoint.setRow(row);
-    assertEquals(LONG_VALUE, dataPoint.value());
+    assertEquals(LONG_VALUE, dataPoint.longValue());
   }
 
   @Test
@@ -43,7 +43,7 @@ public class RowDataPointTest {
     when(row.getFloat(eq("float_value"))).thenReturn(FLOAT_VALUE);
     final RowFloatDataPoint dataPoint = new RowFloatDataPoint();
     dataPoint.setRow(row);
-    assertEquals(FLOAT_VALUE, dataPoint.value(), ACCEPTED_DELTA);
+    assertEquals(FLOAT_VALUE, dataPoint.floatValue(), ACCEPTED_DELTA);
   }
 
   @Test
@@ -52,6 +52,6 @@ public class RowDataPointTest {
     when(row.getDouble(eq("double_value"))).thenReturn(DOUBLE_VALUE);
     final RowDoubleDataPoint dataPoint = new RowDoubleDataPoint();
     dataPoint.setRow(row);
-    assertEquals(DOUBLE_VALUE, dataPoint.value(), ACCEPTED_DELTA);
+    assertEquals(DOUBLE_VALUE, dataPoint.doubleValue(), ACCEPTED_DELTA);
   }
 }
