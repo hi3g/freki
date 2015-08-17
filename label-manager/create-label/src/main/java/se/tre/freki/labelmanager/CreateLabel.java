@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -106,7 +107,7 @@ public final class CreateLabel {
                                                              final LabelType type)
       throws IOException {
     if (shouldReadFromStdin(nonOptionArguments)) {
-      return readNamesFrom(new InputStreamReader(System.in), type);
+      return readNamesFrom(new InputStreamReader(System.in, StandardCharsets.UTF_8), type);
     } else if (nonOptionArguments.size() > 1) {
       return readNamesFrom(nonOptionArguments, type);
     } else {
