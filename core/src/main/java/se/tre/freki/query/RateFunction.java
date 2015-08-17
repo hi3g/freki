@@ -24,7 +24,10 @@ public class RateFunction implements AsyncIterator<DoubleDataPoint> {
   RateFunction(final AsyncIterator<? extends DataPoint> iterator) {
     this.iterator = iterator;
     this.rateDataPoint = new RateDataPoint();
-    updatePreviousValues(iterator.next());
+
+    if (iterator.hasNext()) {
+      updatePreviousValues(iterator.next());
+    }
   }
 
   private void updatePreviousValues(final DataPoint previous) {
