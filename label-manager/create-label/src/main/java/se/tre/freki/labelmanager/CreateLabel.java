@@ -173,7 +173,7 @@ public final class CreateLabel {
     return id;
   }
 
-  private static class LogNewIdCallback implements FutureCallback<LabelId> {
+  private class LogNewIdCallback implements FutureCallback<LabelId> {
     private final String name;
     private final LabelType type;
 
@@ -190,7 +190,9 @@ public final class CreateLabel {
     @Override
     public void onFailure(final Throwable throwable) {
       if (throwable instanceof LabelException) {
-        System.err.println(throwable.getMessage());
+        synchronized (CreateLabel.this) {
+          System.err.println(throwable.getMessage());
+        }
       } else {
         LOG.error("{} {}: {}", name, type, throwable.getMessage(), throwable);
       }
