@@ -33,7 +33,7 @@ jmh {
 }
 
 antlr4 {
-    output = file("${project.buildDir}/generated-sources/main/java/")
+    output = file("${project.buildDir}/generated-sources/main/java/se/tre/freki/query/")
     mustRunAfter clean
 }
 
