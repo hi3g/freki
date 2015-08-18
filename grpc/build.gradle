@@ -6,6 +6,8 @@ plugins {
 dependencies {
     compile project(':freki-core')
 
+    runtime project(':freki-cassandra')
+
     compile libraries.config,
             libraries.dagger,
             libraries.jopt,
