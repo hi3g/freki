@@ -146,7 +146,7 @@ public abstract class StoreTest<K extends Store> {
         dataPoints.entrySet().iterator().next().getValue();
 
     for (int dataPointIdx = 0; dataPointIdx < 10; dataPointIdx++) {
-      assertEquals(value, ((DataPoint.LongDataPoint) iterator.next()).value());
+      assertEquals(value, iterator.next().longValue());
     }
   }
   
