@@ -25,7 +25,7 @@ public class TimeSeriesTagPredicate {
     return operator;
   }
 
-  enum TimeSeriesTagOperator {
+  public enum TimeSeriesTagOperator {
     EQUALS, NOT_EQUALS
   }
 

@@ -14,17 +14,15 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.typesafe.config.Config;
 import org.junit.After;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.Timeout;
 
 import java.io.IOException;
 import java.time.Clock;
 import java.util.List;
 
 public class CassandraStoreTest extends StoreTest<CassandraStore> {
-  @Rule
-  public final Timeout timeout = Timeout.millis(CassandraTestHelpers.TIMEOUT);
+  //@Rule
+  //public final Timeout timeout = Timeout.millis(CassandraTestHelpers.TIMEOUT);
 
   private Config config;
   private CassandraStoreDescriptor storeDescriptor;

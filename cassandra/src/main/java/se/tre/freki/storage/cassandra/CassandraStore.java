@@ -13,7 +13,13 @@ import se.tre.freki.meta.Annotation;
 import se.tre.freki.meta.LabelMeta;
 import se.tre.freki.query.DataPoint;
 import se.tre.freki.query.TimeSeriesQuery;
+import se.tre.freki.query.predicate.AlternationTimeSeriesIdPredicate;
+import se.tre.freki.query.predicate.SimpleTimeSeriesIdPredicate;
+import se.tre.freki.query.predicate.TimeSeriesIdPredicate;
 import se.tre.freki.query.predicate.TimeSeriesQueryPredicate;
+import se.tre.freki.query.predicate.TimeSeriesTagPredicate;
+import se.tre.freki.query.predicate.TimeSeriesTagPredicate.TimeSeriesTagOperator;
+import se.tre.freki.query.predicate.WildcardTimeSeriesIdPredicate;
 import se.tre.freki.storage.Store;
 import se.tre.freki.storage.cassandra.functions.FirstOrAbsentFunction;
 import se.tre.freki.storage.cassandra.functions.IsEmptyFunction;
@@ -658,7 +664,75 @@ public class CassandraStore extends Store {
   @Nonnull
   private ListenableFuture<Iterable<CassandraTimeSeriesId>> resolve(
       final TimeSeriesQueryPredicate predicate) {
-    return resolve(predicate.metric(), LabelType.METRIC);
+
+    final ListenableFuture<Iterable<CassandraTimeSeriesId>> tsId = resolve(predicate.metric(),
+        LabelType.METRIC);
+
+    return transform(tsId,
+        new Function<Iterable<CassandraTimeSeriesId>, Iterable<CassandraTimeSeriesId>>() {
+          @Override
+          public Iterable<CassandraTimeSeriesId> apply(
+              final Iterable<CassandraTimeSeriesId> seriesIds) {
+
+            final ImmutableList.Builder<CassandraTimeSeriesId> builder = ImmutableList.builder();
+
+            boolean keep = true;
+
+            for (CassandraTimeSeriesId tsId : seriesIds) {
+              List<LabelId> tags = tsId.tags();
+
+              for (TimeSeriesTagPredicate tagPredicate : predicate.tagPredicates()) {
+                for (int index = 0; index < tags.size(); index += 2) {
+
+                  if (!matches(tags.get(index), tags.get(index + 1), tagPredicate)) {
+                    keep = false;
+                    break;
+                  }
+
+                }
+              }
+              if (keep)  {
+                builder.add(tsId);
+              }
+            }
+
+            return builder.build();
+          }
+        });
+  }
+
+  private static boolean matches(final LabelId tagk,
+                                final LabelId tagv,
+                                final TimeSeriesTagPredicate tagPredicate) {
+
+    return (matches(tagk, tagPredicate.key(), tagPredicate.operator())
+            && matches(tagv, tagPredicate.value(), tagPredicate.operator()));
+  }
+
+  private static boolean matches(final LabelId tag,
+                                 final TimeSeriesIdPredicate tagPredicate,
+                                 final TimeSeriesTagOperator operator) {
+
+    if (tagPredicate instanceof WildcardTimeSeriesIdPredicate) {
+      return operator.equals(TimeSeriesTagOperator.EQUALS);
+    }
+
+    if (tagPredicate instanceof SimpleTimeSeriesIdPredicate) {
+      if (operator.equals(TimeSeriesTagOperator.EQUALS)) {
+        final boolean temp = ((SimpleTimeSeriesIdPredicate) tagPredicate).id().equals(tag);
+        return temp;
+      }
+      return !((SimpleTimeSeriesIdPredicate) tagPredicate).id().equals(tag);
+    }
+
+    if (tagPredicate instanceof AlternationTimeSeriesIdPredicate) {
+      if (operator.equals(TimeSeriesTagOperator.EQUALS)) {
+        return ((AlternationTimeSeriesIdPredicate) tagPredicate).ids().contains(tag);
+      }
+      return !((AlternationTimeSeriesIdPredicate) tagPredicate).ids().contains(tag);
+
+    }
+    return false;
   }
 
   private ListenableFuture<Iterable<CassandraTimeSeriesId>> resolve(final LabelId id,
@@ -669,7 +743,7 @@ public class CassandraStore extends Store {
     return transform(timeSeries, new Function<ResultSet, Iterable<CassandraTimeSeriesId>>() {
       @Override
       public Iterable<CassandraTimeSeriesId> apply(final ResultSet timeSeriesRows) {
-        return Iterables.transform(timeSeriesRows, new Function<Row, CassandraTimeSeriesId>() {
+        return Iterables.transform(timeSeriesRows.all(), new Function<Row, CassandraTimeSeriesId>() {
           @Override
           public CassandraTimeSeriesId apply(final Row timeSeriesRow) {
             return new CassandraTimeSeriesId(timeSeriesRow);

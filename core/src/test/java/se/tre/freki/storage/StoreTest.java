@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -39,6 +40,8 @@ public abstract class StoreTest<K extends Store> {
   private static final String NEW = "new";
   private static final String MISSING = "missing";
   private static final LabelType TYPE = LabelType.TAGK;
+
+  private static final long VALUE = 123123;
 
   private LabelId nameId;
 
@@ -112,24 +115,133 @@ public abstract class StoreTest<K extends Store> {
     assertFalse(store.getId(NAME, TYPE).get().isPresent());
   }
 
-  @Test
-  public void testQueryFetchesData() throws Exception {
+  private TimeSeriesId addPoints(final long startTime,
+                                 final long endTime,
+                                 final int numberOfTags,
+                                 final K store) throws Exception {
+
     final LabelId metric1 = store.createLabel("metric1", METRIC).get();
-    final LabelId tagk1 = store.createLabel("tagk1", TAGK).get();
-    final LabelId tagv1 = store.createLabel("tagv1", TAGV).get();
-    final List<LabelId> tags1 = ImmutableList.of(tagk1, tagv1);
-    final StaticTimeSeriesId staticTimeSeriesId1 = new StaticTimeSeriesId(metric1, tags1);
+    List<LabelId> tags = new ArrayList<>(2 * numberOfTags);
 
-    final long startTime = 123123123;
-    final long value = 123123;
-
-    for (long time = startTime; time < startTime + 10; time++) {
-      store.addPoint(staticTimeSeriesId1, time, value).get();
+    for (int i = 1; i <= numberOfTags; i++) {
+      final LabelId tagk = store.createLabel("tagk" + i, TAGK).get();
+      final LabelId tagv = store.createLabel("tagv" + i, TAGV).get();
+      tags.add(tagk);
+      tags.add(tagv);
     }
 
+    final StaticTimeSeriesId staticTimeSeriesId1 = new StaticTimeSeriesId(metric1,
+        ImmutableList.copyOf(tags));
+
+    for (long time = startTime; time <= endTime; time++) {
+      store.addPoint(staticTimeSeriesId1, time, VALUE).get();
+    }
+
+    return staticTimeSeriesId1;
+  }
+
+  private Map<TimeSeriesId, AsyncIterator<? extends DataPoint>> getDataPoints(
+      final long startTime,
+      final long endTime,
+      final TimeSeriesQueryPredicate.Builder builder) throws Exception {
+
+    final TimeSeriesQuery query = TimeSeriesQuery.builder()
+        .startTime(startTime)
+        .endTime(endTime)
+        .predicate(builder.build())
+        .build();
+
+    return store.query(query).get();
+  }
+
+  private void assertDataPoints(
+      final long points,
+      final Map<TimeSeriesId, AsyncIterator<? extends DataPoint>> dataPoints) {
+
+    final AsyncIterator<? extends DataPoint> iterator =
+        dataPoints.entrySet().iterator().next().getValue();
+    for (int dataPointIdx = 0; dataPointIdx < points; dataPointIdx++) {
+      assertEquals(VALUE, ((DataPoint.LongDataPoint) iterator.next()).value());
+    }
+  }
+
+  @Test
+  public void testEqWrongTagQuery() throws Exception {
+    final long startTime = 123123123;
+    final long endTime = startTime + 10;
+    final int numberOfTags = 1;
+
+    final TimeSeriesId tsuid = addPoints(startTime, endTime, numberOfTags, store);
     final TimeSeriesQueryPredicate.Builder builder = TimeSeriesQueryPredicate.builder();
-    builder.metric(metric1);
-    builder.addTagPredicate(eq(id(tags1.get(0)), id(tags1.get(1))));
+    builder.metric(tsuid.metric());
+    for (int i = 0; i < tsuid.tags().size() / 2; i++) {
+      builder.addTagPredicate(eq(id(tsuid.tags().get(i * 2)), id(missingLabelId())));
+    }
+
+    final Map<TimeSeriesId, AsyncIterator<? extends DataPoint>> dataPoints = getDataPoints(
+        startTime, endTime, builder);
+
+    assertEquals(0, dataPoints.keySet().size());
+    assertTrue(dataPoints.entrySet().isEmpty());
+  }
+
+  @Test
+  public void testMultipleTagsQuery() throws Exception {
+    final long startTime = 123123123;
+    final long endTime = startTime + 10;
+    final int numberOfTags = 2;
+
+    final TimeSeriesId tsId = addPoints(startTime, endTime, numberOfTags, store);
+
+    final TimeSeriesQueryPredicate.Builder builder = TimeSeriesQueryPredicate.builder();
+    builder.metric(tsId.metric());
+    for (int i = 0; i < tsId.tags().size() / 2; i++) {
+      builder.addTagPredicate(eq(id(tsId.tags().get(i * 2)), id(tsId.tags().get((i * 2) + 1))));
+    }
+
+    final Map<TimeSeriesId, AsyncIterator<? extends DataPoint>> dataPoints = getDataPoints(
+        startTime, endTime, builder);
+
+    assertEquals(1, dataPoints.keySet().size());
+    assertDataPoints(startTime - endTime, dataPoints);
+  }
+
+  @Test
+  public void testSimpleQuery() throws Exception {
+    final long startTime = 123123123;
+    final long endTime = startTime + 10;
+    final int numberOfTags = 1;
+
+    final TimeSeriesId tsId = addPoints(startTime, endTime, numberOfTags, store);
+
+    final TimeSeriesQueryPredicate.Builder builder = TimeSeriesQueryPredicate.builder();
+    builder.metric(tsId.metric());
+
+    for (int i = 0; i < tsId.tags().size() / 2; i++) {
+      builder.addTagPredicate(eq(id(tsId.tags().get(i * 2)), id(tsId.tags().get((i * 2) + 1))));
+    }
+
+    final Map<TimeSeriesId, AsyncIterator<? extends DataPoint>> dataPoints = getDataPoints(
+        startTime, endTime, builder);
+
+    assertEquals(1, dataPoints.keySet().size());
+    assertDataPoints(startTime - endTime, dataPoints);
+  }
+
+  @Test
+  public void testQueryFetchesData() throws Exception {
+
+    final long startTime = 123123123;
+    final long endTime = startTime + 10;
+    final int numberOfTags = 1;
+
+    final TimeSeriesId tsId = addPoints(startTime, endTime, numberOfTags, store);
+
+    final TimeSeriesQueryPredicate.Builder builder = TimeSeriesQueryPredicate.builder();
+    builder.metric(tsId.metric());
+    for (int i = 0; i < tsId.tags().size() / 2; i++) {
+      builder.addTagPredicate(eq(id(tsId.tags().get(i * 2)), id(tsId.tags().get((i * 2) + 1))));
+    }
 
     final TimeSeriesQuery query = TimeSeriesQuery.builder()
         .startTime(123123123)
@@ -146,10 +258,10 @@ public abstract class StoreTest<K extends Store> {
         dataPoints.entrySet().iterator().next().getValue();
 
     for (int dataPointIdx = 0; dataPointIdx < 10; dataPointIdx++) {
-      assertEquals(value, ((DataPoint.LongDataPoint) iterator.next()).value());
+      assertEquals(VALUE, ((DataPoint.LongDataPoint) iterator.next()).value());
     }
   }
-  
+
   @Test
   public void testGetLabelMetaMissingId() throws Exception {
     final LabelId miss = missingLabelId();
